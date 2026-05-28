@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Church {
+  id               String   @id @default(cuid())
+  name             String
+  cash             Float    @default(0)
+  nijFormat        String   @default("[GEREJA]-[TAHUN]-[NOMOR]")
+  youthThreshold   Int      @default(25)
+  elderlyThreshold Int      @default(50)
+  attendanceMode   String?  // "BULK" or "QR" — null means not yet set up
+  aiKeuangan       String?
+  aiJemaat         String?
+  aiKehadiran      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  users               User[]
+  members             Member[]
+  workers             Worker[]
+  finances            FinanceRecord[]
+  events              Event[]
+  financeDivisions    FinanceDivision[]
+  financeTransactions FinanceTransaction[]
+  families            Family[]
+  attendanceRecords   AttendanceRecord[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  password  String
+  churchId  String
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Member {
+  id               String    @id @default(cuid())
+  nij              String?   @unique
+  name             String
+  phone            String?
+  gender           String?
+  birthDate        DateTime?
+  maritalStatus    String?
+  address          String?
+  city             String?
+  status           String    @default("AKTIF")
+  joinDate         DateTime  @default(now())
+
+  isBaptized       Boolean   @default(false)
+  baptismDate      DateTime?
+  cellGroup        String?
+  ministries       String?
+
+  attendanceRatio  Float?
+  lastAttendance   DateTime?
+  absentWeeks      Int       @default(0)
+
+  familyId         String?
+  familyRelation   String?
+  family           Family?   @relation(fields: [familyId], references: [id], onDelete: SetNull)
+
+  churchId         String
+  church           Church    @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Family {
+  id        String   @id @default(cuid())
+  name      String
+  members   Member[]
+  churchId  String
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Worker {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   // "FULLTIME" or "PARTTIME"
+  churchId  String
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FinanceRecord {
+  id        String   @id @default(cuid())
+  amount    Float
+  type      String   // "INCOME" or "EXPENSE"
+  month     Int
+  year      Int
+  churchId  String
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  title     String
+  time      String
+  location  String
+  date      DateTime
+  churchId  String
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model FinanceDivision {
+  id        String   @id @default(cuid())
+  label     String
+  percent   Float
+  val       Float
+  warn      Boolean  @default(false)
+  churchId  String
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model FinanceTransaction {
+  id        String   @id @default(cuid())
+  title     String
+  desc      String
+  amount    Float
+  type      String   // "INCOME" or "EXPENSE"
+  date      DateTime @default(now())
+  churchId  String
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+}
+
+model AttendanceRecord {
+  id          String   @id @default(cuid())
+  churchId    String
+  church      Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  serviceDate DateTime // Date of the Sunday/service
+  serviceType String   @default("Ibadah Umum") // e.g. "Ibadah Umum", "Ibadah Remaja"
+  male        Int      @default(0)
+  female      Int      @default(0)
+  notes       String?
+  createdAt   DateTime @default(now())
+}
