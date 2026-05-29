@@ -56,15 +56,15 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ insight: responseText });
   } catch (error: unknown) {
-    console.error('Gemini API Error:', error);
+    console.error('AI Error:', error);
     if (error instanceof Error) {
       return NextResponse.json(
-        { error: `Kesalahan Gemini: ${error.message}` },
+        { error: `Kesalahan AI: ${error.message}` },
         { status: 500 }
       );
     }
     return NextResponse.json(
-      { error: 'Kesalahan tak dikenal pada Gemini API.' },
+      { error: 'Kesalahan tak dikenal pada API AI.' },
       { status: 500 }
     );
   }

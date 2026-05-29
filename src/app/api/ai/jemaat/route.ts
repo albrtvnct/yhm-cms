@@ -54,10 +54,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ insight: responseText });
   } catch (error: unknown) {
-    console.error('Gemini API Error Jemaat:', error);
+    console.error('AI Error Jemaat:', error);
     if (error instanceof Error) {
-      return NextResponse.json({ error: `Kesalahan Gemini: ${error.message}` }, { status: 500 });
+      return NextResponse.json({ error: `Kesalahan AI: ${error.message}` }, { status: 500 });
     }
-    return NextResponse.json({ error: 'Kesalahan tak dikenal pada Gemini API.' }, { status: 500 });
+    return NextResponse.json({ error: 'Kesalahan tak dikenal pada API AI.' }, { status: 500 });
   }
 }
