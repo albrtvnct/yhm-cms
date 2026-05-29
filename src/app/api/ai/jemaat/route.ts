@@ -1,7 +1,7 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+import { generateAIContent } from '@/lib/ai-service';
 
 export async function POST(req: Request) {
   try {
@@ -10,14 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const churchId = session.churchId;
-    const apiKey = process.env.GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'API Key belum dikonfigurasi. Masukkan GEMINI_API_KEY di file .env' },
-        { status: 500 }
-      );
-    }
+
 
     // Ambil data dari Prisma
     const totalJemaat = await prisma.member.count({ where: { churchId } });
@@ -35,9 +28,6 @@ export async function POST(req: Request) {
       where: { churchId, joinDate: { gte: thirtyDaysAgo } }
     });
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
-
     const prompt = `
       Anda adalah AI Data Analyst spesialis manajemen komunitas gereja.
       Berikut adalah data analitik Jemaat saat ini:
@@ -52,8 +42,7 @@ export async function POST(req: Request) {
       Gunakan tata bahasa profesional modern tanpa salam pembuka. Gunakan format teks biasa atau strong tags HTML jika perlu.
     `;
 
-    const result = await model.generateContent(prompt);
-    let responseText = result.response.text();
+    let responseText = await generateAIContent(prompt);
     // Bersihkan markdown markdown ** menjadi <strong> agar sesuai dengan UI yang mendukung HTML dasar
     responseText = responseText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 

@@ -1,7 +1,7 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+import { generateAIContent } from '@/lib/ai-service';
 
 export async function POST(req: Request) {
   try {
@@ -10,15 +10,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const churchId = session.churchId;
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'API Key belum dikonfigurasi. Masukkan GEMINI_API_KEY di file .env' },
-        { status: 500 }
-      );
-    }
 
     // Ambil data real dari Prisma
     const income = await prisma.financeTransaction.aggregate({
@@ -40,9 +31,6 @@ export async function POST(req: Request) {
     
     const divString = divisions.map(d => `${d.label}: Rp ${d.val} (${d.warn ? 'Warning/Overbudget' : 'Aman'})`).join(', ');
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
-
     const prompt = `
       Anda adalah AI Financial Analyst canggih yang tergabung dalam sistem ChurchOS (Sistem Manajemen Gereja).
       Berikan satu paragraf wawasan cerdas yang singkat dan langsung pada intinya (maksimal 3-4 kalimat) berdasarkan data nyata bulan ini:
@@ -58,8 +46,7 @@ export async function POST(req: Request) {
       7. Jangan berikan salam pembuka yang bertele-tele, langsung masuk ke analisis inti.
     `;
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    const responseText = await generateAIContent(prompt, { provider: 'openrouter' });
 
     // Save to database
     await prisma.church.update({

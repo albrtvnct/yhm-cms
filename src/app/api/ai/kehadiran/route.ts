@@ -1,7 +1,7 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+import { generateAIContent } from '@/lib/ai-service';
 
 export async function POST(req: Request) {
   try {
@@ -10,14 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const churchId = session.churchId;
-    const apiKey = process.env.GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'API Key belum dikonfigurasi. Masukkan GEMINI_API_KEY di file .env' },
-        { status: 500 }
-      );
-    }
+
 
     // Get attendance mode
     const church = await prisma.church.findUnique({
@@ -51,9 +44,6 @@ export async function POST(req: Request) {
     const totalMembers = await prisma.member.count({ where: { churchId } });
     const absenteesCount = await prisma.member.count({ where: { churchId, absentWeeks: { gte: 3 } } });
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
-
     const prompt = `
       Anda adalah AI Church Attendance Analyst spesialis analisis tingkat kehadiran jemaat gereja.
       Berikut adalah data analitik Kehadiran Jemaat saat ini:
@@ -74,8 +64,7 @@ export async function POST(req: Request) {
       Gunakan format teks biasa atau tag <strong> untuk menyoroti poin/angka penting.
     `;
 
-    const result = await model.generateContent(prompt);
-    let responseText = result.response.text();
+    let responseText = await generateAIContent(prompt);
     responseText = responseText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
     // Save to database
