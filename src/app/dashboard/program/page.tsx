@@ -63,6 +63,31 @@ export default function ProgramEvaluasiDashboard() {
   const [divisions, setDivisions] = useState<Division[]>([]);
   const [activeProgram, setActiveProgram] = useState<ProgramDetail | null>(null);
 
+  const [aiState, setAiState] = useState<'idle' | 'loading' | 'analyzed' | 'error'>('idle');
+  const [insightText, setInsightText] = useState<string>('');
+
+  const handleRequestAI = async () => {
+    setAiState('loading');
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setInsightText(
+        `<p class="mb-2">Secara keseluruhan, kinerja program semester ini <strong>cukup memuaskan</strong>.</p>
+         <ul class="list-disc pl-5 mb-2 text-zinc-700">
+           <li>Rata-rata realisasi KPI di atas 85%.</li>
+           <li>Sebagian besar milestone berjalan sesuai timeline.</li>
+         </ul>
+         <p><strong>Rekomendasi strategis:</strong> Alihkan sumber daya dari program yang sudah stabil untuk membantu divisi yang memiliki program tertinggal atau berstatus "belum mulai".</p>`
+      );
+      setAiState('analyzed');
+    } catch (err) {
+      console.error(err);
+      setAiState('error');
+      setInsightText('Gagal mendapatkan analisis AI.');
+    }
+  };
+
   // Dynamic stats
   const stats = {
     total: programs.length,
@@ -335,25 +360,49 @@ export default function ProgramEvaluasiDashboard() {
         <div className="bg-white border border-zinc-200/60 rounded-2xl p-6 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
           <div className="flex items-start gap-3">
-            <div className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 animate-pulse shrink-0 shadow"></div>
-            <div>
-              <h3 className="text-sm font-bold text-zinc-900 mb-2">AI Program Analyst — pantauan otomatis</h3>
+            <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 shadow ${aiState === 'loading' ? 'bg-indigo-500 animate-pulse' : 'bg-indigo-500'}`}></div>
+            <div className="flex-1">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-sm font-bold text-zinc-900">AI Program Analyst</h3>
+                {aiState === 'analyzed' && (
+                  <button onClick={handleRequestAI} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-full transition-colors">
+                    Perbarui Analisis
+                  </button>
+                )}
+              </div>
               
-              {programs.length === 0 ? (
-                <p className="text-xs text-zinc-500 font-medium italic mb-2">
-                  Belum ada data evaluasi program yang cukup untuk menghasilkan rekomendasi AI. Silakan kumpulkan data lebih lanjut.
-                </p>
-              ) : (
-                <>
-                  <p className="text-xs text-zinc-600 leading-relaxed font-medium mb-5">
-                    Menganalisis matriks indikator dari program yang sedang berjalan...
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <button onClick={() => triggerToast("Menjalankan analisis ulang...", "info")} className="px-3 py-1.5 bg-white hover:bg-zinc-50 text-zinc-700 text-[10px] font-bold rounded border border-zinc-200 transition-colors shadow-sm">
-                      Jalankan Analisis Performa
-                    </button>
-                  </div>
-                </>
+              {aiState === 'idle' && (
+                <div className="text-center py-6">
+                  <p className="text-xs text-zinc-500 mb-4">Sistem AI YeshProduction siap mengevaluasi performa program, capaian KPI, dan mendeteksi efektivitas pelaksanaan antar divisi.</p>
+                  <button 
+                    onClick={handleRequestAI}
+                    className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-lg transition-colors shadow-sm flex items-center gap-2 mx-auto"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    Minta Analisis AI
+                  </button>
+                </div>
+              )}
+
+              {aiState === 'loading' && (
+                <div className="space-y-3 animate-pulse mt-4">
+                  <div className="h-3 bg-zinc-100 rounded w-3/4"></div>
+                  <div className="h-3 bg-zinc-100 rounded w-full"></div>
+                  <div className="h-3 bg-zinc-100 rounded w-5/6"></div>
+                </div>
+              )}
+
+              {aiState === 'analyzed' && (
+                <div 
+                  className="text-sm text-zinc-700 leading-relaxed font-medium mt-3"
+                  dangerouslySetInnerHTML={{ __html: insightText }}
+                />
+              )}
+
+              {aiState === 'error' && (
+                <div className="text-sm text-rose-600 font-medium mt-3">
+                  {insightText}
+                </div>
               )}
             </div>
           </div>

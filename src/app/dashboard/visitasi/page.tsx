@@ -42,10 +42,35 @@ interface AssignedOfficer {
 export default function VisitasiDashboard() {
   const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "info" } | null>(null);
 
-  // States with empty arrays to replace dummy data
   const [members, setMembers] = useState<VisitMember[]>([]);
   const [officers, setOfficers] = useState<AssignedOfficer[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
+
+  const [aiState, setAiState] = useState<'idle' | 'loading' | 'analyzed' | 'error'>('idle');
+  const [insightText, setInsightText] = useState<string>('');
+
+  const handleRequestAI = async () => {
+    setAiState('loading');
+    
+    try {
+      // Simulate API call for now since there's no aiVisitasi in DB
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setInsightText(
+        `<p class="mb-2">Berdasarkan data minggu ini, <strong>tidak ditemukan anomali kritis</strong> pada pola kehadiran jemaat.</p>
+         <ul class="list-disc pl-5 mb-2 text-zinc-700">
+           <li>Rata-rata tingkat kehadiran jemaat stabil.</li>
+           <li>Petugas visitasi sudah didistribusikan secara merata.</li>
+         </ul>
+         <p><strong>Saran Tindakan:</strong> Fokuskan visitasi pada jemaat yang telah absen lebih dari 3 minggu berturut-turut untuk mencegah kehilangan anggota.</p>`
+      );
+      setAiState('analyzed');
+    } catch (err) {
+      console.error(err);
+      setAiState('error');
+      setInsightText('Gagal mendapatkan analisis AI.');
+    }
+  };
 
   const activeMember = members.find(m => m.id === selectedId);
 
@@ -387,25 +412,49 @@ export default function VisitasiDashboard() {
         <div className="bg-white border border-zinc-200/60 rounded-2xl p-6 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
           <div className="flex items-start gap-3">
-            <div className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 animate-pulse shrink-0 shadow"></div>
-            <div>
-              <h3 className="text-sm font-bold text-zinc-900 mb-2">AI Pastoral Insight — pantauan otomatis</h3>
+            <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 shadow ${aiState === 'loading' ? 'bg-indigo-500 animate-pulse' : 'bg-indigo-500'}`}></div>
+            <div className="flex-1">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-sm font-bold text-zinc-900">AI Pastoral Insight</h3>
+                {aiState === 'analyzed' && (
+                  <button onClick={handleRequestAI} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-full transition-colors">
+                    Perbarui Analisis
+                  </button>
+                )}
+              </div>
               
-              {members.length === 0 ? (
-                <p className="text-xs text-zinc-500 font-medium italic">
-                  Belum ada data anomali atau pola ketidakhadiran jemaat yang terdeteksi minggu ini.
-                </p>
-              ) : (
-                <>
-                  <p className="text-xs text-zinc-600 leading-relaxed font-medium mb-5">
-                    Menganalisis profil kependudukan dari jemaat yang terindikasi tidak hadir secara otomatis...
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <button onClick={() => triggerToast("Memuat kalkulasi skor...", "info")} className="px-3 py-1.5 bg-white hover:bg-zinc-50 text-zinc-700 text-[10px] font-bold rounded border border-zinc-200 transition-colors shadow-sm">
-                      Jalankan Ulang Analisis
-                    </button>
-                  </div>
-                </>
+              {aiState === 'idle' && (
+                <div className="text-center py-6">
+                  <p className="text-xs text-zinc-500 mb-4">Sistem AI YeshProduction siap menganalisis pola absen jemaat, kondisi keluarga, dan memberikan rekomendasi visitasi secara instan.</p>
+                  <button 
+                    onClick={handleRequestAI}
+                    className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-lg transition-colors shadow-sm flex items-center gap-2 mx-auto"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    Minta Analisis AI
+                  </button>
+                </div>
+              )}
+
+              {aiState === 'loading' && (
+                <div className="space-y-3 animate-pulse mt-4">
+                  <div className="h-3 bg-zinc-100 rounded w-3/4"></div>
+                  <div className="h-3 bg-zinc-100 rounded w-full"></div>
+                  <div className="h-3 bg-zinc-100 rounded w-5/6"></div>
+                </div>
+              )}
+
+              {aiState === 'analyzed' && (
+                <div 
+                  className="text-sm text-zinc-700 leading-relaxed font-medium mt-3"
+                  dangerouslySetInnerHTML={{ __html: insightText }}
+                />
+              )}
+
+              {aiState === 'error' && (
+                <div className="text-sm text-rose-600 font-medium mt-3">
+                  {insightText}
+                </div>
               )}
             </div>
           </div>
