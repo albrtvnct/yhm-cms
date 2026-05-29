@@ -90,6 +90,7 @@ export async function generateAIContent(prompt: string, options?: AIContentOptio
       // Lanjut ke key OpenRouter berikutnya
     }
   }
+  } // Tambahan kurung tutup untuk block if (provider === 'auto' || provider === 'openrouter')
 
   // Jika semuanya gagal
   throw new Error(`Semua API AI gagal. Kesalahan terakhir: ${lastError?.message || 'Tidak ada API key yang dikonfigurasi'}`);
