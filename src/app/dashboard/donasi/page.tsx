@@ -40,13 +40,7 @@ export default function DonasiDashboard() {
     }
   };
 
-  const historyData: DonationHistory[] = [
-    { id: "1", category: "Persepuluhan", date: "25 Mei", method: "QRIS", amount: "Rp 500.000" },
-    { id: "2", category: "Persembahan umum", date: "25 Mei", method: "QRIS", amount: "Rp 150.000" },
-    { id: "3", category: "Misi", date: "18 Mei", method: "Transfer", amount: "Rp 200.000" },
-    { id: "4", category: "Persepuluhan", date: "18 Mei", method: "QRIS", amount: "Rp 500.000" },
-    { id: "5", category: "Persembahan umum", date: "11 Mei", method: "Tunai", amount: "Rp 100.000" },
-  ];
+  const historyData: DonationHistory[] = [];
 
   const getMethodBadge = (method: string) => {
     if (method === "QRIS") return "bg-emerald-50 text-emerald-600 border-emerald-200";
@@ -84,11 +78,8 @@ export default function DonasiDashboard() {
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             Total persembahan
           </div>
-          <div className="mt-3 text-3xl font-extrabold">87,4 jt</div>
-          <div className="text-xs text-emerald-400 font-bold mt-1 flex items-center gap-1">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
-            12% dari bulan lalu
-          </div>
+          <div className="mt-3 text-3xl font-extrabold">0</div>
+          <div className="text-xs text-zinc-500 font-bold mt-1">Data belum masuk</div>
         </div>
         {/* Card 2 */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group hover:shadow-md transition-shadow">
@@ -96,8 +87,8 @@ export default function DonasiDashboard() {
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
             Via QRIS
           </div>
-          <div className="mt-3 text-3xl font-extrabold">34,2 jt</div>
-          <div className="text-xs text-zinc-400 font-medium mt-1">39% dari total</div>
+          <div className="mt-3 text-3xl font-extrabold">0</div>
+          <div className="text-xs text-zinc-500 font-medium mt-1">0% dari total</div>
         </div>
         {/* Card 3 */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group hover:shadow-md transition-shadow">
@@ -105,8 +96,8 @@ export default function DonasiDashboard() {
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
             Via transfer
           </div>
-          <div className="mt-3 text-3xl font-extrabold">28,6 jt</div>
-          <div className="text-xs text-zinc-400 font-medium mt-1">33% dari total</div>
+          <div className="mt-3 text-3xl font-extrabold">0</div>
+          <div className="text-xs text-zinc-500 font-medium mt-1">0% dari total</div>
         </div>
         {/* Card 4 */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group hover:shadow-md transition-shadow">
@@ -114,8 +105,8 @@ export default function DonasiDashboard() {
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
             Tunai (kolekte)
           </div>
-          <div className="mt-3 text-3xl font-extrabold">24,6 jt</div>
-          <div className="text-xs text-zinc-400 font-medium mt-1">28% dari total</div>
+          <div className="mt-3 text-3xl font-extrabold">0</div>
+          <div className="text-xs text-zinc-500 font-medium mt-1">0% dari total</div>
         </div>
       </div>
 
@@ -258,7 +249,7 @@ export default function DonasiDashboard() {
       <div className="mt-10 relative">
         <div className="flex justify-between items-center mb-3">
           <div className="text-xs font-black text-zinc-400 tracking-[0.2em] uppercase ml-1">
-            RIWAYAT DONASI PER JEMAAT &mdash; SARI RAHAYU
+            RIWAYAT DONASI JEMAAT
           </div>
           <span className="bg-rose-50 text-rose-600 border border-rose-200 text-[9px] font-black px-2 py-0.5 rounded flex items-center gap-1 uppercase tracking-wider">
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
@@ -270,17 +261,11 @@ export default function DonasiDashboard() {
           {/* Header Table / Member Info */}
           <div className="bg-zinc-900 p-5 flex justify-between items-center">
             <div className="flex gap-4 items-center">
-              <div className="w-10 h-10 rounded-full font-black text-xs flex items-center justify-center shrink-0 bg-white text-zinc-900 shadow-sm">
-                SR
-              </div>
               <div>
-                <h3 className="text-sm font-extrabold text-white mb-0.5">Sari Rahayu</h3>
-                <p className="text-[10px] text-zinc-400 font-medium">NO: 00412 &bull; Total tahun ini: Rp 6.250.000</p>
+                <h3 className="text-sm font-extrabold text-white mb-0.5">Semua Jemaat</h3>
+                <p className="text-[10px] text-zinc-400 font-medium">Pilih jemaat untuk melihat detail</p>
               </div>
             </div>
-            <button onClick={() => triggerToast("Form kirim pesan ke Sari Rahayu dibuka.", "info")} className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors">
-              Kirim WA
-            </button>
           </div>
           
           {/* Table */}
@@ -295,18 +280,26 @@ export default function DonasiDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {historyData.map((row, idx) => (
-                  <tr key={row.id} className={`border-b border-zinc-100 hover:bg-zinc-50/50 transition-colors ${idx === 0 ? 'bg-indigo-50/20' : ''}`}>
-                    <td className="px-5 py-4 text-xs font-bold text-zinc-800">{row.category}</td>
-                    <td className="px-5 py-4 text-xs font-medium text-zinc-500">{row.date}</td>
-                    <td className="px-5 py-4">
-                      <span className={`px-2.5 py-1 rounded text-[9px] font-black border tracking-wider ${getMethodBadge(row.method)}`}>
-                        {row.method}
-                      </span>
+                {historyData.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-5 py-8 text-center text-xs text-zinc-500 font-medium italic border-b border-zinc-100 bg-zinc-50/30">
+                      Belum ada data donasi yang tercatat.
                     </td>
-                    <td className="px-5 py-4 text-xs font-black text-emerald-600 text-right">{row.amount}</td>
                   </tr>
-                ))}
+                ) : (
+                  historyData.map((row, idx) => (
+                    <tr key={row.id} className={`border-b border-zinc-100 hover:bg-zinc-50/50 transition-colors ${idx === 0 ? 'bg-indigo-50/20' : ''}`}>
+                      <td className="px-5 py-4 text-xs font-bold text-zinc-800">{row.category}</td>
+                      <td className="px-5 py-4 text-xs font-medium text-zinc-500">{row.date}</td>
+                      <td className="px-5 py-4">
+                        <span className={`px-2.5 py-1 rounded text-[9px] font-black border tracking-wider ${getMethodBadge(row.method)}`}>
+                          {row.method}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-xs font-black text-emerald-600 text-right">{row.amount}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -325,7 +318,7 @@ export default function DonasiDashboard() {
               Distribusi per kategori
             </h3>
             <div className="bg-indigo-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm">
-              Total Rp 87,4 jt
+              Total Rp 0
             </div>
           </div>
           
@@ -333,37 +326,37 @@ export default function DonasiDashboard() {
             <div className="flex items-center gap-4">
               <div className="w-32 text-xs font-bold text-zinc-700 shrink-0 truncate">Persembahan umum</div>
               <div className="flex-1 bg-zinc-100 rounded-full h-2.5 overflow-hidden flex items-center shadow-inner">
-                <div className="h-full rounded-full bg-emerald-500" style={{ width: '52%' }}></div>
+                <div className="h-full rounded-full bg-emerald-500" style={{ width: '0%' }}></div>
               </div>
-              <div className="w-16 text-right text-xs font-black text-zinc-900 shrink-0">Rp 45,4 jt</div>
+              <div className="w-16 text-right text-xs font-black text-zinc-400 shrink-0">Rp 0</div>
             </div>
             <div className="flex items-center gap-4">
               <div className="w-32 text-xs font-bold text-zinc-700 shrink-0 truncate">Persepuluhan</div>
               <div className="flex-1 bg-zinc-100 rounded-full h-2.5 overflow-hidden flex items-center shadow-inner">
-                <div className="h-full rounded-full bg-indigo-500" style={{ width: '23%' }}></div>
+                <div className="h-full rounded-full bg-indigo-500" style={{ width: '0%' }}></div>
               </div>
-              <div className="w-16 text-right text-xs font-black text-zinc-900 shrink-0">Rp 20,1 jt</div>
+              <div className="w-16 text-right text-xs font-black text-zinc-400 shrink-0">Rp 0</div>
             </div>
             <div className="flex items-center gap-4">
               <div className="w-32 text-xs font-bold text-zinc-700 shrink-0 truncate">Misi & penginjilan</div>
               <div className="flex-1 bg-zinc-100 rounded-full h-2.5 overflow-hidden flex items-center shadow-inner">
-                <div className="h-full rounded-full bg-sky-500" style={{ width: '9%' }}></div>
+                <div className="h-full rounded-full bg-sky-500" style={{ width: '0%' }}></div>
               </div>
-              <div className="w-16 text-right text-xs font-black text-zinc-900 shrink-0">Rp 7,9 jt</div>
+              <div className="w-16 text-right text-xs font-black text-zinc-400 shrink-0">Rp 0</div>
             </div>
             <div className="flex items-center gap-4">
               <div className="w-32 text-xs font-bold text-zinc-700 shrink-0 truncate">Diakonia</div>
               <div className="flex-1 bg-zinc-100 rounded-full h-2.5 overflow-hidden flex items-center shadow-inner">
-                <div className="h-full rounded-full bg-amber-500" style={{ width: '8%' }}></div>
+                <div className="h-full rounded-full bg-amber-500" style={{ width: '0%' }}></div>
               </div>
-              <div className="w-16 text-right text-xs font-black text-zinc-900 shrink-0">Rp 7,0 jt</div>
+              <div className="w-16 text-right text-xs font-black text-zinc-400 shrink-0">Rp 0</div>
             </div>
             <div className="flex items-center gap-4">
               <div className="w-32 text-xs font-bold text-zinc-700 shrink-0 truncate">Pembangunan</div>
               <div className="flex-1 bg-zinc-100 rounded-full h-2.5 overflow-hidden flex items-center shadow-inner">
-                <div className="h-full rounded-full bg-rose-500" style={{ width: '8%' }}></div>
+                <div className="h-full rounded-full bg-rose-500" style={{ width: '0%' }}></div>
               </div>
-              <div className="w-16 text-right text-xs font-black text-zinc-900 shrink-0">Rp 7,0 jt</div>
+              <div className="w-16 text-right text-xs font-black text-zinc-400 shrink-0">Rp 0</div>
             </div>
           </div>
           
@@ -439,41 +432,9 @@ export default function DonasiDashboard() {
         </div>
       </div>
 
-      {/* Fitur Lengkap Modul Donasi Digital */}
-      <div className="mt-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white border border-zinc-200/60 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-zinc-300 transition-all">
-            <svg className="w-5 h-5 text-zinc-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-            <h4 className="text-sm font-bold text-zinc-900 mb-2">QRIS dinamis per kategori</h4>
-            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">Scan QR code dengan pilihan kategori jemaat, pilih persembahan umum, persepuluhan, atau misi sebelum bayar.</p>
-          </div>
-          <div className="bg-white border border-zinc-200/60 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-zinc-300 transition-all">
-            <svg className="w-5 h-5 text-emerald-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <h4 className="text-sm font-bold text-zinc-900 mb-2">Konfirmasi real-time</h4>
-            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">Pembayaran terdeteksi otomatis, jemaat dapat ucapan terima kasih WA, bendahara dapat notifikasi, sistem catat ke keuangan.</p>
-          </div>
-          <div className="bg-white border border-zinc-200/60 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-zinc-300 transition-all">
-            <svg className="w-5 h-5 text-indigo-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-            <h4 className="text-sm font-bold text-zinc-900 mb-2">Riwayat per jemaat</h4>
-            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">Setiap jemaat punya riwayat lengkap semua donasi yang pernah diberikan. Bisa dilihat pengurus khusus atau oleh jemaat sendiri.</p>
-          </div>
-          <div className="bg-white border border-zinc-200/60 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-zinc-300 transition-all">
-            <svg className="w-5 h-5 text-amber-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-            <h4 className="text-sm font-bold text-zinc-900 mb-2">Donasi rutin</h4>
-            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">Jemaat bisa setup auto-transfer bulanan. Sistem kirim reminder sebelum tanggal jika belum ada konfirmasi masuk.</p>
-          </div>
-          <div className="bg-white border border-zinc-200/60 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-zinc-300 transition-all">
-            <svg className="w-5 h-5 text-sky-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-            <h4 className="text-sm font-bold text-zinc-900 mb-2">Integrasi modul keuangan</h4>
-            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">Setiap donasi otomatis masuk ke modul keuangan dengan kategori yang tepat. Tidak ada double-entry oleh bendahara.</p>
-          </div>
-          <div className="bg-white border border-zinc-200/60 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-zinc-300 transition-all">
-            <svg className="w-5 h-5 text-rose-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            <h4 className="text-sm font-bold text-zinc-900 mb-2">Tanda terima digital</h4>
-            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">Jemaat bisa minta tanda terima PDF resmi berlogo gereja untuk keperluan pelaporan atau dokumentasi pribadi.</p>
-          </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }
