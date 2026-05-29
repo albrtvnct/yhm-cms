@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
       "cmsyhm.vercel.app",
       "yeshproduction.my.id",
       "www.yeshproduction.my.id",
+      "https://yeshproduction.my.id",
+      "https://www.yeshproduction.my.id",
     ],
   },
 };
