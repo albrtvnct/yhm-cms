@@ -441,39 +441,36 @@ export default function DonasiDashboard() {
 
       {/* Fitur Lengkap Modul Donasi Digital */}
       <div className="mt-10">
-        <div className="text-xs font-black text-zinc-400 tracking-[0.2em] uppercase mb-3 ml-1">
-          FITUR LENGKAP MODUL DONASI DIGITAL
-        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 text-white shadow-sm hover:border-zinc-700 transition-colors">
+          <div className="bg-white border border-zinc-200/60 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-zinc-300 transition-all">
             <svg className="w-5 h-5 text-zinc-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-            <h4 className="text-sm font-bold mb-2">QRIS dinamis per kategori</h4>
-            <p className="text-[10px] text-zinc-400 leading-relaxed font-medium">Scan QR code dengan pilihan kategori jemaat, pilih persembahan umum, persepuluhan, atau misi sebelum bayar.</p>
+            <h4 className="text-sm font-bold text-zinc-900 mb-2">QRIS dinamis per kategori</h4>
+            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">Scan QR code dengan pilihan kategori jemaat, pilih persembahan umum, persepuluhan, atau misi sebelum bayar.</p>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 text-white shadow-sm hover:border-zinc-700 transition-colors">
+          <div className="bg-white border border-zinc-200/60 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-zinc-300 transition-all">
             <svg className="w-5 h-5 text-emerald-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <h4 className="text-sm font-bold mb-2">Konfirmasi real-time</h4>
-            <p className="text-[10px] text-zinc-400 leading-relaxed font-medium">Pembayaran terdeteksi otomatis, jemaat dapat ucapan terima kasih WA, bendahara dapat notifikasi, sistem catat ke keuangan.</p>
+            <h4 className="text-sm font-bold text-zinc-900 mb-2">Konfirmasi real-time</h4>
+            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">Pembayaran terdeteksi otomatis, jemaat dapat ucapan terima kasih WA, bendahara dapat notifikasi, sistem catat ke keuangan.</p>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 text-white shadow-sm hover:border-zinc-700 transition-colors">
-            <svg className="w-5 h-5 text-indigo-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-            <h4 className="text-sm font-bold mb-2">Riwayat per jemaat</h4>
-            <p className="text-[10px] text-zinc-400 leading-relaxed font-medium">Setiap jemaat punya riwayat lengkap semua donasi yang pernah diberikan. Bisa dilihat pengurus khusus atau oleh jemaat sendiri.</p>
+          <div className="bg-white border border-zinc-200/60 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-zinc-300 transition-all">
+            <svg className="w-5 h-5 text-indigo-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+            <h4 className="text-sm font-bold text-zinc-900 mb-2">Riwayat per jemaat</h4>
+            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">Setiap jemaat punya riwayat lengkap semua donasi yang pernah diberikan. Bisa dilihat pengurus khusus atau oleh jemaat sendiri.</p>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 text-white shadow-sm hover:border-zinc-700 transition-colors">
-            <svg className="w-5 h-5 text-amber-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-            <h4 className="text-sm font-bold mb-2">Donasi rutin</h4>
-            <p className="text-[10px] text-zinc-400 leading-relaxed font-medium">Jemaat bisa setup auto-transfer bulanan. Sistem kirim reminder sebelum tanggal jika belum ada konfirmasi masuk.</p>
+          <div className="bg-white border border-zinc-200/60 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-zinc-300 transition-all">
+            <svg className="w-5 h-5 text-amber-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            <h4 className="text-sm font-bold text-zinc-900 mb-2">Donasi rutin</h4>
+            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">Jemaat bisa setup auto-transfer bulanan. Sistem kirim reminder sebelum tanggal jika belum ada konfirmasi masuk.</p>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 text-white shadow-sm hover:border-zinc-700 transition-colors">
-            <svg className="w-5 h-5 text-sky-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-            <h4 className="text-sm font-bold mb-2">Integrasi modul keuangan</h4>
-            <p className="text-[10px] text-zinc-400 leading-relaxed font-medium">Setiap donasi otomatis masuk ke modul keuangan dengan kategori yang tepat. Tidak ada double-entry oleh bendahara.</p>
+          <div className="bg-white border border-zinc-200/60 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-zinc-300 transition-all">
+            <svg className="w-5 h-5 text-sky-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+            <h4 className="text-sm font-bold text-zinc-900 mb-2">Integrasi modul keuangan</h4>
+            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">Setiap donasi otomatis masuk ke modul keuangan dengan kategori yang tepat. Tidak ada double-entry oleh bendahara.</p>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 text-white shadow-sm hover:border-zinc-700 transition-colors">
-            <svg className="w-5 h-5 text-rose-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            <h4 className="text-sm font-bold mb-2">Tanda terima digital</h4>
-            <p className="text-[10px] text-zinc-400 leading-relaxed font-medium">Jemaat bisa minta tanda terima PDF resmi berlogo gereja untuk keperluan pelaporan atau dokumentasi pribadi.</p>
+          <div className="bg-white border border-zinc-200/60 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-zinc-300 transition-all">
+            <svg className="w-5 h-5 text-rose-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            <h4 className="text-sm font-bold text-zinc-900 mb-2">Tanda terima digital</h4>
+            <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">Jemaat bisa minta tanda terima PDF resmi berlogo gereja untuk keperluan pelaporan atau dokumentasi pribadi.</p>
           </div>
         </div>
       </div>
