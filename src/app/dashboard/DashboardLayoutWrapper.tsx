@@ -39,7 +39,6 @@ export default function DashboardLayoutWrapper({
         
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto py-6 px-4">
-          <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 px-2">Menu Utama</div>
           <div onClick={() => setSidebarOpen(false)}>
             <SidebarNav />
           </div>

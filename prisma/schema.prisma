@@ -19,6 +19,7 @@ model Church {
   aiKeuangan       String?
   aiJemaat         String?
   aiKehadiran      String?
+  aiInventaris     String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -31,6 +32,7 @@ model Church {
   financeTransactions FinanceTransaction[]
   families            Family[]
   attendanceRecords   AttendanceRecord[]
+  inventoryItems      InventoryItem[]
 }
 
 model User {
@@ -151,4 +153,18 @@ model AttendanceRecord {
   female      Int      @default(0)
   notes       String?
   createdAt   DateTime @default(now())
+}
+
+model InventoryItem {
+  id        String   @id @default(cuid())
+  name      String
+  code      String
+  price     Float
+  condition String
+  division  String
+  notes     String?
+  churchId  String
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
