@@ -32,6 +32,7 @@ export default function KeuanganDashboard() {
   const [aiState, setAiState] = useState<'idle' | 'loading' | 'analyzed' | 'error'>('idle');
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [insightText, setInsightText] = useState<string>('');
+  const [trends, setTrends] = useState<{ trendPemasukan?: string, trendPengeluaran?: string, trendSaldo?: string, trendRataRata?: string } | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
@@ -56,7 +57,15 @@ export default function KeuanganDashboard() {
       // @ts-ignore
       setTransactions(res.data.transactions);
       if (res.data.aiInsight) {
-        setInsightText(res.data.aiInsight);
+        try {
+          const parsed = JSON.parse(res.data.aiInsight);
+          setInsightText(parsed.insight || res.data.aiInsight);
+          if (parsed.trendPemasukan) {
+            setTrends(parsed);
+          }
+        } catch (e) {
+          setInsightText(res.data.aiInsight);
+        }
         setAiState('analyzed');
       }
     } else {
@@ -135,6 +144,12 @@ export default function KeuanganDashboard() {
       }
       
       setInsightText(data.insight);
+      setTrends({
+        trendPemasukan: data.trendPemasukan,
+        trendPengeluaran: data.trendPengeluaran,
+        trendSaldo: data.trendSaldo,
+        trendRataRata: data.trendRataRata
+      });
       setAiState('analyzed');
       setLastUpdated(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
     } catch (err: unknown) {
@@ -189,17 +204,17 @@ export default function KeuanganDashboard() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {[
-          { label: "Pemasukan", val: summaryData?.pemasukan || 0, trend: "+12% vs lalu", icon: "M12 4v16m8-8H4", color: "emerald" },
-          { label: "Pengeluaran", val: summaryData?.pengeluaran || 0, trend: "+5% vs lalu", icon: "M20 12H4", color: "rose" },
+          { label: "Pemasukan", val: summaryData?.pemasukan || 0, trend: trends?.trendPemasukan || "Belum ada analisis AI", icon: "M12 4v16m8-8H4", color: "emerald" },
+          { label: "Pengeluaran", val: summaryData?.pengeluaran || 0, trend: trends?.trendPengeluaran || "Belum ada analisis AI", icon: "M20 12H4", color: "rose" },
           { 
             label: "Saldo Bersih", 
             val: summaryData?.saldo || 0, 
-            trend: (summaryData?.saldo || 0) === 0 ? "Belum ada data / data belum cukup" : ((summaryData?.saldo || 0) > 0 ? "Surplus" : "Defisit"), 
+            trend: trends?.trendSaldo || ((summaryData?.saldo || 0) === 0 ? "Belum ada data / data belum cukup" : ((summaryData?.saldo || 0) > 0 ? "Surplus" : "Defisit")), 
             icon: "M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3", 
             color: (summaryData?.saldo || 0) >= 0 ? "emerald" : "rose", 
             highlight: true 
           },
-          { label: "Rata/Jemaat", val: summaryData?.rataRata || 0, trend: "+3% vs rata-rata", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z", color: "emerald" },
+          { label: "Rata/Jemaat", val: summaryData?.rataRata || 0, trend: trends?.trendRataRata || "Belum ada analisis AI", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z", color: "emerald" },
         ].map((card, i) => (
           <div key={i} className={`p-6 rounded-3xl shadow-sm flex flex-col justify-between h-40 border relative overflow-hidden transition-all hover:-translate-y-1 duration-300 ${card.highlight ? 'bg-zinc-900 border-zinc-800 text-white shadow-[0_8px_30px_rgba(0,0,0,0.12)]' : 'bg-white border-zinc-200/60 text-zinc-900 hover:shadow-md'}`}>
             {card.highlight && <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>}
