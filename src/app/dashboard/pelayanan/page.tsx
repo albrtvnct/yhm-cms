@@ -492,7 +492,7 @@ export default function PelayananDashboard() {
     // Logo / Branding on top right
     ctx.fillStyle = "#18181b";
     ctx.font = "extrabold 22px Inter, Arial, sans-serif";
-    ctx.fillText("✝ ChurchOS", 780, 70);
+    ctx.fillText("✝ YeshProduction", 780, 70);
 
     // Table Headers
     ctx.fillStyle = "#71717a";
@@ -576,7 +576,7 @@ export default function PelayananDashboard() {
 
     ctx.fillStyle = "#71717a";
     ctx.font = "medium 11px Inter, Arial, sans-serif";
-    ctx.fillText("Diekspor otomatis dari ChurchOS Scheduler Admin. Data riil & terkonfirmasi lewat WhatsApp Gateway.", 50, canvas.height - 25);
+    ctx.fillText("Diekspor otomatis dari YeshProduction Scheduler Admin. Data riil & terkonfirmasi lewat WhatsApp Gateway.", 50, canvas.height - 25);
     ctx.fillText("Tanggal Ekspor: " + new Date().toLocaleString("id-ID"), 700, canvas.height - 25);
 
     // Save & Trigger Download
@@ -1001,7 +1001,7 @@ export default function PelayananDashboard() {
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                       <div className="text-xs font-bold text-zinc-500">
-                        Bot ChurchOS &rarr; <span className="text-zinc-900 font-extrabold">
+                        Bot YeshProduction &rarr; <span className="text-zinc-900 font-extrabold">
                           {selectedRow.servants === "Belum ditugaskan" ? "(Pilih Pelayan)" : selectedRow.servants.split(" - ")[0]}
                         </span>
                       </div>
@@ -1350,7 +1350,7 @@ Mohon konfirmasi kehadiranmu ya 🙏`
             </h3>
             <div className="text-xs text-zinc-500 leading-relaxed font-medium space-y-3 mt-4">
               <p>
-                Sistem ChurchOS menggunakan algoritma antrean prioritas adil untuk mengusulkan draf jadwal secara otomatis setiap bulannya.
+                Sistem YeshProduction menggunakan algoritma antrean prioritas adil untuk mengusulkan draf jadwal secara otomatis setiap bulannya.
               </p>
               <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3.5 space-y-2.5 text-zinc-700">
                 <div className="flex gap-2">

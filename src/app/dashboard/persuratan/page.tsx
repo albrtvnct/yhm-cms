@@ -168,7 +168,7 @@ export default function PersuratanDashboard() {
         
         doc.setFontSize(22);
         doc.setTextColor(183, 28, 28);
-        doc.text("Informasi Dokumen - ChurchOS", 105, 20, { align: "center" });
+        doc.text("Informasi Dokumen - YeshProduction", 105, 20, { align: "center" });
         
         doc.setFontSize(14);
         doc.setTextColor(0, 0, 0);
@@ -182,7 +182,7 @@ export default function PersuratanDashboard() {
           doc.text("STATUS: Telah Ditandatangani secara Digital (QR)", 20, 90);
           doc.setTextColor(100, 100, 100);
           doc.setFontSize(10);
-          doc.text("Dokumen ini valid dan tersertifikasi oleh sistem ChurchOS.", 20, 100);
+          doc.text("Dokumen ini valid dan tersertifikasi oleh sistem YeshProduction.", 20, 100);
         }
         
         doc.save(fileName);
@@ -197,7 +197,7 @@ export default function PersuratanDashboard() {
             properties: {},
             children: [
               new Paragraph({
-                text: "DRAFT SURAT KELUAR - ChurchOS",
+                text: "DRAFT SURAT KELUAR - YeshProduction",
                 heading: HeadingLevel.HEADING_1,
                 spacing: { after: 400 }
               }),

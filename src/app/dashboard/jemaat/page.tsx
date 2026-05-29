@@ -488,7 +488,7 @@ export default function JemaatDashboard() {
                 <div className="mt-4">
                   {aiState === 'idle' ? (
                     <div className="text-sm text-zinc-400 italic border-l-2 border-purple-500/30 pl-4 py-2">
-                      Sistem AI ChurchOS siap menganalisis pola kehadiran, data kelompok usia, dan memberikan rekomendasi penjangkauan jemaat secara instan.
+                      Sistem AI YeshProduction siap menganalisis pola kehadiran, data kelompok usia, dan memberikan rekomendasi penjangkauan jemaat secara instan.
                     </div>
                   ) : aiState === 'loading' ? (
                     <div className="flex items-center gap-3 text-sm text-purple-300 font-medium animate-pulse border-l-2 border-purple-500 pl-4 py-2">

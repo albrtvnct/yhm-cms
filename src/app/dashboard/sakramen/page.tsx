@@ -1064,7 +1064,7 @@ export default function SakramenDashboard() {
                 </div>
                 <div className="text-center relative">
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 border border-dashed border-indigo-400/40 rounded-full flex items-center justify-center rotate-12 text-[7px] text-indigo-500/50 font-black pointer-events-none uppercase">
-                    CHURCHOS SEAL
+                    YESHPRODUCTION SEAL
                   </div>
                   <span className="block text-[10px] text-zinc-400 font-bold mb-6">GEMBALA SIDANG</span>
                   <span className="block text-xs font-bold text-zinc-800 border-b border-zinc-200 pb-1 max-w-[120px] mx-auto italic font-serif">

@@ -2,6 +2,69 @@
 
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { generateAIContent } from "@/lib/ai-service";
+
+async function updateKeuanganTrends(churchId: string) {
+  try {
+    const income = await prisma.financeTransaction.aggregate({
+      where: { churchId, type: "INCOME" },
+      _sum: { amount: true }
+    });
+
+    const expense = await prisma.financeTransaction.aggregate({
+      where: { churchId, type: "EXPENSE" },
+      _sum: { amount: true }
+    });
+
+    const pemasukan = income._sum.amount || 0;
+    const pengeluaran = expense._sum.amount || 0;
+    const saldo = pemasukan - pengeluaran;
+
+    const prompt = `Anda adalah AI Financial Analyst. 
+Berdasarkan data keuangan bulan ini:
+Pemasukan: Rp ${pemasukan.toLocaleString('id-ID')}
+Pengeluaran: Rp ${pengeluaran.toLocaleString('id-ID')}
+Saldo Bersih: Rp ${saldo.toLocaleString('id-ID')}
+
+Berikan analisis tren singkat (maksimal 3-4 kata) untuk masing-masing metrik: Pemasukan, Pengeluaran, Saldo Bersih, dan Rata-rata per Jemaat (Katakan saja "Belum cukup data" jika data 0).
+
+WAJIB KEMBALIKAN OUTPUT MURNI DALAM FORMAT JSON SEPERTI BERIKUT TANPA MARKDOWN BLOK KODE:
+{
+  "trendPemasukan": "Tinggi bulan ini",
+  "trendPengeluaran": "Normal",
+  "trendSaldo": "Surplus aman",
+  "trendRataRata": "Belum ada data"
+}`;
+
+    const rawResponse = await generateAIContent(prompt, { provider: 'openrouter' });
+    let cleanedResponse = rawResponse.replace(/\`\`\`json\n?/g, '').replace(/\`\`\`/g, '').trim();
+    
+    let parsedJson = JSON.parse(cleanedResponse);
+
+    const church = await prisma.church.findUnique({ where: { id: churchId } });
+    let currentData: any = {};
+    if (church?.aiKeuangan) {
+      try {
+        currentData = JSON.parse(church.aiKeuangan);
+      } catch (e) {
+        currentData = { insight: church.aiKeuangan };
+      }
+    }
+
+    currentData.trendPemasukan = parsedJson.trendPemasukan || "Belum cukup data";
+    currentData.trendPengeluaran = parsedJson.trendPengeluaran || "Belum cukup data";
+    currentData.trendSaldo = parsedJson.trendSaldo || "Belum cukup data";
+    currentData.trendRataRata = parsedJson.trendRataRata || "Belum cukup data";
+
+    await prisma.church.update({
+      where: { id: churchId },
+      data: { aiKeuangan: JSON.stringify(currentData) }
+    });
+  } catch (err) {
+    console.error("Failed to update Keuangan Trends", err);
+  }
+}
+
 
 export async function getKeuanganData() {
   try {
@@ -112,6 +175,8 @@ export async function addTransaction(data: any) {
       }
     });
 
+    await updateKeuanganTrends(churchId);
+
     return { success: true };
   } catch (error: any) {
     console.error("Error adding transaction:", error);
@@ -156,6 +221,8 @@ export async function deleteTransaction(id: string) {
       await tx.financeTransaction.delete({ where: { id } });
     });
 
+    await updateKeuanganTrends(churchId);
+
     return { success: true };
   } catch (error: any) {
     console.error("Error deleting transaction:", error);
@@ -184,6 +251,8 @@ export async function addDivision(data: any) {
     // Usually 'val' is the nominal spent. 'percent' is the progress percentage (0-100+). 
     // So warn = percent > 100. Let's use that.
 
+    await updateKeuanganTrends(churchId);
+
     return { success: true };
   } catch (error: any) {
     console.error("Error adding division:", error);
@@ -197,6 +266,12 @@ export async function deleteDivision(id: string) {
     if (!session) throw new Error("Unauthorized");
     
     await prisma.financeDivision.delete({ where: { id } });
+    
+    const div = await prisma.financeDivision.findUnique({ where: { id }});
+    // Can't reliably get churchId from deleted record easily without a transaction or finding it first
+    // But we know session.churchId
+    await updateKeuanganTrends(session.churchId);
+
     return { success: true };
   } catch (error: any) {
     console.error("Error deleting division:", error);
@@ -219,6 +294,9 @@ export async function updateDivision(id: string, data: any) {
         warn: parseFloat(data.percent) > 100
       }
     });
+
+    await updateKeuanganTrends(session.churchId);
+
     return { success: true };
   } catch (error: any) {
     console.error("Error updating division:", error);

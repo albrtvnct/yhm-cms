@@ -209,7 +209,7 @@ export default function KeuanganDashboard() {
           { 
             label: "Saldo Bersih", 
             val: summaryData?.saldo || 0, 
-            trend: trends?.trendSaldo || ((summaryData?.saldo || 0) === 0 ? "Belum ada data / data belum cukup" : ((summaryData?.saldo || 0) > 0 ? "Surplus" : "Defisit")), 
+            trend: trends?.trendSaldo || "Belum ada analisis AI", 
             icon: "M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3", 
             color: (summaryData?.saldo || 0) >= 0 ? "emerald" : "rose", 
             highlight: true 
@@ -361,7 +361,7 @@ export default function KeuanganDashboard() {
               <div className="mt-4">
                 {aiState === 'idle' ? (
                   <div className="text-sm text-zinc-400 italic border-l-2 border-purple-500/30 pl-4 py-2">
-                    Sistem AI ChurchOS siap menganalisis tren keuangan, kebocoran anggaran, dan memberikan wawasan kesehatan kas secara instan.
+                    Sistem AI YeshProduction siap menganalisis tren keuangan, kebocoran anggaran, dan memberikan wawasan kesehatan kas secara instan.
                   </div>
                 ) : aiState === 'loading' ? (
                   <div className="flex items-center gap-3 text-sm text-purple-300 font-medium animate-pulse border-l-2 border-purple-500 pl-4 py-2">
