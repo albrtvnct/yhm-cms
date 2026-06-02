@@ -40,7 +40,10 @@ export default function DashboardLayoutWrapper({
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto py-6 px-4">
           <div onClick={() => setSidebarOpen(false)}>
-            <SidebarNav />
+            <SidebarNav 
+              role={user.role} 
+              rolePermissions={user.church.rolePermissions || {}} 
+            />
           </div>
         </div>
 

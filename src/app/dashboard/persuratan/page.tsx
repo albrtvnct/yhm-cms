@@ -13,10 +13,6 @@ interface Letter {
   fileName: string;
   fileSize: number;
   uploadDate: string;
-  isAiGenerated?: boolean;
-  isSigned?: boolean;
-  aiTemplate?: string;
-  aiPrompt?: string;
 }
 
 export default function PersuratanDashboard() {
@@ -31,11 +27,6 @@ export default function PersuratanDashboard() {
   const [formSenderRecipient, setFormSenderRecipient] = useState("");
   const [formSubject, setFormSubject] = useState("");
   
-  // AI vs Upload Toggle
-  const [creationMethod, setCreationMethod] = useState<"UPLOAD" | "AI">("UPLOAD");
-  const [aiTemplate, setAiTemplate] = useState("Surat Undangan");
-  const [aiPrompt, setAiPrompt] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
 
   // File Upload State
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -89,44 +80,12 @@ export default function PersuratanDashboard() {
     setFormSenderRecipient("");
     setFormSubject("");
     setSelectedFile(null);
-    setAiPrompt("");
+
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (formType === "Surat Keluar" && creationMethod === "AI") {
-      if (!aiPrompt) {
-        triggerToast("Harap masukkan instruksi/poin isi surat untuk AI.", "error");
-        return;
-      }
-      setIsGenerating(true);
-      // Simulate AI Generation
-      setTimeout(() => {
-        const newLetter: Letter = {
-          id: `letter-${Date.now()}`,
-          type: "Surat Keluar",
-          number: formNumber,
-          date: formDate,
-          senderOrRecipient: formSenderRecipient,
-          subject: formSubject,
-          fileName: `[AI]_${aiTemplate.replace(/\s+/g, "_")}_Draft.docx`,
-          fileSize: 45000, // mock 45KB docx
-          uploadDate: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
-          isAiGenerated: true,
-          isSigned: false,
-          aiTemplate: aiTemplate,
-          aiPrompt: aiPrompt
-        };
-        setLetters([newLetter, ...letters]);
-        setIsGenerating(false);
-        setShowModal(false);
-        resetForm();
-        triggerToast("Draft Surat Keluar berhasil di-generate oleh AI!", "success");
-      }, 2500);
-      return;
-    }
 
     // Manual Upload Logic
     if (!selectedFile) {
@@ -152,10 +111,6 @@ export default function PersuratanDashboard() {
     triggerToast(`Data ${formType} berhasil ditambahkan!`, "success");
   };
 
-  const handleSignQR = (id: string) => {
-    setLetters(letters.map(l => l.id === id ? { ...l, isSigned: true, fileName: l.fileName.replace("_Draft.docx", "_Signed.pdf") } : l));
-    triggerToast("Tanda tangan PIC dan QR Code berhasil dibubuhkan secara digital!", "success");
-  };
 
   const handleDownload = async (fileName: string, letter: Letter) => {
     triggerToast(`Memproses file ${fileName}...`, "info");
@@ -177,72 +132,11 @@ export default function PersuratanDashboard() {
         doc.text(`Perihal: ${letter.subject}`, 20, 60);
         doc.text(`Pengirim/Tujuan: ${letter.senderOrRecipient}`, 20, 70);
         
-        if (letter.isSigned) {
-          doc.setTextColor(34, 197, 94); // Green
-          doc.text("STATUS: Telah Ditandatangani secara Digital (QR)", 20, 90);
-          doc.setTextColor(100, 100, 100);
-          doc.setFontSize(10);
-          doc.text("Dokumen ini valid dan tersertifikasi oleh sistem YeshProduction.", 20, 100);
-        }
+
         
         doc.save(fileName);
         triggerToast(`Berhasil mengunduh ${fileName}`, "success");
         
-      } else if (fileName.toLowerCase().endsWith('.docx')) {
-        // Generate real DOCX
-        const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import('docx');
-        
-        const doc = new Document({
-          sections: [{
-            properties: {},
-            children: [
-              new Paragraph({
-                text: "DRAFT SURAT KELUAR - YeshProduction",
-                heading: HeadingLevel.HEADING_1,
-                spacing: { after: 400 }
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({ text: "Nomor Surat: ", bold: true }),
-                  new TextRun(letter.number),
-                ],
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({ text: "Tujuan: ", bold: true }),
-                  new TextRun(letter.senderOrRecipient),
-                ],
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({ text: "Perihal: ", bold: true }),
-                  new TextRun(letter.subject),
-                ],
-                spacing: { after: 400 }
-              }),
-              new Paragraph({
-                text: letter.aiTemplate === "Surat Undangan" 
-                  ? `Salam sejahtera,\nMelalui surat ini, kami mengundang Bapak/Ibu untuk hadir dalam acara kami dengan rincian kegiatan sebagai berikut:\n\n${letter.aiPrompt || "-"}\n\nKami sangat mengharapkan kehadiran Bapak/Ibu tepat pada waktunya. Atas perhatian dan pelayanannya kami ucapkan terima kasih.` 
-                  : letter.aiTemplate === "Surat Keterangan"
-                  ? `Salam sejahtera,\nYang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:\n\n${letter.aiPrompt || "-"}\n\nDemikian surat keterangan ini kami buat agar dapat dipergunakan sebagaimana mestinya.`
-                  : `Salam sejahtera,\nBersama dengan surat ini kami ingin menyampaikan perihal berikut:\n\n${letter.aiPrompt || "-"}\n\nDemikian surat ini disampaikan. Terima kasih atas perhatian dan kerja samanya.`,
-                spacing: { after: 200 }
-              }),
-            ],
-          }],
-        });
-        
-        const blob = await Packer.toBlob(doc);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        triggerToast(`Berhasil mengunduh ${fileName}`, "success");
       } else {
         // Fallback for other files (uploaded PDFs but we don't have the backend blob yet)
         const content = `Nama File Asli: ${fileName}\n\nIni adalah dokumen simulasi. Karena ini adalah file upload manual tanpa backend, sistem hanya men-download preview ini.`;
@@ -302,7 +196,7 @@ export default function PersuratanDashboard() {
         <div>
           <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">Manajemen Persuratan</h1>
           <p className="text-zinc-500 text-sm mt-1.5 font-medium">
-            Pusat arsip dan pencatatan Surat Masuk & Surat Keluar gereja dengan lampiran digital PDF & AI.
+            Pusat arsip dan pencatatan Surat Masuk & Surat Keluar gereja dengan lampiran digital PDF.
           </p>
         </div>
         <div className="flex flex-wrap gap-2.5">
@@ -403,20 +297,7 @@ export default function PersuratanDashboard() {
                     </td>
                     <td className="py-3.5 text-right pr-2">
                       <div className="flex items-center justify-end gap-2">
-                        {l.isAiGenerated && !l.isSigned && (
-                          <button 
-                            onClick={() => handleSignQR(l.id)}
-                            className="text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2 py-1.5 rounded border border-emerald-200 transition-colors"
-                          >
-                            Bubuhi TTD QR
-                          </button>
-                        )}
-                        {l.isAiGenerated && l.isSigned && (
-                          <Link href={`/verify/${l.id}`} target="_blank" className="text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2 py-1.5 rounded border border-indigo-200 transition-colors flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
-                            Verifikasi
-                          </Link>
-                        )}
+
                         <button onClick={() => handleDownload(l.fileName, l)} className="text-[11px] font-bold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 px-3 py-1.5 rounded border border-zinc-200 transition-colors cursor-pointer">
                           Unduh
                         </button>
@@ -447,10 +328,7 @@ export default function PersuratanDashboard() {
                   <label className="block text-[11px] font-bold text-zinc-500 mb-1.5 uppercase tracking-wider">Jenis Surat</label>
                   <select
                     value={formType}
-                    onChange={(e) => {
-                      setFormType(e.target.value as "Surat Masuk" | "Surat Keluar");
-                      if (e.target.value === "Surat Masuk") setCreationMethod("UPLOAD");
-                    }}
+                    onChange={(e) => setFormType(e.target.value as "Surat Masuk" | "Surat Keluar")}
                     className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm text-zinc-900 focus:bg-white focus:outline-none focus:border-indigo-500 transition-colors font-medium"
                   >
                     <option value="Surat Masuk">Masuk</option>
@@ -470,25 +348,6 @@ export default function PersuratanDashboard() {
                 </div>
               </div>
 
-              {formType === "Surat Keluar" && (
-                <div className="flex gap-2 p-1 bg-zinc-100 rounded-xl">
-                  <button 
-                    type="button"
-                    onClick={() => setCreationMethod("UPLOAD")}
-                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${creationMethod === "UPLOAD" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"}`}
-                  >
-                    Upload Manual
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => setCreationMethod("AI")}
-                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${creationMethod === "AI" ? "bg-indigo-600 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-700"}`}
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                    Generate AI
-                  </button>
-                </div>
-              )}
 
               <div className="flex gap-4">
                 <div className="w-1/2">
@@ -528,9 +387,8 @@ export default function PersuratanDashboard() {
                 />
               </div>
 
-              {/* Dynamic Uploader vs AI Generator */}
-              {creationMethod === "UPLOAD" ? (
-                <div>
+              {/* Dynamic Uploader */}
+              <div>
                   <label className="block text-[11px] font-bold text-zinc-500 mb-1.5 uppercase tracking-wider">File Lampiran (PDF)</label>
                   <div 
                     className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all ${
@@ -583,64 +441,20 @@ export default function PersuratanDashboard() {
                     )}
                   </div>
                 </div>
-              ) : (
-                <div className="space-y-4 border-2 border-indigo-100 bg-indigo-50/30 rounded-2xl p-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-indigo-700 mb-1.5 uppercase tracking-wider">Gunakan Template</label>
-                    <select
-                      value={aiTemplate}
-                      onChange={(e) => setAiTemplate(e.target.value)}
-                      className="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:border-indigo-500 transition-colors font-medium shadow-sm"
-                    >
-                      <option value="Surat Undangan">Surat Undangan</option>
-                      <option value="Surat Keterangan">Surat Keterangan</option>
-                      <option value="Surat Peminjaman">Surat Peminjaman</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-indigo-700 mb-1.5 uppercase tracking-wider">Poin Instruksi (Prompt)</label>
-                    <textarea
-                      value={aiPrompt}
-                      onChange={(e) => setAiPrompt(e.target.value)}
-                      rows={3}
-                      placeholder="Contoh: Tolong buatkan surat undangan rapat pengurus untuk tanggal 20 Mei jam 10 pagi, bahas evaluasi KKR."
-                      className="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-indigo-500 transition-colors font-medium shadow-sm resize-none"
-                    />
-                  </div>
-                </div>
-              )}
 
               <div className="mt-6 pt-5 border-t border-zinc-200 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  disabled={isGenerating}
-                  className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 text-xs font-bold rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 text-xs font-bold rounded-xl transition-colors cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  disabled={isGenerating}
-                  className={`px-4 py-2 text-white text-xs font-bold rounded-xl transition-colors shadow-md flex items-center gap-2 ${
-                    creationMethod === "AI" 
-                      ? "bg-indigo-600 hover:bg-indigo-700" 
-                      : "bg-zinc-900 hover:bg-zinc-800"
-                  } disabled:opacity-70 disabled:cursor-wait`}
+                  className="px-4 py-2 text-white text-xs font-bold rounded-xl transition-colors shadow-md flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800"
                 >
-                  {isGenerating ? (
-                    <>
-                      <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
-                      Sedang Digenerate AI...
-                    </>
-                  ) : creationMethod === "AI" ? (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                      Generate Draft Surat
-                    </>
-                  ) : (
-                    "Simpan & Upload Manual"
-                  )}
+                  Simpan & Upload Manual
                 </button>
               </div>
             </form>

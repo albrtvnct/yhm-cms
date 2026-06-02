@@ -25,9 +25,9 @@ export async function decrypt(session: string | undefined = "") {
   }
 }
 
-export async function createSession(userId: string, churchId: string) {
+export async function createSession(userId: string, churchId: string, role: string) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-  const session = await encrypt({ userId, churchId, expiresAt });
+  const session = await encrypt({ userId, churchId, role, expiresAt });
 
   const cookieStore = await cookies();
   cookieStore.set("session", session, {
@@ -45,7 +45,7 @@ export async function getSession() {
   if (!session) return null;
   const decrypted = await decrypt(session);
   if (!decrypted) return null;
-  return decrypted as { userId: string; churchId: string; expiresAt: Date };
+  return decrypted as { userId: string; churchId: string; role: string; expiresAt: Date };
 }
 
 export async function deleteSession() {

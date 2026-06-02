@@ -11,6 +11,7 @@ datasource db {
 model Church {
   id               String   @id @default(cuid())
   name             String
+  slug             String?  @unique
   cash             Float    @default(0)
   nijFormat        String   @default("[GEREJA]-[TAHUN]-[NOMOR]")
   youthThreshold   Int      @default(25)
@@ -20,6 +21,7 @@ model Church {
   aiJemaat         String?
   aiKehadiran      String?
   aiInventaris     String?
+  rolePermissions  Json?    // Stores object { "ROLE": ["Menu1", "Menu2"] }
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -33,6 +35,7 @@ model Church {
   families            Family[]
   attendanceRecords   AttendanceRecord[]
   inventoryItems      InventoryItem[]
+  programs            Program[]
 }
 
 model User {
@@ -41,6 +44,7 @@ model User {
   email     String   @unique
   phone     String?
   password  String
+  role      String   @default("ADMIN")
   churchId  String
   church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
@@ -52,9 +56,12 @@ model Member {
   nij              String?   @unique
   name             String
   phone            String?
+  email            String?
   gender           String?
+  birthPlace       String?
   birthDate        DateTime?
   maritalStatus    String?
+  job              String?
   address          String?
   city             String?
   status           String    @default("AKTIF")
@@ -90,13 +97,27 @@ model Family {
 }
 
 model Worker {
-  id        String   @id @default(cuid())
-  name      String
-  type      String   // "FULLTIME" or "PARTTIME"
-  churchId  String
-  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(cuid())
+  nij              String?  @unique
+  name             String
+  keterangan       String?
+  tempatLahir      String?
+  tanggalLahir     DateTime?
+  phone            String?
+  email            String?
+  alamat           String?
+  persembahanKasih Float    @default(0)
+  statusPerkawinan String?
+  statusPekerjaan  String   @default("AKTIF")
+  statusJemaat     String   @default("AKTIF")
+  fileBaptisan     String?
+  fileSuratTugas   String?
+
+  type             String   @default("FULLTIME") // "FULLTIME" or "PARTTIME"
+  churchId         String
+  church           Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model FinanceRecord {
@@ -167,4 +188,31 @@ model InventoryItem {
   church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Program {
+  id               String   @id @default(cuid())
+  nama             String
+  divisi           String
+  dana             Float
+  penanggungJawab  String
+  proposalFile     String?
+  tanggal          DateTime
+  status           String   @default("MENUNGGU") // MENUNGGU, DISETUJUI, DITOLAK, SELESAI
+  churchId         String
+  church           Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  approvals        ProgramApproval[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model ProgramApproval {
+  id        String   @id @default(cuid())
+  role      String   // Diaken, Majelis, Penatua, Gembala Sidang
+  name      String   // Name of the person who approved/rejected
+  status    String   // APPROVED, REJECTED
+  reason    String?
+  programId String
+  program   Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }

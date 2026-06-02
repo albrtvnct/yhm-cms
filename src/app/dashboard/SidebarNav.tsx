@@ -2,10 +2,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export default function SidebarNav() {
+export default function SidebarNav({ 
+  role, 
+  rolePermissions 
+}: { 
+  role?: string, 
+  rolePermissions?: any 
+}) {
   const pathname = usePathname();
 
-  const menuGroups = [
+  const allMenuGroups = [
     {
       group: "Menu Utama",
       items: [
@@ -37,12 +43,24 @@ export default function SidebarNav() {
     {
       group: "Lain lain",
       items: [
-        { name: "Konten", path: "/dashboard/konten", icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" },
         { name: "Approval", path: "/dashboard/approval", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
         { name: "Pengaturan", path: "/dashboard/pengaturan", icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" },
       ]
     }
   ];
+
+  // Filter menu items based on role
+  let menuGroups = allMenuGroups;
+  if (role !== "ADMIN") {
+    // get user permissions, default to Dashboard if not configured
+    const userRole = role || "PELAYAN";
+    const allowedMenus = rolePermissions?.[userRole] || ["Dashboard"];
+
+    menuGroups = allMenuGroups.map(group => ({
+      ...group,
+      items: group.items.filter(item => allowedMenus.includes(item.name))
+    })).filter(group => group.items.length > 0);
+  }
 
   return (
     <div className="space-y-6">

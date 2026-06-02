@@ -15,6 +15,7 @@ export async function getChurchSettings() {
       select: {
         id: true,
         name: true,
+        slug: true,
         nijFormat: true,
         youthThreshold: true,
         elderlyThreshold: true,
@@ -33,6 +34,7 @@ export async function getChurchSettings() {
 
 export async function updateChurchSettings(data: { 
   name: string; 
+  slug?: string;
   nijFormat: string;
   youthThreshold: number;
   elderlyThreshold: number;
@@ -44,6 +46,19 @@ export async function updateChurchSettings(data: {
 
     if (!data.name || data.name.trim() === "") {
       throw new Error("Nama gereja tidak boleh kosong.");
+    }
+
+    // Slug formatting and validation
+    let validSlug = null;
+    if (data.slug) {
+      validSlug = data.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+      // Check if slug is taken by another church
+      const existingSlug = await prisma.church.findFirst({
+        where: { slug: validSlug, id: { not: churchId } }
+      });
+      if (existingSlug) {
+        throw new Error("Link portal (slug) sudah digunakan oleh gereja lain. Silakan pilih yang lain.");
+      }
     }
 
     const youth = Math.round(Number(data.youthThreshold));
@@ -95,6 +110,7 @@ export async function updateChurchSettings(data: {
         where: { id: churchId },
         data: {
           name: data.name,
+          slug: validSlug,
           nijFormat: data.nijFormat,
           youthThreshold: youth,
           elderlyThreshold: elderly,

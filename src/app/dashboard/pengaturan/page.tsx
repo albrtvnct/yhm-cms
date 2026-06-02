@@ -1,13 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { getChurchSettings, updateChurchSettings } from "@/app/actions/settings";
 import { setAttendanceMode, getKehadiranSetup } from "@/app/actions/attendance";
+import { getUsers, addUser, deleteUser } from "@/app/actions/user";
+import { getRolePermissions, updateRolePermissions } from "@/app/actions/permissions";
+import Portal from "@/components/Portal";
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [churchName, setChurchName] = useState("");
+  const [slug, setSlug] = useState("");
   const [nijFormat, setNijFormat] = useState("");
   const [youthThreshold, setYouthThreshold] = useState(25);
   const [elderlyThreshold, setElderlyThreshold] = useState(50);
@@ -16,67 +20,48 @@ export default function SettingsPage() {
   const [attendanceMode, setAttendanceModeState] = useState<"BULK" | "QR" | null>(null);
   const [savingMode, setSavingMode] = useState(false);
   const [modeSuccess, setModeSuccess] = useState(false);
-  const [templates, setTemplates] = useState([
-    { id: 1, name: "Surat Undangan", ext: "DOCX", size: "45 KB", date: "10 Mei 2026" },
-    { id: 2, name: "Surat Keterangan", ext: "DOCX", size: "32 KB", date: "12 Mei 2026" },
-    { id: 3, name: "Surat Peminjaman", ext: "PDF", size: "120 KB", date: "15 Mei 2026" },
-  ]);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [newTemplateName, setNewTemplateName] = useState("");
-  const [templateFile, setTemplateFile] = useState<File | null>(null);
 
+  // User Management State
+  const [users, setUsers] = useState<any[]>([]);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [userLoading, setUserLoading] = useState(false);
+  const userFormRef = useRef<HTMLFormElement>(null);
 
-  const handleDeleteTemplate = (id: number) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus template ini?")) {
-      setTemplates(templates.filter(t => t.id !== id));
+  // Permissions State
+  const [rolePermissions, setRolePermissions] = useState<Record<string, string[]>>({});
+  const [selectedRoleForPerms, setSelectedRoleForPerms] = useState("MAJELIS");
+  const [savingPerms, setSavingPerms] = useState(false);
+
+  const loadData = async () => {
+    const [settingsRes, modeRes, usersRes, permsRes] = await Promise.all([
+      getChurchSettings(),
+      getKehadiranSetup(),
+      getUsers(),
+      getRolePermissions(),
+    ]);
+    if (settingsRes.success && settingsRes.data) {
+      setChurchName(settingsRes.data.name);
+      setSlug(settingsRes.data.slug || "");
+      setNijFormat(settingsRes.data.nijFormat || "[GEREJA]-[TAHUN]-[NOMOR]");
+      setYouthThreshold(settingsRes.data.youthThreshold ?? 25);
+      setElderlyThreshold(settingsRes.data.elderlyThreshold ?? 50);
+    } else {
+      setError(settingsRes.error || "Gagal memuat pengaturan.");
     }
-  };
-
-  const handleEditTemplate = (id: number, currentName: string) => {
-    const newName = window.prompt("Ubah nama template:", currentName);
-    if (newName && newName.trim() !== "") {
-      setTemplates(templates.map(t => t.id === id ? { ...t, name: newName.trim() } : t));
+    if (modeRes.attendanceMode) {
+      setAttendanceModeState(modeRes.attendanceMode as "BULK" | "QR");
     }
-  };
-
-  const handleUploadTemplate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTemplateName.trim()) return;
-    const newTmpl = {
-      id: Date.now(),
-      name: newTemplateName.trim(),
-      ext: "DOCX", 
-      size: "24 KB",
-      date: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
-    };
-    setTemplates([newTmpl, ...templates]);
-    setIsUploadModalOpen(false);
-    setNewTemplateName("");
-    setTemplateFile(null);
-    setSuccessMsg("Template berhasil diunggah!");
-    setTimeout(() => setSuccessMsg(null), 3000);
+    if (usersRes.success && usersRes.data) {
+      setUsers(usersRes.data);
+    }
+    if (permsRes.success && permsRes.data) {
+      setRolePermissions(permsRes.data as Record<string, string[]>);
+    }
+    setLoading(false);
   };
 
   useEffect(() => {
-    async function loadSettings() {
-      const [settingsRes, modeRes] = await Promise.all([
-        getChurchSettings(),
-        getKehadiranSetup(),
-      ]);
-      if (settingsRes.success && settingsRes.data) {
-        setChurchName(settingsRes.data.name);
-        setNijFormat(settingsRes.data.nijFormat || "[GEREJA]-[TAHUN]-[NOMOR]");
-        setYouthThreshold(settingsRes.data.youthThreshold ?? 25);
-        setElderlyThreshold(settingsRes.data.elderlyThreshold ?? 50);
-      } else {
-        setError(settingsRes.error || "Gagal memuat pengaturan.");
-      }
-      if (modeRes.attendanceMode) {
-        setAttendanceModeState(modeRes.attendanceMode as "BULK" | "QR");
-      }
-      setLoading(false);
-    }
-    loadSettings();
+    loadData();
   }, []);
 
   // Helper to generate preview
@@ -121,6 +106,7 @@ export default function SettingsPage() {
 
     const res = await updateChurchSettings({
       name: churchName,
+      slug: slug,
       nijFormat: nijFormat,
       youthThreshold: youthThreshold,
       elderlyThreshold: elderlyThreshold,
@@ -133,6 +119,67 @@ export default function SettingsPage() {
     }
     setSaving(false);
   };
+
+  const handleAddUser = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setUserLoading(true);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const data = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      passwordRaw: formData.get("password") as string,
+      role: formData.get("role") as string,
+    };
+
+    const res = await addUser(data);
+    if (res.success) {
+      form.reset();
+      setShowUserModal(false);
+      await loadData();
+    } else {
+      alert("Gagal menambah pengguna: " + res.error);
+    }
+    setUserLoading(false);
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    if (!confirm("Hapus pengguna ini secara permanen?")) return;
+    const res = await deleteUser(id);
+    if (res.success) {
+      await loadData();
+    } else {
+      alert("Gagal menghapus pengguna: " + res.error);
+    }
+  };
+
+  const handleSavePermissions = async () => {
+    setSavingPerms(true);
+    const res = await updateRolePermissions(rolePermissions);
+    if (res.success) {
+      alert("Hak akses berhasil disimpan.");
+    } else {
+      alert("Gagal menyimpan hak akses: " + res.error);
+    }
+    setSavingPerms(false);
+  };
+
+  const togglePermission = (menuName: string) => {
+    setRolePermissions(prev => {
+      const current = prev[selectedRoleForPerms] || [];
+      const updated = current.includes(menuName)
+        ? current.filter(m => m !== menuName)
+        : [...current, menuName];
+      return { ...prev, [selectedRoleForPerms]: updated };
+    });
+  };
+
+  const availableMenus = [
+    "Dashboard", "Persuratan", "Keuangan & Donasi", "Inventaris", 
+    "Jemaat", "Kehadiran", "Pelayanan", "Sakramen", "Visitasi", "Komsel", 
+    "Program", "Full timer", "Hamba Tuhan", "Approval", "Pengaturan"
+  ];
+  const permissionRoles = ["MAJELIS", "DIAKEN", "PENATUA", "GEMBALA SIDANG", "PELAYAN"];
 
   const placeholders = [
     "[NOMOR INDUK]",
@@ -199,6 +246,40 @@ export default function SettingsPage() {
                 placeholder="Contoh: Gereja Bethel Indonesia"
                 required
               />
+            </div>
+
+            {/* Portal Slug */}
+            <div className="space-y-2">
+              <label htmlFor="slug" className="block text-sm font-bold text-zinc-700">
+                Link Portal Gereja
+              </label>
+              <div className="relative flex items-center">
+                <span className="absolute left-4 text-zinc-400 font-mono text-sm">/portal/</span>
+                <input
+                  id="slug"
+                  type="text"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  className="w-full pl-[5.5rem] pr-24 py-3 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-all font-mono font-medium bg-zinc-50/50 text-sm"
+                  placeholder="gbi-rock"
+                />
+                {slug && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const url = `${window.location.origin}/portal/${slug}/login`;
+                      navigator.clipboard.writeText(url);
+                      alert("Link portal disalin: " + url);
+                    }}
+                    className="absolute right-2 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                  >
+                    Salin Link
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-zinc-500 font-medium mt-1">
+                Gunakan URL ini khusus untuk jemaat/pengurus gereja login. Hanya huruf kecil, angka, dan tanda hubung (-).
+              </p>
             </div>
 
             {/* NIJ Format */}
@@ -503,109 +584,195 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* ── TEMPLATE SURAT AI SECTION ─────────────────────────────────────── */}
-      <div className="pt-8 mt-8 border-t border-zinc-100">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 gap-4">
+      {/* ── USER MANAGEMENT SECTION ─────────────────────────────────────── */}
+      <div className="pt-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
-            <h2 className="text-xs font-black text-zinc-400 tracking-[0.2em] uppercase">Template Surat Keluar (AI)</h2>
+            <h2 className="text-xs font-black text-zinc-400 tracking-[0.2em] uppercase">Manajemen Pengguna</h2>
             <p className="text-sm text-zinc-500 mt-1.5 font-medium">
-              Upload template dokumen (DOCX/PDF) untuk digunakan AI saat membuat surat otomatis.
+              Kelola akun pelayan jemaat dengan hak akses berbeda (Admin, Diaken, Majelis, Penatua, dll).
             </p>
           </div>
-          <button onClick={() => setIsUploadModalOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm flex items-center gap-2 shrink-0">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-            Upload Template Baru
+          <button 
+            onClick={() => setShowUserModal(true)}
+            className="px-5 py-2.5 bg-zinc-900 text-white text-sm font-bold rounded-xl hover:bg-zinc-800 transition-all shadow-md flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+            Tambah Akun
           </button>
         </div>
 
-        <div className="bg-white rounded-3xl border border-zinc-200/60 shadow-sm p-6">
-          <div className="space-y-3">
-            {templates.map((tmpl) => (
-              <div key={tmpl.id} className="flex items-center justify-between p-4 rounded-xl border border-zinc-100 bg-zinc-50 hover:bg-white hover:shadow-sm hover:border-zinc-200 transition-all">
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-[10px] shrink-0 shadow-sm ${
-                    tmpl.ext === 'DOCX' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
-                  }`}>
-                    {tmpl.ext}
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-zinc-900">{tmpl.name}</h4>
-                    <p className="text-[10px] text-zinc-500 font-medium">Diunggah: {tmpl.date} • {tmpl.size}</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => handleEditTemplate(tmpl.id, tmpl.name)} className="p-2 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                  </button>
-                  <button onClick={() => handleDeleteTemplate(tmpl.id)} className="p-2 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                  </button>
-                </div>
-              </div>
-            ))}
-            {templates.length === 0 && (
-              <div className="text-center py-6 text-zinc-400 text-xs font-medium italic">
-                Belum ada template. Silakan upload template baru.
-              </div>
-            )}
+        <div className="bg-white rounded-3xl border border-zinc-200/60 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr className="bg-zinc-50 border-b border-zinc-100 text-xs text-zinc-500 uppercase tracking-wider font-bold">
+                  <th className="px-6 py-4 font-bold">Nama / Email</th>
+                  <th className="px-6 py-4 font-bold">Role (Jabatan)</th>
+                  <th className="px-6 py-4 font-bold text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {users.map((user) => (
+                  <tr key={user.id} className="hover:bg-zinc-50/80 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-extrabold text-zinc-900 text-sm">{user.name}</div>
+                      <div className="text-xs text-zinc-500 font-medium mt-0.5">{user.email}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wide border ${
+                        user.role === 'ADMIN' ? 'bg-zinc-100 text-zinc-700 border-zinc-200' :
+                        user.role === 'GEMBALA SIDANG' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                        'bg-indigo-50 text-indigo-700 border-indigo-200'
+                      }`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <button 
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100"
+                        title="Hapus Pengguna"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {users.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-8 text-center text-zinc-500 text-sm italic">
+                      Belum ada pengguna.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      {/* --- Modal Upload Template --- */}
-      {isUploadModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col border border-zinc-200 animate-slide-up">
-            <div className="px-5 py-4 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
-              <h3 className="text-sm font-extrabold text-zinc-900">Upload Template Baru</h3>
-              <button onClick={() => setIsUploadModalOpen(false)} className="text-zinc-400 hover:text-zinc-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="p-5">
-              <form id="upload-template-form" onSubmit={handleUploadTemplate} className="space-y-4">
-                <div>
-                  <label className="block text-[11px] font-bold text-zinc-600 uppercase tracking-wider mb-1.5">Nama Template</label>
-                  <input type="text" required value={newTemplateName} onChange={(e) => setNewTemplateName(e.target.value)} placeholder="Contoh: Surat Peringatan" className="w-full text-sm px-4 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-zinc-900" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-zinc-600 uppercase tracking-wider mb-1.5">File Dokumen (DOCX/PDF)</label>
-                  <label className="block border-2 border-dashed border-zinc-200 rounded-xl p-4 text-center bg-zinc-50 cursor-pointer hover:bg-zinc-100 transition-colors">
-                    <input 
-                      type="file" 
-                      accept=".docx,.pdf"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files.length > 0) {
-                          setTemplateFile(e.target.files[0]);
-                          if (!newTemplateName) {
-                            setNewTemplateName(e.target.files[0].name.replace(/\.[^/.]+$/, ""));
-                          }
-                        }
-                      }}
-                      className="hidden" 
-                    />
-                    {!templateFile ? (
-                      <>
-                        <svg className="w-6 h-6 text-indigo-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                        <p className="text-[11px] font-bold text-zinc-600">Pilih file dari komputer</p>
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-6 h-6 text-emerald-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <p className="text-[11px] font-bold text-zinc-800">{templateFile.name}</p>
-                        <p className="text-[10px] text-zinc-500 mt-1 hover:text-rose-500">Klik untuk mengganti</p>
-                      </>
-                    )}
-                  </label>
-                </div>
-              </form>
-            </div>
-            <div className="px-5 py-4 border-t border-zinc-100 flex justify-end gap-2 bg-zinc-50/50">
-              <button type="button" onClick={() => setIsUploadModalOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-600 hover:bg-zinc-100 transition-colors">Batal</button>
-              <button type="submit" form="upload-template-form" className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-colors">Simpan Template</button>
-            </div>
+      {/* ── ROLE PERMISSIONS SECTION ─────────────────────────────────────── */}
+      <div className="pt-8 border-t border-zinc-100">
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xs font-black text-zinc-400 tracking-[0.2em] uppercase">Pengaturan Hak Akses (RBAC)</h2>
+            <p className="text-sm text-zinc-500 mt-1.5 font-medium">
+              Atur menu apa saja yang bisa dilihat oleh setiap jabatan (Role). Role ADMIN mutlak memiliki semua akses.
+            </p>
           </div>
         </div>
+
+        <div className="bg-white rounded-3xl border border-zinc-200/60 shadow-sm p-6">
+          <div className="flex flex-wrap gap-2 mb-6">
+            {permissionRoles.map(r => (
+              <button
+                key={r}
+                onClick={() => setSelectedRoleForPerms(r)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  selectedRoleForPerms === r 
+                    ? "bg-zinc-900 text-white shadow-md" 
+                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+
+          <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-5 mb-6">
+            <h3 className="text-sm font-bold text-zinc-900 mb-4">Akses Menu untuk {selectedRoleForPerms}:</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {availableMenus.map(menu => {
+                const isChecked = (rolePermissions[selectedRoleForPerms] || []).includes(menu);
+                return (
+                  <label key={menu} className="flex items-center gap-3 p-3 bg-white border border-zinc-200 rounded-xl cursor-pointer hover:border-zinc-400 transition-colors">
+                    <div className="relative flex items-center justify-center w-5 h-5">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => togglePermission(menu)}
+                        className="peer appearance-none w-5 h-5 border-2 border-zinc-300 rounded focus:ring-2 focus:ring-zinc-900 focus:outline-none checked:border-zinc-900 checked:bg-zinc-900 transition-all cursor-pointer"
+                      />
+                      <svg className="absolute w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-semibold text-zinc-700 select-none">{menu}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={handleSavePermissions}
+              disabled={savingPerms}
+              className="px-6 py-2.5 bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 text-white text-sm font-bold rounded-xl shadow-md transition-all flex items-center gap-2"
+            >
+              {savingPerms ? "Menyimpan..." : "Simpan Hak Akses"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── MODAL TAMBAH USER ─────────────────────────────────────────── */}
+      {showUserModal && (
+        <Portal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in-up border border-zinc-200/60">
+              <div className="p-8">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h2 className="text-xl font-extrabold text-zinc-900">Tambah Akun Baru</h2>
+                    <p className="text-xs text-zinc-500 font-medium mt-1">Buat kredensial login untuk tim.</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowUserModal(false)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 text-zinc-500 hover:bg-zinc-200 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+
+                <form ref={userFormRef} onSubmit={handleAddUser} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Nama Lengkap</label>
+                    <input name="name" type="text" required placeholder="Contoh: Budi Santoso" className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Email</label>
+                    <input name="email" type="email" required placeholder="budi@example.com" className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Jabatan (Role)</label>
+                    <select name="role" required className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all">
+                      <option value="">-- Pilih Jabatan --</option>
+                      <option value="ADMIN">Admin Utama</option>
+                      <option value="MAJELIS">Majelis</option>
+                      <option value="DIAKEN">Diaken</option>
+                      <option value="PENATUA">Penatua</option>
+                      <option value="GEMBALA SIDANG">Gembala Sidang</option>
+                      <option value="PELAYAN">Pelayan Divisi / PIC</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Password Sementara</label>
+                    <input name="password" type="password" required placeholder="Minimal 6 karakter" minLength={6} className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
+                  </div>
+                  
+                  <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100">
+                    <button type="button" onClick={() => setShowUserModal(false)} className="px-5 py-2.5 text-zinc-500 font-bold hover:bg-zinc-100 rounded-xl transition-colors text-sm">Batal</button>
+                    <button type="submit" disabled={userLoading} className="px-6 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-xl transition-all shadow-md flex items-center gap-2 text-sm">
+                      {userLoading ? 'Menyimpan...' : 'Buat Akun'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </Portal>
       )}
 
     </div>

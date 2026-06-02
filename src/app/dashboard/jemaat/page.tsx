@@ -16,6 +16,8 @@ export default function JemaatDashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
+  const [selectedFamilyId, setSelectedFamilyId] = useState<string>("-");
+  const [newFamilyMembers, setNewFamilyMembers] = useState<{id: string, name: string, phone: string, relation: string, existingId?: string | null}[]>([]);
 
   // Age grouping thresholds & expand states
   const [youthThreshold, setYouthThreshold] = useState(25);
@@ -62,6 +64,16 @@ export default function JemaatDashboard() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (showEditModal && selectedProfile) {
+      setSelectedFamilyId(selectedProfile.familyId || "-");
+      setNewFamilyMembers([]);
+    } else if (showAddModal) {
+      setSelectedFamilyId("-");
+      setNewFamilyMembers([]);
+    }
+  }, [showEditModal, showAddModal, selectedProfile]);
 
   useEffect(() => {
     load();
@@ -175,6 +187,9 @@ export default function JemaatDashboard() {
     const formData = new FormData(form);
     const payload = Object.fromEntries(formData.entries());
     
+    // Append dynamic family members
+    payload.newFamilyMembers = JSON.stringify(newFamilyMembers);
+
     const res = await addMember(payload);
     if (res.success) {
       form.reset();
@@ -193,6 +208,10 @@ export default function JemaatDashboard() {
     const formData = new FormData(form);
     const payload = Object.fromEntries(formData.entries());
     
+    // Append dynamic family members
+    payload.newFamilyMembers = JSON.stringify(newFamilyMembers);
+
+    if (!selectedProfile?.id) return;
     const res = await updateMember(selectedProfile.id, payload);
     if (res.success) {
       form.reset();
@@ -206,7 +225,8 @@ export default function JemaatDashboard() {
   };
 
   const handleDeleteMember = async () => {
-    if (!confirm(`Hapus permanen jemaat ${selectedProfile.name}?`)) return;
+    if (!selectedProfile?.id) return;
+    if (!confirm(`Hapus permanen jemaat ${selectedProfile?.name || 'ini'}?`)) return;
     
     const res = await deleteMember(selectedProfile.id);
     if (res.success) {
@@ -229,6 +249,97 @@ export default function JemaatDashboard() {
     }
     const message = encodeURIComponent(`Shalom ${name}, \n\nKami dari tim admin gereja ingin menyapa Anda...`);
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+  };
+
+  const renderDynamicFamilyTable = () => {
+    return (
+      <div className="sm:col-span-2 mt-4 pt-4 border-t border-zinc-100">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h4 className="text-xs font-bold text-zinc-900">Tambahkan Anggota Keluarga Baru</h4>
+            <p className="text-[10px] text-zinc-500 mt-0.5">Anggota di sini otomatis terdaftar sebagai jemaat baru.</p>
+          </div>
+          <button type="button" onClick={() => setNewFamilyMembers([...newFamilyMembers, { id: Date.now().toString(), name: '', phone: '', relation: '', existingId: null }])} className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+            Tambah Baris
+          </button>
+        </div>
+        
+        {newFamilyMembers.length > 0 && (
+          <div className="bg-white rounded-xl border border-zinc-200/60 overflow-hidden shadow-sm">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead className="bg-zinc-50 border-b border-zinc-100 text-zinc-500 font-bold">
+                <tr>
+                  <th className="px-3 py-2 w-5/12">Nama Lengkap</th>
+                  <th className="px-3 py-2 w-3/12">No. Telepon</th>
+                  <th className="px-3 py-2 w-3/12">Status</th>
+                  <th className="px-3 py-2 w-1/12 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {newFamilyMembers.map((member, idx) => (
+                  <tr key={member.id} className="hover:bg-zinc-50/50">
+                    <td className="p-2">
+                      <input required type="text" list={`members-list-${idx}`} value={member.name} onChange={(e) => {
+                        const val = e.target.value;
+                        const arr = [...newFamilyMembers];
+                        arr[idx].name = val;
+                        
+                        const existing = data.members?.find((m: any) => m.name === val && m.id !== selectedProfile?.id);
+                        if (existing) {
+                          arr[idx].existingId = existing.id;
+                          if (existing.phone) arr[idx].phone = existing.phone;
+                        } else {
+                          arr[idx].existingId = null;
+                        }
+                        
+                        setNewFamilyMembers(arr);
+                      }} placeholder="Nama Lengkap" className="w-full px-3 py-1.5 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-xs" />
+                      <datalist id={`members-list-${idx}`}>
+                        {data.members?.filter((m: any) => m.id !== selectedProfile?.id).map((m: any) => (
+                          <option key={m.id} value={m.name}>{m.nij || 'Anggota Jemaat'}</option>
+                        ))}
+                      </datalist>
+                    </td>
+                    <td className="p-2">
+                      <input type="text" value={member.phone} onChange={(e) => {
+                        const arr = [...newFamilyMembers];
+                        arr[idx].phone = e.target.value;
+                        setNewFamilyMembers(arr);
+                      }} placeholder="No. Telepon" className="w-full px-3 py-1.5 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-xs" />
+                    </td>
+                    <td className="p-2">
+                      <select required value={member.relation} onChange={(e) => {
+                        const arr = [...newFamilyMembers];
+                        arr[idx].relation = e.target.value;
+                        setNewFamilyMembers(arr);
+                      }} className="w-full px-3 py-1.5 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-xs bg-white">
+                        <option value="">Pilih...</option>
+                        <option value="Suami">Suami</option>
+                        <option value="Istri">Istri</option>
+                        <option value="Anak">Anak</option>
+                        <option value="Ayah">Ayah</option>
+                        <option value="Ibu">Ibu</option>
+                        <option value="Lainnya">Lainnya</option>
+                      </select>
+                    </td>
+                    <td className="p-2 text-center">
+                      <button type="button" onClick={() => {
+                        const arr = [...newFamilyMembers];
+                        arr.splice(idx, 1);
+                        setNewFamilyMembers(arr);
+                      }} className="text-rose-500 hover:text-rose-700 p-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -831,10 +942,25 @@ export default function JemaatDashboard() {
                 <div className="h-px bg-zinc-100 w-full mb-8"></div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6 text-sm">
-                  <div>
-                    <div className="text-xs text-zinc-500 font-medium mb-1">Tanggal lahir</div>
+                  <div className="col-span-2 md:col-span-1">
+                    <div className="text-xs text-zinc-500 font-medium mb-1">Tempat, tanggal lahir</div>
                     <div className="font-bold text-zinc-900">
+                      {selectedProfile.birthPlace ? `${selectedProfile.birthPlace}, ` : ''}
                       {selectedProfile.birthDate ? new Date(selectedProfile.birthDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'} 
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-zinc-500 font-medium mb-1">Email</div>
+                    <div className="font-bold text-zinc-900">{selectedProfile.email || '-'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-zinc-500 font-medium mb-1">Pekerjaan</div>
+                    <div className="font-bold text-zinc-900">{selectedProfile.job || '-'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-zinc-500 font-medium mb-1">Keluarga</div>
+                    <div className="font-bold text-zinc-900">
+                      {selectedProfile.family ? `${selectedProfile.family.name} (${selectedProfile.familyRelation || '-'})` : '-'}
                     </div>
                   </div>
                   <div>
@@ -849,12 +975,45 @@ export default function JemaatDashboard() {
                     <div className="text-xs text-zinc-500 font-medium mb-1">No. WA</div>
                     <div className="font-bold text-blue-600">{selectedProfile.phone || '-'}</div>
                   </div>
-                  <div>
+                  <div className="col-span-2 md:col-span-1">
                     <div className="text-xs text-zinc-500 font-medium mb-1">Alamat domisili</div>
                     <div className="font-bold text-zinc-900">
                       {[selectedProfile.address, selectedProfile.city].filter(Boolean).join(', ') || '-'}
                     </div>
                   </div>
+                </div>
+
+                {selectedProfile.family?.members?.filter((m: any) => m.id !== selectedProfile.id).length > 0 && (
+                  <div className="my-8">
+                    <h4 className="text-sm font-extrabold text-zinc-900 mb-3">Daftar Anggota Keluarga Terhubung</h4>
+                    <div className="bg-white rounded-xl border border-zinc-200/60 overflow-hidden shadow-sm">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead className="bg-zinc-50 border-b border-zinc-100 text-zinc-500 font-bold">
+                          <tr>
+                            <th className="px-4 py-3">Nama</th>
+                            <th className="px-4 py-3">Status di Keluarga</th>
+                            <th className="px-4 py-3">NIJ</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-100">
+                          {selectedProfile.family.members.filter((m: any) => m.id !== selectedProfile.id).map((relative: any, i: number) => (
+                            <tr key={i} className="hover:bg-zinc-50/50">
+                              <td className="px-4 py-3 font-bold text-zinc-900">{relative.name}</td>
+                              <td className="px-4 py-3 text-zinc-600">{relative.familyRelation || '-'}</td>
+                              <td className="px-4 py-3 text-zinc-500 font-mono">{relative.nij || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {!selectedProfile.family?.members?.filter((m: any) => m.id !== selectedProfile.id).length && (
+                  <div className="h-px bg-zinc-100 w-full my-8"></div>
+                )}
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6 text-sm">
                   <div>
                     <div className="text-xs text-zinc-500 font-medium mb-1">Komsel</div>
                     <div className="font-bold text-zinc-900">{selectedProfile.cellGroup || '-'}</div>
@@ -878,30 +1037,6 @@ export default function JemaatDashboard() {
                     <div className="font-bold text-zinc-900">{selectedProfile.lastAttendance ? new Date(selectedProfile.lastAttendance).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</div>
                   </div>
                 </div>
-
-                {selectedProfile.family?.members?.filter((m: any) => m.id !== selectedProfile.id).length > 0 && (
-                  <>
-                    <div className="h-px bg-zinc-100 w-full my-8"></div>
-                    <div>
-                      <h4 className="text-sm font-extrabold text-zinc-900 mb-4">Anggota keluarga terhubung</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {selectedProfile.family.members.filter((m: any) => m.id !== selectedProfile.id).map((relative: any, i: number) => (
-                          <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-zinc-200/60 bg-zinc-50">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-full bg-white text-zinc-600 font-extrabold text-xs flex items-center justify-center shrink-0 border border-zinc-200 shadow-sm">
-                                {relative.name.split(' ').map((n: string) => n[0]).join('').substring(0,2)}
-                              </div>
-                              <div>
-                                <div className="font-extrabold text-zinc-900 text-sm">{relative.name}</div>
-                                <div className="text-xs text-zinc-500 font-medium">{relative.familyRelation} · {relative.nij}</div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
               </div>
             </div>
           </div>
@@ -947,8 +1082,41 @@ export default function JemaatDashboard() {
                     </select>
                   </div>
                   <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Email</label>
+                    <input name="email" type="email" className="w-full px-4 py-2.5 rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm text-zinc-900" placeholder="Misal: budi@email.com" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Pekerjaan</label>
+                    <input name="job" type="text" className="w-full px-4 py-2.5 rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm text-zinc-900" placeholder="Pekerjaan" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Tempat Lahir</label>
+                    <input name="birthPlace" type="text" className="w-full px-4 py-2.5 rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm text-zinc-900" placeholder="Tempat lahir" />
+                  </div>
+                  <div>
                     <label className="block text-xs font-bold text-zinc-700 mb-1.5">Tanggal Lahir</label>
                     <input name="birthDate" type="date" className="w-full px-4 py-2.5 rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm text-zinc-900" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Hubungan Keluarga</label>
+                    <select name="familyId" onChange={(e) => setSelectedFamilyId(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm text-zinc-900 bg-white">
+                      <option value="-">- (Pilih Keluarga)</option>
+                      {data.families?.map((f: any) => (
+                        <option key={f.id} value={f.id}>{f.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Status di Keluarga</label>
+                    <select name="familyRelation" className="w-full px-4 py-2.5 rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm text-zinc-900 bg-white">
+                      <option value="">-</option>
+                      <option value="Suami">Suami</option>
+                      <option value="Istri">Istri</option>
+                      <option value="Anak">Anak</option>
+                      <option value="Ayah">Ayah</option>
+                      <option value="Ibu">Ibu</option>
+                      <option value="Lainnya">Lainnya</option>
+                    </select>
                   </div>
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-zinc-700 mb-1.5">Alamat Domisili</label>
@@ -965,6 +1133,35 @@ export default function JemaatDashboard() {
                       <option value="true">Sudah</option>
                     </select>
                   </div>
+
+                  {/* DAFTAR ANGGOTA KELUARGA TABEL DI FORM TAMBAH */}
+                  {selectedFamilyId !== "-" && data.families?.find((f: any) => f.id === selectedFamilyId)?.members?.length > 0 && (
+                    <div className="sm:col-span-2 mt-2">
+                      <h4 className="text-xs font-bold text-zinc-900 mb-2">Tabel Anggota Keluarga Terdaftar</h4>
+                      <div className="bg-white rounded-xl border border-zinc-200/60 overflow-hidden shadow-sm">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead className="bg-zinc-50 border-b border-zinc-100 text-zinc-500 font-bold">
+                            <tr>
+                              <th className="px-4 py-2">Nama</th>
+                              <th className="px-4 py-2">Nomor Telepon</th>
+                              <th className="px-4 py-2">Statusnya dalam keluarga</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-100">
+                            {data.families.find((f: any) => f.id === selectedFamilyId).members.map((relative: any, i: number) => (
+                              <tr key={i} className="hover:bg-zinc-50/50">
+                                <td className="px-4 py-3 font-bold text-zinc-900">{relative.name}</td>
+                                <td className="px-4 py-3 text-zinc-600">{relative.phone || '-'}</td>
+                                <td className="px-4 py-3 text-zinc-600">{relative.familyRelation || '-'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {renderDynamicFamilyTable()}
                 </div>
 
                 <div className="pt-6 border-t border-zinc-100 flex justify-end gap-3">
@@ -1029,8 +1226,41 @@ export default function JemaatDashboard() {
                     </select>
                   </div>
                   <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Email</label>
+                    <input name="email" type="email" defaultValue={selectedProfile.email} className="w-full px-4 py-2.5 rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm text-zinc-900" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Pekerjaan</label>
+                    <input name="job" type="text" defaultValue={selectedProfile.job} className="w-full px-4 py-2.5 rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm text-zinc-900" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Tempat Lahir</label>
+                    <input name="birthPlace" type="text" defaultValue={selectedProfile.birthPlace} className="w-full px-4 py-2.5 rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm text-zinc-900" />
+                  </div>
+                  <div>
                     <label className="block text-xs font-bold text-zinc-700 mb-1.5">Tanggal Lahir</label>
                     <input name="birthDate" type="date" defaultValue={selectedProfile.birthDate ? new Date(selectedProfile.birthDate).toISOString().split('T')[0] : ''} className="w-full px-4 py-2.5 rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm text-zinc-900" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Hubungan Keluarga</label>
+                    <select name="familyId" defaultValue={selectedProfile.familyId || "-"} onChange={(e) => setSelectedFamilyId(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm text-zinc-900 bg-white">
+                      <option value="-">- (Pilih Keluarga)</option>
+                      {data.families?.map((f: any) => (
+                        <option key={f.id} value={f.id}>{f.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-1.5">Status di Keluarga</label>
+                    <select name="familyRelation" defaultValue={selectedProfile.familyRelation || ""} className="w-full px-4 py-2.5 rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm text-zinc-900 bg-white">
+                      <option value="">-</option>
+                      <option value="Suami">Suami</option>
+                      <option value="Istri">Istri</option>
+                      <option value="Anak">Anak</option>
+                      <option value="Ayah">Ayah</option>
+                      <option value="Ibu">Ibu</option>
+                      <option value="Lainnya">Lainnya</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-zinc-700 mb-1.5">Komunitas Sel (Komsel)</label>
@@ -1047,6 +1277,35 @@ export default function JemaatDashboard() {
                       <option value="true">Sudah</option>
                     </select>
                   </div>
+
+                  {/* DAFTAR ANGGOTA KELUARGA TABEL DI FORM EDIT */}
+                  {selectedFamilyId !== "-" && data.families?.find((f: any) => f.id === selectedFamilyId)?.members?.filter((m: any) => m.id !== selectedProfile?.id).length > 0 && (
+                    <div className="sm:col-span-2 mt-2">
+                      <h4 className="text-xs font-bold text-zinc-900 mb-2">Tabel Anggota Keluarga Terdaftar</h4>
+                      <div className="bg-white rounded-xl border border-zinc-200/60 overflow-hidden shadow-sm">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead className="bg-zinc-50 border-b border-zinc-100 text-zinc-500 font-bold">
+                            <tr>
+                              <th className="px-4 py-2">Nama</th>
+                              <th className="px-4 py-2">Nomor Telepon</th>
+                              <th className="px-4 py-2">Statusnya dalam keluarga</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-100">
+                            {data.families.find((f: any) => f.id === selectedFamilyId).members.filter((m: any) => m.id !== selectedProfile?.id).map((relative: any, i: number) => (
+                              <tr key={i} className="hover:bg-zinc-50/50">
+                                <td className="px-4 py-3 font-bold text-zinc-900">{relative.name}</td>
+                                <td className="px-4 py-3 text-zinc-600">{relative.phone || '-'}</td>
+                                <td className="px-4 py-3 text-zinc-600">{relative.familyRelation || '-'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {renderDynamicFamilyTable()}
                 </div>
 
                 <div className="pt-6 border-t border-zinc-100 flex justify-end gap-3">
