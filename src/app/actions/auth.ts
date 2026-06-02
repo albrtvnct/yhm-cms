@@ -37,6 +37,7 @@ export async function registerAction(prevState: any, formData: FormData) {
             email,
             phone,
             password: hashedPassword,
+            role: "ADMIN",
           },
         },
       },
