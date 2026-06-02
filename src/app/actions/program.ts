@@ -49,10 +49,23 @@ export async function addProgram(data: any) {
   }
 }
 
-export async function addApproval(programId: string, role: string, name: string, status: string, reason?: string) {
+export async function addApproval(programId: string, status: string, reason?: string, documents: string[] = []) {
   try {
-    const churchId = await getChurchId();
+    const session = await getSession();
+    if (!session || !session.userId) return { success: false, error: "Unauthorized" };
+
+    const churchId = session.churchId;
     if (!churchId) return { success: false, error: "Unauthorized" };
+
+    const currentUser = await prisma.user.findUnique({ where: { id: session.userId } });
+    if (!currentUser) return { success: false, error: "User not found" };
+
+    const role = currentUser.role;
+    const name = currentUser.name;
+
+    if (status === "REJECTED" && (!reason || reason.trim() === "")) {
+      return { success: false, error: "Alasan penolakan wajib diisi" };
+    }
 
     // Check if this person already voted
     const existingApproval = await prisma.programApproval.findFirst({
@@ -62,7 +75,7 @@ export async function addApproval(programId: string, role: string, name: string,
     if (existingApproval) {
       await prisma.programApproval.update({
         where: { id: existingApproval.id },
-        data: { role, status, reason }
+        data: { role, status, reason, documents }
       });
     } else {
       await prisma.programApproval.create({
@@ -71,7 +84,8 @@ export async function addApproval(programId: string, role: string, name: string,
           role,
           name,
           status,
-          reason
+          reason,
+          documents
         }
       });
     }

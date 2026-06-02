@@ -212,6 +212,7 @@ model ProgramApproval {
   name      String   // Name of the person who approved/rejected
   status    String   // APPROVED, REJECTED
   reason    String?
+  documents String[] @default([]) // Array of base64 document strings
   programId String
   program   Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())

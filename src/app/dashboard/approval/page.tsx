@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Portal from '@/components/Portal';
 import { getPrograms, addProgram, addApproval, updateProgramStatus, deleteProgram } from '@/app/actions/program';
+import { getCurrentUser } from '@/app/actions/user';
 
 export default function ApprovalDashboard() {
   const [data, setData] = useState<any[]>([]);
@@ -15,15 +16,25 @@ export default function ApprovalDashboard() {
 
   // Forms
   const formRef = useRef<HTMLFormElement>(null);
-  const approvalFormRef = useRef<HTMLFormElement>(null);
+
+  // User and Voting State
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showRejectForm, setShowRejectForm] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectFiles, setRejectFiles] = useState<File[]>([]);
+  const [votingLoading, setVotingLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
-    const res = await getPrograms();
-    if (res.success && res.data) {
-      setData(res.data);
-    } else {
-      console.error(res.error);
+    const [progRes, userRes] = await Promise.all([
+      getPrograms(),
+      getCurrentUser()
+    ]);
+    if (progRes.success && progRes.data) {
+      setData(progRes.data);
+    }
+    if (userRes.success && userRes.data) {
+      setCurrentUser(userRes.data);
     }
     setLoading(false);
   };
@@ -106,6 +117,58 @@ export default function ApprovalDashboard() {
     }
   };
 
+  const handleApprove = async () => {
+    if (!selectedProgram) return;
+    if (!confirm("Setujui program ini?")) return;
+    setVotingLoading(true);
+    const res = await addApproval(selectedProgram.id, "APPROVED");
+    if (res.success) {
+      alert("Persetujuan berhasil!");
+      await load();
+      setSelectedProgram(null);
+    } else {
+      alert("Gagal menyetujui: " + res.error);
+    }
+    setVotingLoading(false);
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleRejectSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProgram) return;
+    if (!rejectReason.trim()) {
+      alert("Alasan penolakan wajib diisi!");
+      return;
+    }
+
+    setVotingLoading(true);
+    try {
+      const base64Files = await Promise.all(rejectFiles.map(fileToBase64));
+      const res = await addApproval(selectedProgram.id, "REJECTED", rejectReason, base64Files);
+      if (res.success) {
+        alert("Program berhasil ditolak.");
+        await load();
+        setSelectedProgram(null);
+        setShowRejectForm(false);
+        setRejectReason("");
+        setRejectFiles([]);
+      } else {
+        alert("Gagal menolak program: " + res.error);
+      }
+    } catch (error) {
+      alert("Terjadi kesalahan saat mengunggah dokumen.");
+    }
+    setVotingLoading(false);
+  };
+
   const requiredRoles = ['Majelis', 'Diaken', 'Penatua', 'Gembala Sidang'];
 
   return (
@@ -114,7 +177,7 @@ export default function ApprovalDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">Approval Program</h1>
+          <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">Program Gereja</h1>
           <p className="text-zinc-500 text-sm mt-1.5 font-medium">Persetujuan dan pemantauan program kerja dari berbagai divisi.</p>
         </div>
         <div className="flex gap-3">
@@ -431,13 +494,83 @@ export default function ApprovalDashboard() {
                                 Alasan: {approval.reason}
                               </div>
                             )}
+                            {approval.documents && approval.documents.length > 0 && (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {approval.documents.map((doc: string, dIdx: number) => (
+                                  <a key={dIdx} href={doc} download={`Dokumen_Penolakan_${dIdx+1}`} className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-100 text-rose-700 text-[10px] font-bold rounded-lg hover:bg-rose-200 transition-colors">
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                    Unduh Dokumen {dIdx + 1}
+                                  </a>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ))
                       )}
                     </div>
                   </div>
 
-
+                  {/* Voting Form Section for Non-Admins */}
+                  {currentUser && currentUser.role !== 'ADMIN' && selectedProgram.status === 'MENUNGGU' && (
+                    <div className="pt-6 border-t border-zinc-100">
+                      {!showRejectForm ? (
+                        <div className="flex gap-3">
+                          <button onClick={handleApprove} disabled={votingLoading} className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm">
+                            {votingLoading ? 'Memproses...' : 'Setujui Program'}
+                          </button>
+                          <button onClick={() => setShowRejectForm(true)} disabled={votingLoading} className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm">
+                            Tolak Program
+                          </button>
+                        </div>
+                      ) : (
+                        <form onSubmit={handleRejectSubmit} className="bg-rose-50 p-5 rounded-2xl border border-rose-100 space-y-4">
+                          <div>
+                            <label className="block text-xs font-bold text-rose-900 mb-1.5">Alasan Penolakan <span className="text-rose-600">*</span></label>
+                            <textarea
+                              required
+                              value={rejectReason}
+                              onChange={(e) => setRejectReason(e.target.value)}
+                              rows={3}
+                              className="w-full px-4 py-2.5 bg-white border border-rose-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all"
+                              placeholder="Masukkan alasan mengapa program ini ditolak..."
+                            ></textarea>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-rose-900 mb-1.5">Dokumen Pendukung (Maks. 5 file, Maks. 2MB/file)</label>
+                            <input
+                              type="file"
+                              multiple
+                              accept=".pdf,.png,.jpg,.jpeg"
+                              onChange={(e) => {
+                                const files = Array.from(e.target.files || []);
+                                if (files.length > 5) {
+                                  alert("Maksimal 5 dokumen!");
+                                  e.target.value = "";
+                                  setRejectFiles([]);
+                                } else {
+                                  const oversized = files.find(f => f.size > 2 * 1024 * 1024);
+                                  if (oversized) {
+                                    alert("Ada file yang ukurannya lebih dari 2MB!");
+                                    e.target.value = "";
+                                    setRejectFiles([]);
+                                  } else {
+                                    setRejectFiles(files);
+                                  }
+                                }
+                              }}
+                              className="block w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-rose-100 file:text-rose-700 hover:file:bg-rose-200"
+                            />
+                          </div>
+                          <div className="flex justify-end gap-3 pt-2">
+                            <button type="button" onClick={() => setShowRejectForm(false)} className="px-5 py-2.5 text-rose-600 font-bold hover:bg-rose-100 rounded-xl transition-colors text-sm">Batal</button>
+                            <button type="submit" disabled={votingLoading} className="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition-all shadow-md text-sm">
+                              {votingLoading ? 'Menyimpan...' : 'Kirim Penolakan'}
+                            </button>
+                          </div>
+                        </form>
+                      )}
+                    </div>
+                  )}
 
                   <div className="pt-6 border-t border-zinc-100 flex gap-3">
                     {selectedProgram.proposalFile ? (

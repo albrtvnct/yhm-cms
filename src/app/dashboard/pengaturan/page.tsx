@@ -177,7 +177,7 @@ export default function SettingsPage() {
   const availableMenus = [
     "Dashboard", "Persuratan", "Keuangan & Donasi", "Inventaris", 
     "Jemaat", "Kehadiran", "Pelayanan", "Sakramen", "Visitasi", "Komsel", 
-    "Program", "Full timer", "Hamba Tuhan", "Approval", "Pengaturan"
+    "Program", "Full timer", "Hamba Tuhan", "Program Gereja", "Pengaturan"
   ];
   const permissionRoles = ["MAJELIS", "DIAKEN", "PENATUA", "GEMBALA SIDANG", "PELAYAN"];
 

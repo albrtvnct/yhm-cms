@@ -103,3 +103,19 @@ export async function deleteUser(id: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function getCurrentUser() {
+  try {
+    const session = await getSession();
+    if (!session) return { success: false, error: "Unauthorized" };
+    
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { id: true, name: true, role: true, email: true }
+    });
+
+    return { success: true, data: user };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
