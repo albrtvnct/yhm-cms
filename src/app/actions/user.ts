@@ -32,7 +32,7 @@ export async function getUsers() {
   }
 }
 
-export async function addUser(data: { name: string; email: string; passwordRaw: string; role: string }) {
+export async function addUser(data: { name: string; email: string; passwordRaw: string; role: string; seksi?: string }) {
   try {
     const churchId = await getChurchId();
     if (!churchId) return { success: false, error: "Unauthorized" };
@@ -61,6 +61,7 @@ export async function addUser(data: { name: string; email: string; passwordRaw: 
         email: data.email,
         password: hashedPassword,
         role: data.role,
+        seksi: data.seksi || null,
         churchId,
       },
       select: {

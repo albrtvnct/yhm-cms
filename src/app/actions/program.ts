@@ -10,11 +10,23 @@ async function getChurchId() {
 
 export async function getPrograms() {
   try {
-    const churchId = await getChurchId();
+    const session = await getSession();
+    if (!session) return { success: false, error: "Unauthorized" };
+
+    const churchId = session.churchId;
     if (!churchId) return { success: false, error: "Unauthorized" };
 
+    const currentUser = await prisma.user.findUnique({ where: { id: session.userId } });
+    if (!currentUser) return { success: false, error: "User not found" };
+
+    const whereClause: any = { churchId };
+
+    if (currentUser.role === "SEKSI" && currentUser.seksi) {
+      whereClause.divisi = currentUser.seksi;
+    }
+
     const programs = await prisma.program.findMany({
-      where: { churchId },
+      where: whereClause,
       include: { approvals: true },
       orderBy: { tanggal: 'asc' },
     });
@@ -27,13 +39,24 @@ export async function getPrograms() {
 
 export async function addProgram(data: any) {
   try {
-    const churchId = await getChurchId();
+    const session = await getSession();
+    if (!session) return { success: false, error: "Unauthorized" };
+
+    const churchId = session.churchId;
     if (!churchId) return { success: false, error: "Unauthorized" };
+
+    const currentUser = await prisma.user.findUnique({ where: { id: session.userId } });
+    if (!currentUser) return { success: false, error: "User not found" };
+
+    let divisi = data.divisi;
+    if (currentUser.role === "SEKSI" && currentUser.seksi) {
+      divisi = currentUser.seksi;
+    }
 
     const newProgram = await prisma.program.create({
       data: {
         nama: data.nama,
-        divisi: data.divisi,
+        divisi: divisi,
         dana: parseFloat(data.dana.toString().replace(/[^0-9.-]+/g,"")) || 0,
         penanggungJawab: data.penanggungJawab,
         proposalFile: data.proposalFile || null,

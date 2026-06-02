@@ -406,7 +406,11 @@ export default function ApprovalDashboard() {
 
                     <div>
                       <label className="block text-xs font-bold text-zinc-700 mb-1.5">Divisi Pelaksana <span className="text-rose-500">*</span></label>
-                      <input name="divisi" type="text" required placeholder="Contoh: Komisi Pemuda" className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
+                      {currentUser?.role === "SEKSI" ? (
+                        <input name="divisi" type="text" readOnly value={currentUser.seksi || ""} className="w-full px-4 py-2.5 bg-zinc-100 border border-zinc-200 rounded-xl text-sm text-zinc-500 font-bold focus:outline-none cursor-not-allowed" />
+                      ) : (
+                        <input name="divisi" type="text" required placeholder="Contoh: Komisi Pemuda" className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
+                      )}
                     </div>
 
                     <div>
@@ -510,8 +514,8 @@ export default function ApprovalDashboard() {
                     </div>
                   </div>
 
-                  {/* Voting Form Section for Non-Admins */}
-                  {currentUser && currentUser.role !== 'ADMIN' && selectedProgram.status === 'MENUNGGU' && (
+                  {/* Voting Form Section for Non-Admins and Non-Seksi */}
+                  {currentUser && currentUser.role !== 'ADMIN' && currentUser.role !== 'SEKSI' && selectedProgram.status === 'MENUNGGU' && (
                     <div className="pt-6 border-t border-zinc-100">
                       {!showRejectForm ? (
                         <div className="flex gap-3">

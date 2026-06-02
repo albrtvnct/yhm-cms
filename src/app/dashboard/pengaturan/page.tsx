@@ -5,6 +5,7 @@ import { getChurchSettings, updateChurchSettings } from "@/app/actions/settings"
 import { setAttendanceMode, getKehadiranSetup } from "@/app/actions/attendance";
 import { getUsers, addUser, deleteUser } from "@/app/actions/user";
 import { getRolePermissions, updateRolePermissions } from "@/app/actions/permissions";
+import { getSeksis, addSeksi, deleteSeksi } from "@/app/actions/seksi";
 import Portal from "@/components/Portal";
 
 export default function SettingsPage() {
@@ -32,12 +33,21 @@ export default function SettingsPage() {
   const [selectedRoleForPerms, setSelectedRoleForPerms] = useState("MAJELIS");
   const [savingPerms, setSavingPerms] = useState(false);
 
+  // Seksi State
+  const [seksis, setSeksis] = useState<string[]>([]);
+  const [newSeksiName, setNewSeksiName] = useState("");
+  const [savingSeksi, setSavingSeksi] = useState(false);
+
+  // Add User Form State
+  const [selectedRole, setSelectedRole] = useState("PELAYAN");
+
   const loadData = async () => {
-    const [settingsRes, modeRes, usersRes, permsRes] = await Promise.all([
+    const [settingsRes, modeRes, usersRes, permsRes, seksisRes] = await Promise.all([
       getChurchSettings(),
       getKehadiranSetup(),
       getUsers(),
       getRolePermissions(),
+      getSeksis(),
     ]);
     if (settingsRes.success && settingsRes.data) {
       setChurchName(settingsRes.data.name);
@@ -56,6 +66,9 @@ export default function SettingsPage() {
     }
     if (permsRes.success && permsRes.data) {
       setRolePermissions(permsRes.data as Record<string, string[]>);
+    }
+    if (seksisRes.success && seksisRes.data) {
+      setSeksis(seksisRes.data);
     }
     setLoading(false);
   };
@@ -130,6 +143,7 @@ export default function SettingsPage() {
       email: formData.get("email") as string,
       passwordRaw: formData.get("password") as string,
       role: formData.get("role") as string,
+      seksi: formData.get("seksiName") as string || undefined,
     };
 
     const res = await addUser(data);
@@ -164,6 +178,31 @@ export default function SettingsPage() {
     setSavingPerms(false);
   };
 
+  const handleAddSeksi = async () => {
+    if (!newSeksiName.trim()) return;
+    setSavingSeksi(true);
+    const res = await addSeksi(newSeksiName.trim());
+    if (res.success) {
+      setNewSeksiName("");
+      await loadData();
+    } else {
+      alert("Gagal menambah seksi: " + res.error);
+    }
+    setSavingSeksi(false);
+  };
+
+  const handleDeleteSeksi = async (name: string) => {
+    if (!confirm(`Hapus seksi ${name}?`)) return;
+    setSavingSeksi(true);
+    const res = await deleteSeksi(name);
+    if (res.success) {
+      await loadData();
+    } else {
+      alert("Gagal menghapus seksi: " + res.error);
+    }
+    setSavingSeksi(false);
+  };
+
   const togglePermission = (menuName: string) => {
     setRolePermissions(prev => {
       const current = prev[selectedRoleForPerms] || [];
@@ -179,7 +218,7 @@ export default function SettingsPage() {
     "Jemaat", "Kehadiran", "Pelayanan", "Sakramen", "Visitasi", "Komsel", 
     "Program", "Full timer", "Hamba Tuhan", "Program Gereja", "Pengaturan"
   ];
-  const permissionRoles = ["MAJELIS", "DIAKEN", "PENATUA", "GEMBALA SIDANG", "PELAYAN"];
+  const permissionRoles = ["MAJELIS", "DIAKEN", "PENATUA", "GEMBALA SIDANG", "PELAYAN", "SEKSI"];
 
   const placeholders = [
     "[NOMOR INDUK]",
@@ -652,6 +691,58 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* ── MANAJEMEN SEKSI ────────────────────────────────────────────── */}
+      <div className="pt-8 border-t border-zinc-100">
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xs font-black text-zinc-400 tracking-[0.2em] uppercase">Manajemen Seksi / Divisi</h2>
+            <p className="text-sm text-zinc-500 mt-1.5 font-medium">
+              Atur daftar seksi yang ada di gereja (misal: Seksi KAA, Seksi Pemuda Remaja, dll).
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-3xl border border-zinc-200/60 shadow-sm p-6">
+          <div className="flex gap-3 mb-6">
+            <input
+              type="text"
+              value={newSeksiName}
+              onChange={(e) => setNewSeksiName(e.target.value)}
+              placeholder="Contoh: Seksi KAA"
+              className="flex-1 px-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-all"
+            />
+            <button
+              onClick={handleAddSeksi}
+              disabled={savingSeksi || !newSeksiName.trim()}
+              className="px-5 py-2 bg-zinc-900 text-white font-bold text-sm rounded-xl hover:bg-zinc-800 disabled:bg-zinc-400 transition-all shadow-md"
+            >
+              Tambah Seksi
+            </button>
+          </div>
+
+          {seksis.length === 0 ? (
+            <div className="text-sm text-zinc-500 italic p-4 bg-zinc-50 rounded-xl border border-zinc-100 text-center">
+              Belum ada daftar seksi.
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {seksis.map((seksi, idx) => (
+                <div key={idx} className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold shadow-sm">
+                  <span>{seksi}</span>
+                  <button 
+                    onClick={() => handleDeleteSeksi(seksi)}
+                    disabled={savingSeksi}
+                    className="w-5 h-5 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-400 hover:bg-rose-100 hover:text-rose-600 transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* ── ROLE PERMISSIONS SECTION ─────────────────────────────────────── */}
       <div className="pt-8 border-t border-zinc-100">
         <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -747,7 +838,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-zinc-700 mb-1.5">Jabatan (Role)</label>
-                    <select name="role" required className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all">
+                    <select name="role" required value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)} className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all text-zinc-700 font-medium">
                       <option value="">-- Pilih Jabatan --</option>
                       <option value="ADMIN">Admin Utama</option>
                       <option value="MAJELIS">Majelis</option>
@@ -755,8 +846,26 @@ export default function SettingsPage() {
                       <option value="PENATUA">Penatua</option>
                       <option value="GEMBALA SIDANG">Gembala Sidang</option>
                       <option value="PELAYAN">Pelayan Divisi / PIC</option>
+                      <option value="SEKSI">Seksi</option>
                     </select>
                   </div>
+                  {selectedRole === "SEKSI" && (
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-700 mb-1.5">Pilih Seksi <span className="text-rose-500">*</span></label>
+                      {seksis.length === 0 ? (
+                        <div className="text-xs text-rose-500 bg-rose-50 p-2 rounded-lg border border-rose-100 font-medium">
+                          Belum ada seksi terdaftar. Silakan buat di menu Manajemen Seksi terlebih dahulu.
+                        </div>
+                      ) : (
+                        <select name="seksiName" required className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all text-zinc-700 font-medium">
+                          <option value="">-- Pilih Seksi --</option>
+                          {seksis.map((s, idx) => (
+                            <option key={idx} value={s}>{s}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  )}
                   <div>
                     <label className="block text-xs font-bold text-zinc-700 mb-1.5">Password Sementara</label>
                     <input name="password" type="password" required placeholder="Minimal 6 karakter" minLength={6} className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />

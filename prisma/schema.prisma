@@ -22,6 +22,7 @@ model Church {
   aiKehadiran      String?
   aiInventaris     String?
   rolePermissions  Json?    // Stores object { "ROLE": ["Menu1", "Menu2"] }
+  seksis           String[] @default([]) // List of Seksi names managed by admin
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -44,7 +45,8 @@ model User {
   email     String   @unique
   phone     String?
   password  String
-  role      String   @default("ADMIN")
+  role      String   // ADMIN, MAJELIS, DIAKEN, PENATUA, GEMBALA SIDANG, PELAYAN, SEKSI
+  seksi     String?  // If role is SEKSI, store the seksi name here
   churchId  String
   church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
