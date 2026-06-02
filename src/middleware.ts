@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { decrypt } from "@/lib/session";
 
 const protectedRoutes = ["/dashboard", "/setup"];
-const publicRoutes = ["/login", "/register"];
+const publicRoutes: string[] = [];
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
@@ -22,7 +22,7 @@ export async function middleware(req: NextRequest) {
   }
 
   if (isProtectedRoute && !session) {
-    return NextResponse.redirect(new URL("/login", req.nextUrl));
+    return NextResponse.redirect(new URL("/", req.nextUrl));
   }
 
   // If logged in and on a public route (login/register), redirect to dashboard

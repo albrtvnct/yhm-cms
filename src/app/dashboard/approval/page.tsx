@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import Portal from '@/components/Portal';
-import { getPrograms, addProgram, addApproval, updateProgramStatus, deleteProgram } from '@/app/actions/program';
+import { getPrograms, addProgram, addApproval, updateProgramStatus, deleteProgram, editProgram } from '@/app/actions/program';
 import { getCurrentUser } from '@/app/actions/user';
 
 export default function ApprovalDashboard() {
@@ -12,6 +12,7 @@ export default function ApprovalDashboard() {
   // Modals state
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
 
   // Forms
@@ -77,13 +78,18 @@ export default function ApprovalDashboard() {
     const formData = new FormData(form);
     const payload = Object.fromEntries(formData.entries());
 
-    const res = await addProgram(payload);
+    const res = isEditing && selectedProgram 
+      ? await editProgram(selectedProgram.id, payload)
+      : await addProgram(payload);
+      
     if (res.success) {
       form.reset();
       setShowAddModal(false);
+      setIsEditing(false);
+      setSelectedProgram(null);
       await load();
     } else {
-      alert("Gagal menambahkan program: " + res.error);
+      alert(`Gagal ${isEditing ? 'mengubah' : 'menambahkan'} program: ${res.error}`);
     }
     setFormLoading(false);
   };
@@ -182,8 +188,12 @@ export default function ApprovalDashboard() {
         </div>
         <div className="flex gap-3">
           <button 
-            onClick={() => setShowAddModal(true)}
-            className="px-5 py-2.5 bg-zinc-900 text-white text-sm font-bold rounded-xl hover:bg-zinc-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+            onClick={() => {
+              setIsEditing(false);
+              setSelectedProgram(null);
+              setShowAddModal(true);
+            }} 
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-xl transition-all shadow-md group"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
             Ajukan Program
@@ -385,11 +395,15 @@ export default function ApprovalDashboard() {
               <div className="p-8">
                 <div className="flex justify-between items-center mb-6">
                   <div>
-                    <h2 className="text-2xl font-extrabold text-zinc-900">Ajukan Program Baru</h2>
-                    <p className="text-sm text-zinc-500 font-medium mt-1">Lengkapi form berikut untuk mengajukan program kerja.</p>
+                    <h2 className="text-2xl font-extrabold text-zinc-900">{isEditing ? "Edit Program Kerja" : "Ajukan Program Baru"}</h2>
+                    <p className="text-sm text-zinc-500 font-medium mt-1">{isEditing ? "Perbarui detail program. Jika program ini ditolak sebelumnya, program akan otomatis dikembalikan ke status Menunggu." : "Lengkapi form berikut untuk mengajukan program kerja."}</p>
                   </div>
                   <button 
-                    onClick={() => setShowAddModal(false)}
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setIsEditing(false);
+                      if (!isEditing) setSelectedProgram(null);
+                    }}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 text-zinc-500 hover:bg-zinc-200 transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -401,7 +415,7 @@ export default function ApprovalDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold text-zinc-700 mb-1.5">Nama Program <span className="text-rose-500">*</span></label>
-                      <input name="nama" type="text" required placeholder="Contoh: Retreat Pemuda 2026" className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
+                      <input name="nama" type="text" required defaultValue={isEditing && selectedProgram ? selectedProgram.nama : ""} placeholder="Contoh: Retreat Pemuda 2026" className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
                     </div>
 
                     <div>
@@ -409,36 +423,50 @@ export default function ApprovalDashboard() {
                       {currentUser?.role === "SEKSI" ? (
                         <input name="divisi" type="text" readOnly value={currentUser.seksi || ""} className="w-full px-4 py-2.5 bg-zinc-100 border border-zinc-200 rounded-xl text-sm text-zinc-500 font-bold focus:outline-none cursor-not-allowed" />
                       ) : (
-                        <input name="divisi" type="text" required placeholder="Contoh: Komisi Pemuda" className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
+                        <input name="divisi" type="text" required defaultValue={isEditing && selectedProgram ? selectedProgram.divisi : ""} placeholder="Contoh: Komisi Pemuda" className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
                       )}
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-zinc-700 mb-1.5">Penanggung Jawab <span className="text-rose-500">*</span></label>
-                      <input name="penanggungJawab" type="text" required placeholder="Nama lengkap PJ" className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
+                      <input name="penanggungJawab" type="text" required defaultValue={isEditing && selectedProgram ? selectedProgram.penanggungJawab : ""} placeholder="Nama lengkap PJ" className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-zinc-700 mb-1.5">Kebutuhan Dana <span className="text-rose-500">*</span></label>
-                      <input name="dana" type="text" required placeholder="Contoh: 15000000" className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
+                      <input name="dana" type="text" required defaultValue={isEditing && selectedProgram ? selectedProgram.dana : ""} placeholder="Contoh: 15000000" className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-zinc-700 mb-1.5">Tanggal Pelaksanaan <span className="text-rose-500">*</span></label>
-                      <input name="tanggal" type="date" required className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
+                      <input name="tanggal" type="date" required defaultValue={isEditing && selectedProgram ? new Date(selectedProgram.tanggal).toISOString().split('T')[0] : ""} className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
                     </div>
 
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold text-zinc-700 mb-1.5">Tautan Proposal Dokumen</label>
-                      <input name="proposalFile" type="url" placeholder="https://docs.google.com/..." className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
+                      <input name="proposalFile" type="url" defaultValue={isEditing && selectedProgram ? selectedProgram.proposalFile : ""} placeholder="https://docs.google.com/..." className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:bg-white transition-all" />
                       <p className="text-[10px] text-zinc-500 mt-1">Masukkan link ke Google Drive atau penyimpanan lain (opsional)</p>
                     </div>
                   </div>
 
                   <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100">
-                    <button type="button" onClick={() => setShowAddModal(false)} className="px-5 py-2.5 text-zinc-500 font-bold hover:bg-zinc-100 rounded-xl transition-colors text-sm">Batal</button>
-                    <button type="submit" disabled={formLoading} className="px-6 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-xl transition-all shadow-md flex items-center gap-2 text-sm">
-                      {formLoading ? 'Menyimpan...' : 'Ajukan Program'}
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setShowAddModal(false);
+                        setIsEditing(false);
+                        if (!isEditing) setSelectedProgram(null);
+                      }} 
+                      className="px-6 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-bold rounded-xl transition-all"
+                    >
+                      Batal
+                    </button>
+                    <button 
+                      type="submit" 
+                      disabled={formLoading} 
+                      className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-xl transition-all shadow-md flex items-center gap-2"
+                    >
+                      {formLoading ? 'Menyimpan...' : isEditing ? 'Simpan Perubahan' : 'Ajukan Program'}
                     </button>
                   </div>
                 </form>
@@ -467,12 +495,28 @@ export default function ApprovalDashboard() {
                 <div className="mb-8 pr-10">
                   <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-2">{selectedProgram.divisi}</div>
                   <h2 className="text-2xl font-extrabold text-zinc-900 leading-tight">{selectedProgram.nama}</h2>
-                  <div className="flex items-center gap-3 mt-3">
-                    <span className="bg-zinc-100 text-zinc-600 px-3 py-1 rounded-md text-xs font-bold tracking-wide">Dana: Rp {selectedProgram.dana.toLocaleString('id-ID')}</span>
-                    <span className="bg-zinc-100 text-zinc-600 px-3 py-1 rounded-md text-xs font-bold tracking-wide">PJ: {selectedProgram.penanggungJawab}</span>
-                    <span className={`px-2 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wide ${selectedProgram.status === 'DISETUJUI' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : selectedProgram.status === 'DITOLAK' ? 'bg-rose-50 text-rose-600 border border-rose-200' : 'bg-amber-50 text-amber-600 border border-amber-200'}`}>
-                      {selectedProgram.status}
-                    </span>
+                  <div className="flex items-center justify-between mt-3">
+                    <div className="flex items-center gap-3">
+                      <span className="bg-zinc-100 text-zinc-600 px-3 py-1 rounded-md text-xs font-bold tracking-wide">Dana: Rp {selectedProgram.dana.toLocaleString('id-ID')}</span>
+                      <span className="bg-zinc-100 text-zinc-600 px-3 py-1 rounded-md text-xs font-bold tracking-wide">PJ: {selectedProgram.penanggungJawab}</span>
+                      <span className={`px-2 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wide ${selectedProgram.status === 'DISETUJUI' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : selectedProgram.status === 'DITOLAK' ? 'bg-rose-50 text-rose-600 border border-rose-200' : selectedProgram.status === 'SELESAI' ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'bg-amber-50 text-amber-600 border border-amber-200'}`}>
+                        {selectedProgram.status}
+                      </span>
+                    </div>
+                    {/* EDIT BUTTON (Only if status is MENUNGGU or DITOLAK and user has permission) */}
+                    {(selectedProgram.status === 'MENUNGGU' || selectedProgram.status === 'DITOLAK') && 
+                     (currentUser?.role === 'ADMIN' || (currentUser?.role === 'SEKSI' && currentUser?.seksi === selectedProgram.divisi) || currentUser?.role === 'MAJELIS') && (
+                      <button
+                        onClick={() => {
+                          setIsEditing(true);
+                          setShowAddModal(true);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        Edit Program
+                      </button>
+                    )}
                   </div>
                 </div>
 

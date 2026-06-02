@@ -217,7 +217,7 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                <a href={plan.name === "Free" ? "/register" : "#kontak"} className={plan.featured ? "btn-cta" : "btn-outline"} style={!plan.featured ? { color: "var(--brand-navy)", borderColor: "var(--border-soft)" } : {}}>
+                <a href="#kontak" className={plan.featured ? "btn-cta" : "btn-outline"} style={!plan.featured ? { color: "var(--brand-navy)", borderColor: "var(--border-soft)" } : {}}>
                   {plan.cta}
                 </a>
               </div>

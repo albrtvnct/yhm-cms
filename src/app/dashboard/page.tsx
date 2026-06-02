@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 
 export default async function DashboardOverview() {
   const session = await getSession();
-  if (!session) redirect("/login");
+  if (!session) redirect("/");
 
   const churchId = session.churchId;
 
@@ -80,7 +80,7 @@ export default async function DashboardOverview() {
 
   const maxFlow = Math.max(...monthlyFlow.map(Math.abs), 1); // Avoid div by 0
 
-  if (!church) redirect("/login");
+  if (!church) redirect("/");
 
   const formattedCash = new Intl.NumberFormat('id-ID', {
     style: 'currency',

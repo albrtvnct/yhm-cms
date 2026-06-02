@@ -7,7 +7,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const session = await getSession();
 
   if (!session) {
-    redirect("/login");
+    redirect("/");
   }
 
   // Fetch real data
@@ -17,7 +17,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   });
 
   if (!user) {
-    redirect("/login");
+    redirect("/");
   }
 
   return <DashboardLayoutWrapper user={user}>{children}</DashboardLayoutWrapper>;

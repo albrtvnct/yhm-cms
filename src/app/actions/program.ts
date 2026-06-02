@@ -72,6 +72,52 @@ export async function addProgram(data: any) {
   }
 }
 
+export async function editProgram(id: string, data: any) {
+  try {
+    const session = await getSession();
+    if (!session) return { success: false, error: "Unauthorized" };
+
+    const churchId = session.churchId;
+    if (!churchId) return { success: false, error: "Unauthorized" };
+
+    const currentUser = await prisma.user.findUnique({ where: { id: session.userId } });
+    if (!currentUser) return { success: false, error: "User not found" };
+
+    const program = await prisma.program.findUnique({ where: { id, churchId } });
+    if (!program) return { success: false, error: "Program not found" };
+
+    let divisi = data.divisi;
+    if (currentUser.role === "SEKSI" && currentUser.seksi) {
+      divisi = currentUser.seksi;
+    }
+
+    const updatedProgram = await prisma.program.update({
+      where: { id },
+      data: {
+        nama: data.nama,
+        divisi: divisi,
+        dana: parseFloat(data.dana.toString().replace(/[^0-9.-]+/g,"")) || 0,
+        penanggungJawab: data.penanggungJawab,
+        proposalFile: data.proposalFile || null,
+        tanggal: new Date(data.tanggal),
+        // If it was rejected, editing it resubmits it
+        status: program.status === "DITOLAK" ? "MENUNGGU" : program.status,
+      },
+    });
+
+    // If it was rejected and we resubmitted, we might want to delete old approvals
+    if (program.status === "DITOLAK") {
+      await prisma.programApproval.deleteMany({
+        where: { programId: id }
+      });
+    }
+
+    return { success: true, data: updatedProgram };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
 export async function addApproval(programId: string, status: string, reason?: string, documents: string[] = []) {
   try {
     const session = await getSession();
