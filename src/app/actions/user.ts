@@ -22,6 +22,7 @@ export async function getUsers() {
         name: true,
         email: true,
         role: true,
+        customPermissions: true,
         createdAt: true,
       }
     });
@@ -116,6 +117,32 @@ export async function getCurrentUser() {
     });
 
     return { success: true, data: user };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateUserPermissions(userId: string, customPermissions: string[] | null) {
+  try {
+    const churchId = await getChurchId();
+    if (!churchId) return { success: false, error: "Unauthorized" };
+
+    const session = await getSession();
+    if (!session) return { success: false, error: "Unauthorized" };
+
+    const currentUser = await prisma.user.findUnique({ where: { id: session.userId } });
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      return { success: false, error: "Hanya ADMIN yang dapat mengatur hak akses spesifik." };
+    }
+
+    await prisma.user.update({
+      where: { id: userId, churchId },
+      data: {
+        customPermissions: customPermissions ? JSON.parse(JSON.stringify(customPermissions)) : null,
+      }
+    });
+
+    return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

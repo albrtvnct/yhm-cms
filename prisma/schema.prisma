@@ -47,6 +47,7 @@ model User {
   password  String
   role      String   // ADMIN, MAJELIS, DIAKEN, PENATUA, GEMBALA SIDANG, PELAYAN, SEKSI
   seksi     String?  // If role is SEKSI, store the seksi name here
+  customPermissions Json? // Optional per-user override for allowed menus
   churchId  String
   church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())

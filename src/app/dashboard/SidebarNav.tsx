@@ -4,10 +4,12 @@ import { usePathname } from "next/navigation";
 
 export default function SidebarNav({ 
   role, 
-  rolePermissions 
+  rolePermissions,
+  customPermissions
 }: { 
   role?: string, 
-  rolePermissions?: any 
+  rolePermissions?: any,
+  customPermissions?: any
 }) {
   const pathname = usePathname();
 
@@ -54,7 +56,13 @@ export default function SidebarNav({
   if (role !== "ADMIN") {
     // get user permissions, default to Dashboard if not configured
     const userRole = role || "PELAYAN";
-    const allowedMenus = rolePermissions?.[userRole] || ["Dashboard"];
+    let allowedMenus = ["Dashboard"];
+    
+    if (customPermissions && Array.isArray(customPermissions)) {
+      allowedMenus = customPermissions;
+    } else {
+      allowedMenus = rolePermissions?.[userRole] || ["Dashboard"];
+    }
 
     menuGroups = allMenuGroups.map(group => ({
       ...group,

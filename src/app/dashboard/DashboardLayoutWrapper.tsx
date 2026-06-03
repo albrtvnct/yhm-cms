@@ -43,6 +43,7 @@ export default function DashboardLayoutWrapper({
             <SidebarNav 
               role={user.role} 
               rolePermissions={user.church.rolePermissions || {}} 
+              customPermissions={user.customPermissions}
             />
           </div>
         </div>
