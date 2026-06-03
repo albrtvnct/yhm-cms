@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decrypt } from "@/lib/session";
 
-const protectedRoutes = ["/dashboard", "/setup"];
+const protectedRoutes = ["/dashboard", "/setup", "/super-admin"];
 const publicRoutes: string[] = [];
 
 export async function middleware(req: NextRequest) {
@@ -25,10 +25,25 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.nextUrl));
   }
 
+  if (session) {
+    const isSuperAdmin = (session as any).role === "SUPER_ADMIN";
+    
+    // Redirect Super Admin trying to access standard dashboard or setup routes
+    if (isSuperAdmin && !path.startsWith("/super-admin")) {
+      return NextResponse.redirect(new URL("/super-admin", req.nextUrl));
+    }
+    
+    // Redirect standard users trying to access super-admin routes
+    if (!isSuperAdmin && path.startsWith("/super-admin")) {
+      return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+    }
+  }
+
   // If logged in and on a public route (login/register), redirect to dashboard
   // But DON'T redirect from /setup to avoid infinite loop
   if (isPublicRoute && session) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+    const isSuperAdmin = (session as any).role === "SUPER_ADMIN";
+    return NextResponse.redirect(new URL(isSuperAdmin ? "/super-admin" : "/dashboard", req.nextUrl));
   }
 
   return NextResponse.next({

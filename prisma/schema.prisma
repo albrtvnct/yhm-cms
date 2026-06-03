@@ -26,6 +26,12 @@ model Church {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  // Limit and access configuration
+  maxMembers       Int      @default(-1)
+  maxWorkers       Int      @default(-1)
+  maxUsers         Int      @default(-1)
+  allowedMenus     Json?    // Array of allowed menu names (null means unlimited/all allowed)
+
   users               User[]
   members             Member[]
   workers             Worker[]

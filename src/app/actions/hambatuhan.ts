@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { checkWorkerLimit } from "@/lib/limits";
 
 export async function getHambaTuhan() {
   try {
@@ -26,6 +27,11 @@ export async function addHambaTuhan(data: any) {
     const session = await getSession();
     if (!session) throw new Error("Unauthorized");
     const churchId = session.churchId;
+
+    const limit = await checkWorkerLimit(churchId);
+    if (!limit.allowed) {
+      return { success: false, error: `Batas kapasitas pelayan/pekerja gereja telah tercapai (${limit.max} orang). Silakan hubungi Super Admin.` };
+    }
 
     // 1. Create the Worker
     const newHambaTuhan = await prisma.worker.create({

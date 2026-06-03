@@ -6,12 +6,14 @@ export default function SidebarNav({
   role, 
   rolePermissions,
   customPermissions,
-  pendingProgramsCount = 0
+  pendingProgramsCount = 0,
+  allowedMenus
 }: { 
   role?: string, 
   rolePermissions?: any,
   customPermissions?: any,
-  pendingProgramsCount?: number
+  pendingProgramsCount?: number,
+  allowedMenus?: any
 }) {
   const pathname = usePathname();
 
@@ -53,26 +55,38 @@ export default function SidebarNav({
     }
   ];
 
+  // Filter menu items based on church limits
+  let churchAllowed = allMenuGroups;
+  if (allowedMenus && Array.isArray(allowedMenus)) {
+    churchAllowed = allMenuGroups.map(group => ({
+      ...group,
+      items: group.items.filter(item => {
+        if (item.name === "Dashboard" || item.name === "Pengaturan") return true;
+        return allowedMenus.includes(item.name);
+      })
+    })).filter(group => group.items.length > 0);
+  }
+
   // Filter menu items based on role
-  let menuGroups = allMenuGroups;
+  let menuGroups = churchAllowed;
   if (role !== "ADMIN") {
     // get user permissions, default to Dashboard if not configured
     const userRole = role || "PELAYAN";
-    let allowedMenus = ["Dashboard"];
+    let allowedRolesMenus = ["Dashboard"];
     
     if (customPermissions && Array.isArray(customPermissions)) {
-      allowedMenus = customPermissions;
+      allowedRolesMenus = customPermissions;
     } else {
-      allowedMenus = rolePermissions?.[userRole] || ["Dashboard"];
+      allowedRolesMenus = rolePermissions?.[userRole] || ["Dashboard"];
     }
 
-    menuGroups = allMenuGroups.map(group => ({
+    menuGroups = churchAllowed.map(group => ({
       ...group,
       items: group.items.filter(item => {
         if (item.name === "Ibadah") {
-          return allowedMenus.includes("Ibadah") || allowedMenus.includes("Kehadiran");
+          return allowedRolesMenus.includes("Ibadah") || allowedRolesMenus.includes("Kehadiran");
         }
-        return allowedMenus.includes(item.name);
+        return allowedRolesMenus.includes(item.name);
       })
     })).filter(group => group.items.length > 0);
   }

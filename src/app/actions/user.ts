@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import bcrypt from "bcryptjs";
+import { checkUserLimit } from "@/lib/limits";
 
 async function getChurchId() {
   const session = await getSession();
@@ -37,6 +38,11 @@ export async function addUser(data: { name: string; email: string; passwordRaw: 
   try {
     const churchId = await getChurchId();
     if (!churchId) return { success: false, error: "Unauthorized" };
+
+    const limit = await checkUserLimit(churchId);
+    if (!limit.allowed) {
+      return { success: false, error: `Batas kapasitas pengguna (akun pengurus) telah tercapai untuk gereja Anda (${limit.max} akun). Silakan hubungi Super Admin.` };
+    }
 
     const session = await getSession();
     if (!session) return { success: false, error: "Unauthorized" };

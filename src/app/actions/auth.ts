@@ -13,6 +13,40 @@ export async function loginAction(prevState: any, formData: FormData) {
   const slug = formData.get("slug") as string | null;
 
   try {
+    // Auto-seed Super Admin if using the requested credentials
+    if (email === "admin@yeshhealmecms.com") {
+      let saChurch = await prisma.church.findUnique({
+        where: { slug: "super-admin" }
+      });
+      if (!saChurch) {
+        saChurch = await prisma.church.create({
+          data: {
+            name: "Yesh Heal Me CMS Admin Hub",
+            slug: "super-admin",
+            maxMembers: -1,
+            maxWorkers: -1,
+            maxUsers: -1,
+          }
+        });
+      }
+
+      let saUser = await prisma.user.findUnique({
+        where: { email }
+      });
+      if (!saUser) {
+        const hashedPassword = await bcrypt.hash("gotorevival", 10);
+        await prisma.user.create({
+          data: {
+            name: "Super Admin",
+            email: "admin@yeshhealmecms.com",
+            password: hashedPassword,
+            role: "SUPER_ADMIN",
+            churchId: saChurch.id
+          }
+        });
+      }
+    }
+
     const user = await prisma.user.findUnique({
       where: { email },
       include: { church: true }
@@ -76,6 +110,40 @@ export async function resolveChurchPortalAction(prevState: any, formData: FormDa
 
   let slug = "";
   try {
+    // Auto-seed Super Admin if resolving for admin@yeshhealmecms.com
+    if (email === "admin@yeshhealmecms.com") {
+      let saChurch = await prisma.church.findUnique({
+        where: { slug: "super-admin" }
+      });
+      if (!saChurch) {
+        saChurch = await prisma.church.create({
+          data: {
+            name: "Yesh Heal Me CMS Admin Hub",
+            slug: "super-admin",
+            maxMembers: -1,
+            maxWorkers: -1,
+            maxUsers: -1,
+          }
+        });
+      }
+
+      let saUser = await prisma.user.findUnique({
+        where: { email }
+      });
+      if (!saUser) {
+        const hashedPassword = await bcrypt.hash("gotorevival", 10);
+        await prisma.user.create({
+          data: {
+            name: "Super Admin",
+            email: "admin@yeshhealmecms.com",
+            password: hashedPassword,
+            role: "SUPER_ADMIN",
+            churchId: saChurch.id
+          }
+        });
+      }
+    }
+
     const user = await prisma.user.findUnique({
       where: { email },
       include: { church: true }

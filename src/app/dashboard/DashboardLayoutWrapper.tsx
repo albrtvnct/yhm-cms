@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import SidebarNav from "./SidebarNav";
 import TopbarActions from "./TopbarActions";
 
@@ -17,6 +18,7 @@ export default function DashboardLayoutWrapper({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(true);
+  const pathname = usePathname();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("dashboard-theme") || "dark";
@@ -39,6 +41,35 @@ export default function DashboardLayoutWrapper({
       document.documentElement.classList.remove("dashboard-dark");
     }
   };
+
+  // Check feature limitations set by Super Admin
+  let isForbidden = false;
+  const allowedMenus = user.church.allowedMenus;
+  if (allowedMenus && Array.isArray(allowedMenus)) {
+    const pathMenuMapping: { [key: string]: string } = {
+      "/dashboard/approval": "Program Gereja",
+      "/dashboard/persuratan": "Persuratan",
+      "/dashboard/keuangan": "Keuangan & Donasi",
+      "/dashboard/inventaris": "Inventaris",
+      "/dashboard/jemaat": "Jemaat",
+      "/dashboard/kehadiran": "Ibadah",
+      "/dashboard/pelayanan": "Pelayanan",
+      "/dashboard/sakramen": "Sakramen",
+      "/dashboard/visitasi": "Visitasi",
+      "/dashboard/komsel": "Komsel",
+      "/dashboard/program": "Program",
+      "/dashboard/full-timer": "Full timer",
+      "/dashboard/hamba-tuhan": "Hamba Tuhan",
+    };
+
+    const matchedPath = Object.keys(pathMenuMapping).find(path => pathname.startsWith(path));
+    if (matchedPath) {
+      const requiredMenu = pathMenuMapping[matchedPath];
+      if (!allowedMenus.includes(requiredMenu)) {
+        isForbidden = true;
+      }
+    }
+  }
 
   return (
     <div className="flex h-screen bg-dashboard-wrapper bg-[#f4f4f5] overflow-hidden font-sans text-zinc-900 selection:bg-purple-200">
@@ -72,6 +103,7 @@ export default function DashboardLayoutWrapper({
               rolePermissions={user.church.rolePermissions || {}} 
               customPermissions={user.customPermissions}
               pendingProgramsCount={pendingProgramsCount}
+              allowedMenus={user.church.allowedMenus}
             />
           </div>
         </div>
@@ -133,7 +165,35 @@ export default function DashboardLayoutWrapper({
         {/* Scrollable Page Content */}
         <main className="flex-1 overflow-y-auto p-6 lg:p-10 scroll-smooth">
           <div className="mx-auto max-w-7xl">
-            {children}
+            {isForbidden ? (
+              <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-white border border-zinc-200/80 rounded-3xl shadow-sm relative overflow-hidden">
+                <div className="absolute top-[-10%] right-[-10%] w-[300px] h-[300px] bg-amber-100 rounded-full blur-[80px] pointer-events-none opacity-40" />
+                <div className="absolute bottom-[-10%] left-[-10%] w-[300px] h-[300px] bg-indigo-100 rounded-full blur-[80px] pointer-events-none opacity-40" />
+
+                <div className="relative z-10 max-w-md">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200/50 flex items-center justify-center mx-auto mb-6 text-amber-500 shadow-inner">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-extrabold text-zinc-900 tracking-tight mb-3">Fitur Terkunci</h3>
+                  <p className="text-zinc-500 text-sm leading-relaxed mb-8">
+                    Fitur ini dinonaktifkan atau dibatasi oleh Super Admin untuk akun gereja Anda. Silakan hubungi Super Admin untuk memperbarui lisensi atau limitasi akun Anda.
+                  </p>
+                  <Link 
+                    href="/dashboard" 
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-900 text-white text-sm font-bold rounded-2xl hover:bg-zinc-800 transition-all shadow-md cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Kembali ke Dashboard
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              children
+            )}
           </div>
         </main>
       </div>

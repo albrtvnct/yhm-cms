@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { checkMemberLimit } from "@/lib/limits";
 
 export async function getJemaatData() {
   try {
@@ -108,6 +109,11 @@ export async function addMember(data: any) {
     const session = await getSession();
     if (!session) throw new Error("Unauthorized");
     const churchId = session.churchId;
+
+    const limit = await checkMemberLimit(churchId);
+    if (!limit.allowed) {
+      return { success: false, error: `Batas kapasitas jemaat telah tercapai untuk gereja Anda (${limit.max} jemaat). Silakan hubungi Super Admin.` };
+    }
 
     // Fetch church settings for NIJ format
     const church = await prisma.church.findUnique({
