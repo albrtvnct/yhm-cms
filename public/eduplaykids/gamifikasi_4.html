@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Suara - Game Latihan Berbicara</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #7209b7;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #ffbe0b;
+            --dark: #3d348b;
+            --light: #f8f9fa;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #7209b7, #3d348b);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 1rem;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            color: #333;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        
+        .intro, .level-selection, .game-area, .reward-screen, .settings {
+            transition: all 0.5s ease;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Intro Screen */
+        .intro {
+            text-align: center;
+        }
+        
+        .intro p {
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        
+        .character-selection {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .character {
+            width: 120px;
+            height: 160px;
+            background-color: var(--light);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 3px solid transparent;
+        }
+        
+        .character:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .character.selected {
+            border-color: var(--success);
+            box-shadow: 0 0 16px var(--success);
+        }
+        
+        .character-img {
+            width: 100%;
+            height: 100px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin-top: 10px;
+        }
+        
+        .character-name {
+            margin-top: 10px;
+            font-weight: bold;
+            color: var(--dark);
+        }
+        
+        .char-boy .character-img {
+            background-image: url('/api/placeholder/100/100');
+        }
+        
+        .char-girl .character-img {
+            background-image: url('/api/placeholder/100/100');
+        }
+        
+        /* Level Selection */
+        .level-selection {
+            text-align: center;
+        }
+        
+        .level-selection h2 {
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .levels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .level-btn {
+            background-color: var(--light);
+            border: none;
+            border-radius: 10px;
+            padding: 1rem;
+            color: var(--dark);
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .level-btn:hover {
+            background-color: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .level-btn.locked {
+            background-color: #ddd;
+            color: #999;
+            cursor: not-allowed;
+        }
+        
+        .level-btn.locked:hover {
+            transform: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Game Area */
+        .game-area {
+            position: relative;
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .game-score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .game-lives {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .life {
+            color: var(--danger);
+            font-size: 1.5rem;
+        }
+        
+        .challenge-container {
+            background-color: #f0f0f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .challenge-word {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--dark);
+            margin: 1rem 0;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .challenge-image {
+            width: 200px;
+            height: 200px;
+            margin: 1rem auto;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 12px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            border: none;
+            border-radius: 50px;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            min-width: 120px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+            color: #333;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-record {
+            background-color: var(--danger);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(247, 37, 133, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(247, 37, 133, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(247, 37, 133, 0);
+            }
+        }
+        
+        .btn-record.recording {
+            animation: recording 0.8s infinite alternate;
+        }
+        
+        @keyframes recording {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: var(--success);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .feedback {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+        
+        .feedback.show {
+            opacity: 1;
+        }
+        
+        .feedback.correct {
+            background-color: rgba(76, 201, 240, 0.2);
+            color: var(--success);
+        }
+        
+        .feedback.incorrect {
+            background-color: rgba(247, 37, 133, 0.2);
+            color: var(--danger);
+        }
+        
+        .speech-visualization {
+            height: 60px;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .bar {
+            display: inline-block;
+            width: 10px;
+            height: 5px;
+            margin: 0 2px;
+            background-color: var(--primary);
+            border-radius: 5px;
+        }
+        
+        /* Reward Screen */
+        .reward-screen {
+            text-align: center;
+        }
+        
+        .reward-header {
+            font-size: 2rem;
+            color: var(--success);
+            margin-bottom: 1rem;
+        }
+        
+        .stars {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .star {
+            font-size: 3rem;
+            color: #ccc;
+            transition: all 0.5s ease;
+        }
+        
+        .star.filled {
+            color: var(--warning);
+            animation: star-grow 0.5s ease;
+        }
+        
+        @keyframes star-grow {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .reward-message {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .reward-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        /* Settings Screen */
+        .settings {
+            padding: 1rem;
+        }
+        
+        .settings-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--primary);
+        }
+        
+        .settings-group {
+            margin-bottom: 2rem;
+        }
+        
+        .settings-group h3 {
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .slider-label {
+            min-width: 150px;
+        }
+        
+        .slider {
+            flex-grow: 1;
+            height: 10px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        
+        .slider:hover {
+            opacity: 1;
+        }
+        
+        .speech-test {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .settings-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .character {
+                width: 100px;
+                height: 140px;
+            }
+            
+            .character-img {
+                height: 80px;
+            }
+            
+            .challenge-word {
+                font-size: 2rem;
+            }
+            
+            .challenge-image {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+        
+        .fadeIn {
+            animation: fadeIn 1s ease;
+        }
+        
+        .bounce {
+            animation: bounce 1s ease;
+        }
+        
+        /* Level tracker */
+        .level-tracker {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+            padding: 0.5rem;
+        }
+        
+        .level-item {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            color: #777;
+        }
+        
+        .level-item.current {
+            background-color: var(--primary);
+            color: white;
+            transform: scale(1.2);
+        }
+        
+        .level-item.completed {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--dark);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+            font-weight: normal;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Animation for correct answer */
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .celebrate {
+            animation: celebrate 0.5s ease;
+        }
+        
+        /* Difficulty badges */
+        .difficulty {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+        
+        .difficulty.easy {
+            background-color: rgba(76, 201, 240, 0.2);
+            color: var(--success);
+        }
+        
+        .difficulty.medium {
+            background-color: rgba(255, 190, 11, 0.2);
+            color: #d97706;
+        }
+        
+        .difficulty.hard {
+            background-color: rgba(247, 37, 133, 0.2);
+            color: var(--danger);
+        }
+        
+        /* Help modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            animation: slideDown 0.5s ease;
+            position: relative;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #777;
+        }
+        
+        .modal-header {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .modal-body {
+            line-height: 1.6;
+        }
+        
+        .modal-body h3 {
+            color: var(--dark);
+            margin: 1rem 0 0.5rem 0;
+        }
+        
+        .modal-body p {
+            margin-bottom: 1rem;
+        }
+        
+        .modal-footer {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        /* Helper buttons */
+        .helper-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .helper-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .helper-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+        
+        /* Confetti animation for rewards */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f0f;
+            opacity: 0;
+            animation: fall 3s ease-out;
+            z-index: 1000;
+        }
+        
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="helper-buttons">
+        <div class="helper-btn" id="helpBtn">?</div>
+        <div class="helper-btn" id="settingsBtn">⚙️</div>
+    </div>
+    
+    <div class="container" id="gameContainer">
+        <!-- Intro Screen -->
+        <div class="intro" id="introScreen">
+            <h1>Petualangan Suara</h1>
+            <p>Selamat datang di Petualangan Suara! Game interaktif untuk melatih kemampuan berbicara dengan cara yang menyenangkan. Ayo mulai petualangan dan selesaikan tantangan berbicara!</p>
+            
+            <h2>Pilih Karaktermu</h2>
+            <div class="character-selection">
+                <div class="character char-boy" data-char="boy">
+                    <div class="character-img"></div>
+                    <div class="character-name">Bima</div>
+                </div>
+                <div class="character char-girl" data-char="girl">
+                    <div class="character-img"></div>
+                    <div class="character-name">Sari</div>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" id="startBtn" disabled>Mulai Petualangan</button>
+        </div>
+        
+        <!-- Level Selection -->
+        <div class="level-selection hidden" id="levelScreen">
+            <h2>Pilih Level</h2>
+            <div class="levels">
+                <button class="level-btn" data-level="1">Level 1<br><span class="difficulty easy">Mudah</span></button>
+                <button class="level-btn locked" data-level="2">Level 2<br><span class="difficulty medium">Sedang</span></button>
+                <button class="level-btn locked" data-level="3">Level 3<br><span class="difficulty hard">Sulit</span></button>
+                <button class="level-btn locked" data-level="4">Level 4<br><span class="difficulty easy">Mudah</span></button>
+                <button class="level-btn locked" data-level="5">Level 5<br><span class="difficulty medium">Sedang</span></button>
+                <button class="level-btn locked" data-level="6">Level 6<br><span class="difficulty hard">Sulit</span></button>
+            </div>
+            <button class="btn btn-warning" id="backToIntroBtn">Kembali</button>
+        </div>
+        
+        <!-- Game Area -->
+        <div class="game-area hidden" id="gameScreen">
+            <div class="game-header">
+                <div class="game-score">Skor: <span id="scoreValue">0</span></div>
+                <div class="game-lives">
+                    <div class="life">❤️</div>
+                    <div class="life">❤️</div>
+                    <div class="life">❤️</div>
+                </div>
+            </div>
+            
+            <div class="level-tracker">
+                <div class="level-item">1</div>
+                <div class="level-item">2</div>
+                <div class="level-item">3</div>
+                <div class="level-item">4</div>
+                <div class="level-item">5</div>
+            </div>
+            
+            <div class="challenge-container">
+                <h3>Ucapkan Kata Ini:</h3>
+                <div class="challenge-word" id="currentWord">Bola</div>
+                <div class="challenge-image" id="wordImage"></div>
+            </div>
+            
+            <div class="speech-visualization" id="visualization">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress" id="levelProgress" style="width: 0%"></div>
+            </div>
+            
+            <div class="feedback" id="feedback"></div>
+            
+            <div class="controls">
+                <button class="btn btn-success" id="playWordBtn">
+                    🔊 Dengarkan
+                </button>
+                <button class="btn btn-record" id="recordBtn">
+                    🎤 Ucapkan
+                </button>
+                <button class="btn btn-warning" id="nextWordBtn" disabled>
+                    ➡️ Selanjutnya
+                </button>
+            </div>
+            
+            <button class="btn btn-danger" id="exitGameBtn" style="margin-top: 1rem">
+                Keluar
+            </button>
+        </div>
+        
+        <!-- Reward Screen -->
+        <div class="reward-screen hidden" id="rewardScreen">
+            <h2 class="reward-header">Selamat!</h2>
+            <p class="reward-message">Kamu telah menyelesaikan Level <span id="completedLevel">1</span></p>
+            
+            <div class="stars">
+                <div class="star">★</div>
+                <div class="star">★</div>
+                <div class="star">★</div>
+            </div>
+            
+            <div class="challenge-image" id="rewardImage" style="background-image: url('/api/placeholder/200/200');"></div>
+            
+            <div class="reward-buttons">
+                <button class="btn btn-success" id="nextLevelBtn">Level Berikutnya</button>
+                <button class="btn btn-primary" id="retryLevelBtn">Ulangi Level</button>
+                <button class="btn btn-warning" id="backToLevelsBtn">Menu Level</button>
+            </div>
+        </div>
+        
+        <!-- Settings Screen -->
+        <div class="settings hidden" id="settingsScreen">
+            <h2 class="settings-header">Pengaturan</h2>
+            
+            <div class="settings-group">
+                <h3>Pengaturan Suara</h3>
+                <div class="slider-container">
+                    <span class="slider-label">Volume Suara:</span>
+                    <input type="range" min="0" max="100" value="80" class="slider" id="volumeSlider">
+                </div>
+                <div class="slider-container">
+                    <span class="slider-label">Kecepatan Pengucapan:</span>
+                    <input type="range" min="0.5" max="2" value="1" step="0.1" class="slider" id="rateSlider">
+                </div>
+            </div>
+            
+            <div class="settings-group">
+                <h3>Pengaturan Game</h3>
+                <div class="slider-container">
+                    <span class="slider-label">Tingkat Sensitivitas:</span>
+                    <input type="range" min="0" max="100" value="70" class="slider" id="sensitivitySlider">
+                    <span class="tooltip">ℹ️
+                        <span class="tooltiptext">Mengatur seberapa tepat pengucapan harus dilakukan</span>
+                    </span>
+                </div>
+                <div class="slider-container">
+                    <span class="slider-label">Waktu Pengucapan (detik):</span>
+                    <input type="range" min="3" max="10" value="5" step="1" class="slider" id="timeSlider">
+                </div>
+            </div>
+            
+            <div class="speech-test">
+                <button class="btn btn-primary" id="testSpeechBtn">Tes Pengaturan</button>
+                <div id="testFeedback" style="margin-left: 1rem;"></div>
+            </div>
+            
+            <div class="settings-buttons">
+                <button class="btn btn-success" id="saveSettingsBtn">Simpan</button>
+                <button class="btn btn-warning" id="cancelSettingsBtn">Batal</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="closeModal">&times;</span>
+            <h2 class="modal-header">Cara Bermain</h2>
+            <div class="modal-body">
+                <h3>Tentang Game</h3>
+                <p>Petualangan Suara adalah game interaktif yang dirancang untuk membantu melatih kemampuan berbicara dan mengurangi speech delay. Game ini menggunakan teknologi pengenalan suara untuk memberikan feedback langsung.</p>
+                
+                <h3>Cara Bermain</h3>
+                <p>1. Pilih karakter dan level yang ingin dimainkan.</p>
+                <p>2. Pada setiap tantangan, kamu akan melihat sebuah kata dan gambar.</p>
+                <p>3. Klik tombol "Dengarkan" untuk mendengar cara pengucapan kata yang benar.</p>
+                <p>4. Klik tombol "Ucapkan" dan cobalah mengucapkan kata tersebut.</p>
+                <p>5. Sistem akan menilai pengucapanmu dan memberikan feedback.</p>
+                <p>6. Lanjutkan ke kata berikutnya hingga menyelesaikan level.</p>
+                
+                <h3>Tips Melatih Berbicara</h3>
+                <p>- Dengarkan dengan seksama sebelum mencoba mengucapkan kata</p>
+                <p>- Ucapkan dengan perlahan dan jelas</p>
+                <p>- Jika kesulitan, cobalah pecah kata menjadi suku kata</p>
+                <p>- Berlatihlah secara teratur untuk hasil terbaik</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="closeModalBtn">Mengerti</button>
+            </div>
+        </div>
+
+    
+    <script>
+// Game state
+const gameState = {
+    character: null,
+    currentLevel: 1,
+    score: 0,
+    lives: 3,
+    progress: 0,
+    completedLevels: [],
+    settings: {
+        volume: 80,
+        rate: 1,
+        sensitivity: 70,
+        time: 5
+    }
+};
+
+// Words data by level
+const levelData = {
+    1: [
+        { word: "Bola", image: "gamifikasi1/2.png" },
+        { word: "Kucing", image: "gamifikasi1/8.png" },
+        { word: "Apel", image: "gamifikasi1/1.png" },
+        { word: "Rumah", image: "gamifikasi1/27.png" },
+        { word: "Buku", image: "gamifikasi1/17.png" }
+    ],
+    2: [
+        { word: "Sekolah", image: "/api/placeholder/200/200" },
+        { word: "Sepeda", image: "/api/placeholder/200/200" },
+        { word: "Jerapah", image: "/api/placeholder/200/200" },
+        { word: "Pesawat", image: "/api/placeholder/200/200" },
+        { word: "Kereta", image: "/api/placeholder/200/200" }
+    ],
+    3: [
+        { word: "Bintang laut", image: "/api/placeholder/200/200" },
+        { word: "Kursi roda", image: "/api/placeholder/200/200" },
+        { word: "Bunga matahari", image: "/api/placeholder/200/200" },
+        { word: "Awan putih", image: "/api/placeholder/200/200" },
+        { word: "Taman bermain", image: "/api/placeholder/200/200" }
+    ],
+    4: [
+        { word: "Aku senang", image: "/api/placeholder/200/200" },
+        { word: "Makan nasi", image: "/api/placeholder/200/200" },
+        { word: "Baju baru", image: "/api/placeholder/200/200" },
+        { word: "Pergi sekolah", image: "/api/placeholder/200/200" },
+        { word: "Main bola", image: "/api/placeholder/200/200" }
+    ],
+    5: [
+        { word: "Saya suka membaca buku", image: "/api/placeholder/200/200" },
+        { word: "Hari ini cuaca cerah", image: "/api/placeholder/200/200" },
+        { word: "Ayo pergi ke taman", image: "/api/placeholder/200/200" },
+        { word: "Ibu memasak makanan enak", image: "/api/placeholder/200/200" },
+        { word: "Aku mau main petak umpet", image: "/api/placeholder/200/200" }
+    ],
+    6: [
+        { word: "Besok aku akan pergi berenang", image: "/api/placeholder/200/200" },
+        { word: "Saya sangat suka es krim cokelat", image: "/api/placeholder/200/200" },
+        { word: "Kita bisa belajar bersama-sama", image: "/api/placeholder/200/200" },
+        { word: "Liburan ke pantai sangat menyenangkan", image: "/api/placeholder/200/200" },
+        { word: "Tolong bantu saya mengerjakan tugas", image: "/api/placeholder/200/200" }
+    ]
+};
+
+// Speech recognition variables
+let recognition;
+let currentWordIndex = 0;
+let isRecording = false;
+let visualizationInterval;
+
+// DOM Elements
+const introScreen = document.getElementById('introScreen');
+const levelScreen = document.getElementById('levelScreen');
+const gameScreen = document.getElementById('gameScreen');
+const rewardScreen = document.getElementById('rewardScreen');
+const settingsScreen = document.getElementById('settingsScreen');
+const helpModal = document.getElementById('helpModal');
+
+const characters = document.querySelectorAll('.character');
+const startBtn = document.getElementById('startBtn');
+const backToIntroBtn = document.getElementById('backToIntroBtn');
+const levelBtns = document.querySelectorAll('.level-btn');
+
+const currentWordElement = document.getElementById('currentWord');
+const wordImageElement = document.getElementById('wordImage');
+const scoreValueElement = document.getElementById('scoreValue');
+const levelProgressElement = document.getElementById('levelProgress');
+const feedbackElement = document.getElementById('feedback');
+const lifeElements = document.querySelectorAll('.life');
+const levelItems = document.querySelectorAll('.level-item');
+
+const playWordBtn = document.getElementById('playWordBtn');
+const recordBtn = document.getElementById('recordBtn');
+const nextWordBtn = document.getElementById('nextWordBtn');
+const exitGameBtn = document.getElementById('exitGameBtn');
+
+const completedLevelElement = document.getElementById('completedLevel');
+const starElements = document.querySelectorAll('.star');
+const nextLevelBtn = document.getElementById('nextLevelBtn');
+const retryLevelBtn = document.getElementById('retryLevelBtn');
+const backToLevelsBtn = document.getElementById('backToLevelsBtn');
+
+const volumeSlider = document.getElementById('volumeSlider');
+const rateSlider = document.getElementById('rateSlider');
+const sensitivitySlider = document.getElementById('sensitivitySlider');
+const timeSlider = document.getElementById('timeSlider');
+const testSpeechBtn = document.getElementById('testSpeechBtn');
+const testFeedback = document.getElementById('testFeedback');
+const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+
+const helpBtn = document.getElementById('helpBtn');
+const settingsBtn = document.getElementById('settingsBtn');
+const closeModal = document.getElementById('closeModal');
+const closeModalBtn = document.getElementById('closeModalBtn');
+
+// Character selection
+characters.forEach(character => {
+    character.addEventListener('click', () => {
+        characters.forEach(char => char.classList.remove('selected'));
+        character.classList.add('selected');
+        gameState.character = character.dataset.char;
+        startBtn.disabled = false;
+    });
+});
+
+// Navigation
+startBtn.addEventListener('click', () => {
+    introScreen.classList.add('hidden');
+    levelScreen.classList.remove('hidden');
+});
+backToIntroBtn.addEventListener('click', () => {
+    levelScreen.classList.add('hidden');
+    introScreen.classList.remove('hidden');
+});
+levelBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (!btn.classList.contains('locked')) {
+            gameState.currentLevel = parseInt(btn.dataset.level);
+            startLevel(gameState.currentLevel);
+            levelScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+        }
+    });
+});
+
+// Level functions
+function startLevel(level) {
+    currentWordIndex = 0;
+    gameState.lives = 3;
+    gameState.progress = 0;
+    updateLevelTracker();
+    updateLives();
+    loadWord(currentWordIndex);
+    updateProgress();
+}
+function loadWord(index) {
+    const levelWords = levelData[gameState.currentLevel];
+    if (index < levelWords.length) {
+        const wordData = levelWords[index];
+        currentWordElement.textContent = wordData.word;
+        wordImageElement.style.backgroundImage = `url(${wordData.image})`;
+        nextWordBtn.disabled = true;
+        feedbackElement.classList.remove('show', 'correct', 'incorrect');
+    }
+}
+function updateProgress() {
+    const levelWords = levelData[gameState.currentLevel];
+    const progressPercentage = (currentWordIndex / levelWords.length) * 100;
+    levelProgressElement.style.width = `${progressPercentage}%`;
+}
+function updateLives() {
+    lifeElements.forEach((life, index) => {
+        life.style.opacity = index < gameState.lives ? '1' : '0.3';
+    });
+}
+function updateLevelTracker() {
+    levelItems.forEach((item, index) => {
+        item.classList.remove('current', 'completed');
+        if (index + 1 === gameState.currentLevel) {
+            item.classList.add('current');
+        } else if (gameState.completedLevels.includes(index + 1)) {
+            item.classList.add('completed');
+        }
+    });
+}
+
+// Feedback
+function showFeedback(isCorrect, message) {
+    feedbackElement.textContent = message;
+    feedbackElement.classList.remove('correct', 'incorrect');
+    feedbackElement.classList.add(isCorrect ? 'correct' : 'incorrect', 'show');
+    setTimeout(() => {
+        feedbackElement.classList.add('celebrate');
+        setTimeout(() => {
+            feedbackElement.classList.remove('celebrate');
+        }, 500);
+    }, 100);
+
+    if (isCorrect) {
+        nextWordBtn.disabled = false;
+        gameState.score += 10;
+        scoreValueElement.textContent = gameState.score;
+        currentWordElement.classList.add('bounce');
+        setTimeout(() => {
+            currentWordElement.classList.remove('bounce');
+        }, 1000);
+    }
+}
+
+// Speech synthesis
+playWordBtn.addEventListener('click', () => {
+    const word = currentWordElement.textContent;
+    const utterance = new SpeechSynthesisUtterance(word);
+    utterance.lang = 'id-ID';
+    utterance.volume = gameState.settings.volume / 100;
+    utterance.rate = gameState.settings.rate;
+    speechSynthesis.speak(utterance);
+    playWordBtn.disabled = true;
+    playWordBtn.textContent = '🔊 Memutar...';
+    utterance.onend = () => {
+        playWordBtn.disabled = false;
+        playWordBtn.textContent = '🔊 Dengarkan';
+    };
+});
+
+// Speech recognition
+recordBtn.addEventListener('click', () => {
+    isRecording ? stopRecording() : startRecording();
+});
+function startRecording() {
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+    } else if ('SpeechRecognition' in window) {
+        recognition = new SpeechRecognition();
+    } else {
+        showFeedback(false, "Maaf, browser tidak mendukung pengenalan suara");
+        return;
+    }
+    recognition.lang = 'id-ID';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+        isRecording = true;
+        recordBtn.classList.add('recording');
+        recordBtn.textContent = '🎤 Berbicara...';
+        startVisualization();
+        setTimeout(() => {
+            if (isRecording) stopRecording();
+        }, gameState.settings.time * 1000);
+    };
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        const currentWord = currentWordElement.textContent.toLowerCase();
+        const confidence = event.results[0][0].confidence * 100;
+        const sensitivity = gameState.settings.sensitivity / 100;
+        const isCorrect = (transcript === currentWord) || (confidence >= (90 - (20 * (1 - sensitivity))) && (transcript.includes(currentWord) || currentWord.includes(transcript)));
+        if (isCorrect) {
+            showFeedback(true, "Bagus! Pengucapan benar! 👏");
+        } else {
+            showFeedback(false, `Coba lagi! Kamu mengucapkan "${transcript}"`);
+            gameState.lives--;
+            updateLives();
+            if (gameState.lives <= 0) {
+                setTimeout(() => {
+                    alert("Level gagal! Coba lagi.");
+                    location.reload();
+                }, 1500);
+            }
+        }
+    };
+    recognition.onerror = () => showFeedback(false, "Terjadi kesalahan dalam pengenalan suara");
+    recognition.onend = () => stopRecording();
+    recognition.start();
+}
+function stopRecording() {
+    if (recognition) recognition.stop();
+    isRecording = false;
+    recordBtn.classList.remove('recording');
+    recordBtn.textContent = '🎤 Ucapkan';
+    stopVisualization();
+}
+
+// Visualization
+function startVisualization() {
+    const bars = document.querySelectorAll('.bar');
+    visualizationInterval = setInterval(() => {
+        bars.forEach(bar => {
+            const height = Math.floor(Math.random() * 50) + 5;
+            bar.style.height = `${height}px`;
+        });
+    }, 100);
+}
+function stopVisualization() {
+    clearInterval(visualizationInterval);
+    document.querySelectorAll('.bar').forEach(bar => {
+        bar.style.height = '5px';
+    });
+}
+
+// Next word
+nextWordBtn.addEventListener('click', () => {
+    currentWordIndex++;
+    if (currentWordIndex >= levelData[gameState.currentLevel].length) {
+        showLevelCompleted();
+    } else {
+        loadWord(currentWordIndex);
+        updateProgress();
+        nextWordBtn.disabled = true;
+        feedbackElement.classList.remove('show');
+    }
+});
+
+// Exit game
+exitGameBtn.addEventListener('click', () => {
+    gameScreen.classList.add('hidden');
+    levelScreen.classList.remove('hidden');
+});
+
+function showLevelCompleted() {
+    gameScreen.classList.add('hidden');
+    rewardScreen.classList.remove('hidden');
+    completedLevelElement.textContent = gameState.currentLevel;
+
+    if (!gameState.completedLevels.includes(gameState.currentLevel)) {
+        gameState.completedLevels.push(gameState.currentLevel);
+    }
+
+    // 🔓 UNLOCK LEVEL BERIKUTNYA
+    const nextLevel = gameState.currentLevel + 1;
+    const nextLevelBtn = document.querySelector(`.level-btn[data-level="${nextLevel}"]`);
+    if (nextLevelBtn) {
+        nextLevelBtn.classList.remove('locked');
+    }
+
+    updateLevelTracker();
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tantangan Memori Warna</title>
+    <style>
+        :root {
+            --primary: #4e54c8;
+            --secondary: #8f94fb;
+            --success: #28a745;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--dark);
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .description {
+            margin-bottom: 20px;
+            color: #666;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+        
+        .game-container {
+            margin: 20px 0;
+        }
+        
+        .color-display {
+            height: 150px;
+            width: 150px;
+            margin: 0 auto;
+            border-radius: 50%;
+            border: 5px solid #fff;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease;
+        }
+        
+        .controls {
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            margin: 10px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a40a5;
+            transform: translateY(-3px);
+        }
+        
+        .btn-secondary {
+            background-color: #f8f9fa;
+            color: var(--dark);
+            border: 1px solid #ddd;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e9ecef;
+            transform: translateY(-3px);
+        }
+        
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .color-option {
+            height: 60px;
+            width: 60px;
+            margin: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            border: 3px solid transparent;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .color-option:hover {
+            transform: scale(1.1);
+            border-color: var(--primary);
+        }
+        
+        .message {
+            margin: 20px 0;
+            font-size: 1.2rem;
+            min-height: 30px;
+            font-weight: bold;
+        }
+        
+        .success {
+            color: var(--success);
+        }
+        
+        .error {
+            color: var(--danger);
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 30px;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            border-radius: 30px;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.5s ease;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .game-over {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .game-over h2 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .game-over p {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        
+        .instructions {
+            text-align: left;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid var(--primary);
+        }
+        
+        .instructions h3 {
+            color: var(--primary);
+            margin-top: 0;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .levels {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        
+        .level-btn {
+            padding: 8px 16px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .level-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .timer {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                width: 95%;
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .color-display {
+                height: 120px;
+                width: 120px;
+            }
+            
+            .color-option {
+                height: 50px;
+                width: 50px;
+                margin: 8px;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+
+        .game-screens > div {
+            display: none;
+        }
+
+        .game-screens > div.active {
+            display: block;
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .animate-success {
+            animation: pulse 1s;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-screens">
+            <!-- Start Screen -->
+            <div class="start-screen active" id="start-screen">
+                <h1>Tantangan Memori Warna</h1>
+                <p class="description">Latih kemampuan memori dan konsentrasi Anda dengan permainan interaktif dan menyenangkan!</p>
+                
+                <div class="instructions">
+                    <h3>Cara Bermain:</h3>
+                    <ol>
+                        <li>Serangkaian warna akan ditampilkan satu per satu</li>
+                        <li>Perhatikan dengan baik urutan warnanya</li>
+                        <li>Setelah selesai, pilih warna-warna tersebut sesuai urutan yang benar</li>
+                        <li>Kesulitan akan meningkat seiring kemajuan Anda</li>
+                    </ol>
+                </div>
+                
+                <div class="levels">
+                    <p>Pilih Tingkat Kesulitan: </p>
+                    <button class="level-btn active" data-level="mudah">Mudah</button>
+                    <button class="level-btn" data-level="sedang">Sedang</button>
+                    <button class="level-btn" data-level="sulit">Sulit</button>
+                </div>
+                
+                <button id="start-btn" class="btn btn-primary">Mulai Permainan</button>
+            </div>
+            
+            <!-- Game Screen -->
+            <div class="game-screen" id="game-screen">
+                <h1>Tantangan Memori Warna</h1>
+                <div class="stats">
+                    <div>Level: <span id="level">1</span></div>
+                    <div>Skor: <span id="score">0</span></div>
+                </div>
+                
+                <div class="timer" id="timer">00:00</div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar">0%</div>
+                </div>
+                
+                <div class="game-container">
+                    <div class="color-display" id="color-display"></div>
+                    <div class="message" id="message"></div>
+                    
+                    <div class="options" id="options">
+                        <!-- Color options will be added here -->
+                    </div>
+                    
+                    <div class="controls">
+                        <button id="next-sequence-btn" class="btn btn-primary">Lihat Pola Berikutnya</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Game Over Screen -->
+            <div class="game-over" id="game-over">
+                <h2>Permainan Selesai!</h2>
+                <p>Skor Akhir: <span id="final-score">0</span></p>
+                <p>Level Tertinggi: <span id="highest-level">1</span></p>
+                <p>Waktu Bermain: <span id="play-time">00:00</span></p>
+                <button id="play-again-btn" class="btn btn-primary">Main Lagi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Game variables
+            const colors = [
+                '#FF5252', // Merah
+                '#4CAF50', // Hijau
+                '#2196F3', // Biru
+                '#FFC107', // Kuning
+                '#9C27B0', // Ungu
+                '#FF9800', // Oranye
+                '#00BCD4', // Cyan
+                '#795548'  // Coklat
+            ];
+            
+            let gameState = {
+                level: 1,
+                score: 0,
+                sequence: [],
+                playerSequence: [],
+                displayIndex: 0,
+                isWatching: true,
+                timeStarted: 0,
+                timeElapsed: 0,
+                difficulty: 'mudah', // mudah, sedang, sulit
+                intervalId: null,
+                timerInterval: null
+            };
+            
+            // DOM elements
+            const startScreen = document.getElementById('start-screen');
+            const gameScreen = document.getElementById('game-screen');
+            const gameOverScreen = document.getElementById('game-over');
+            const startBtn = document.getElementById('start-btn');
+            const colorDisplay = document.getElementById('color-display');
+            const options = document.getElementById('options');
+            const message = document.getElementById('message');
+            const levelEl = document.getElementById('level');
+            const scoreEl = document.getElementById('score');
+            const progressBar = document.getElementById('progress-bar');
+            const nextSequenceBtn = document.getElementById('next-sequence-btn');
+            const playAgainBtn = document.getElementById('play-again-btn');
+            const finalScoreEl = document.getElementById('final-score');
+            const highestLevelEl = document.getElementById('highest-level');
+            const playTimeEl = document.getElementById('play-time');
+            const timerEl = document.getElementById('timer');
+            const levelBtns = document.querySelectorAll('.level-btn');
+            
+            // Set up difficulty levels
+            const difficultySettings = {
+                mudah: {
+                    initialSequenceLength: 2,
+                    displayTime: 1000,
+                    pauseTime: 300
+                },
+                sedang: {
+                    initialSequenceLength: 3,
+                    displayTime: 800,
+                    pauseTime: 250
+                },
+                sulit: {
+                    initialSequenceLength: 4,
+                    displayTime: 600,
+                    pauseTime: 200
+                }
+            };
+            
+            // Event listeners
+            startBtn.addEventListener('click', startGame);
+            nextSequenceBtn.addEventListener('click', showSequence);
+            playAgainBtn.addEventListener('click', resetGame);
+            
+            levelBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    levelBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    gameState.difficulty = this.dataset.level;
+                });
+            });
+            
+            // Create color options
+            function createColorOptions() {
+                options.innerHTML = '';
+                colors.forEach((color, index) => {
+                    const option = document.createElement('div');
+                    option.className = 'color-option';
+                    option.style.backgroundColor = color;
+                    option.dataset.index = index;
+                    option.addEventListener('click', () => checkColor(index));
+                    options.appendChild(option);
+                });
+            }
+            
+            // Start the game
+            function startGame() {
+                switchScreen('game-screen');
+                gameState.timeStarted = Date.now();
+                startTimer();
+                gameState.level = 1;
+                gameState.score = 0;
+                updateUI();
+                generateSequence();
+                showSequence();
+                nextSequenceBtn.style.display = 'none';
+            }
+            
+            // Generate a color sequence based on level and difficulty
+            function generateSequence() {
+                gameState.sequence = [];
+                const settings = difficultySettings[gameState.difficulty];
+                const sequenceLength = settings.initialSequenceLength + Math.floor(gameState.level / 2);
+                
+                for (let i = 0; i < sequenceLength; i++) {
+                    const randomIndex = Math.floor(Math.random() * colors.length);
+                    gameState.sequence.push(randomIndex);
+                }
+                
+                gameState.playerSequence = [];
+                gameState.displayIndex = 0;
+                gameState.isWatching = true;
+            }
+            
+            // Show the sequence to the player
+            function showSequence() {
+                options.style.pointerEvents = 'none';
+                nextSequenceBtn.style.display = 'none';
+                message.textContent = 'Perhatikan pola warna!';
+                message.className = 'message';
+                
+                const settings = difficultySettings[gameState.difficulty];
+                
+                gameState.displayIndex = 0;
+                colorDisplay.style.backgroundColor = '#fff';
+                
+                clearInterval(gameState.intervalId);
+                
+                gameState.intervalId = setInterval(() => {
+                    if (gameState.displayIndex < gameState.sequence.length) {
+                        const colorIndex = gameState.sequence[gameState.displayIndex];
+                        colorDisplay.style.backgroundColor = colors[colorIndex];
+                        
+                        setTimeout(() => {
+                            colorDisplay.style.backgroundColor = '#fff';
+                        }, settings.displayTime - settings.pauseTime);
+                        
+                        gameState.displayIndex++;
+                        updateProgressBar();
+                    } else {
+                        clearInterval(gameState.intervalId);
+                        gameState.isWatching = false;
+                        message.textContent = 'Sekarang pilih warna sesuai urutan yang benar!';
+                        options.style.pointerEvents = 'auto';
+                        gameState.playerSequence = [];
+                        updateProgressBar();
+                    }
+                }, settings.displayTime);
+            }
+            
+            // Check if the selected color is correct
+            function checkColor(colorIndex) {
+                if (gameState.isWatching) return;
+                
+                const currentIndex = gameState.playerSequence.length;
+                gameState.playerSequence.push(colorIndex);
+                
+                const correctIndex = gameState.sequence[currentIndex];
+                
+                if (colorIndex === correctIndex) {
+                    // Correct choice
+                    const option = options.children[colorIndex];
+                    option.classList.add('animate-success');
+                    setTimeout(() => option.classList.remove('animate-success'), 300);
+                    
+                    colorDisplay.style.backgroundColor = colors[colorIndex];
+                    setTimeout(() => {
+                        colorDisplay.style.backgroundColor = '#fff';
+                    }, 300);
+                    
+                    if (gameState.playerSequence.length === gameState.sequence.length) {
+                        // Completed the sequence
+                        gameState.score += gameState.level * 10;
+                        gameState.level++;
+                        
+                        message.textContent = 'Benar! Siap untuk level berikutnya?';
+                        message.className = 'message success';
+                        
+                        createConfetti();
+                        
+                        nextSequenceBtn.style.display = 'inline-block';
+                        options.style.pointerEvents = 'none';
+                        
+                        updateUI();
+                        generateSequence();
+                    }
+                } else {
+                    // Wrong choice
+                    gameOver();
+                }
+                
+                updateProgressBar();
+            }
+            
+            // Game over
+            function gameOver() {
+                clearInterval(gameState.timerInterval);
+                gameState.timeElapsed = Math.floor((Date.now() - gameState.timeStarted) / 1000);
+                
+                message.textContent = 'Salah! Permainan Selesai.';
+                message.className = 'message error';
+                
+                finalScoreEl.textContent = gameState.score;
+                highestLevelEl.textContent = gameState.level;
+                playTimeEl.textContent = formatTime(gameState.timeElapsed);
+                
+                setTimeout(() => {
+                    switchScreen('game-over');
+                }, 1500);
+            }
+            
+            // Reset game
+            function resetGame() {
+                switchScreen('start-screen');
+                clearInterval(gameState.intervalId);
+                clearInterval(gameState.timerInterval);
+            }
+            
+            // Update UI elements
+            function updateUI() {
+                levelEl.textContent = gameState.level;
+                scoreEl.textContent = gameState.score;
+            }
+            
+            // Update progress bar
+            function updateProgressBar() {
+                if (gameState.isWatching) {
+                    const progress = (gameState.displayIndex / gameState.sequence.length) * 100;
+                    progressBar.style.width = `${progress}%`;
+                    progressBar.textContent = `${Math.floor(progress)}%`;
+                } else {
+                    const progress = (gameState.playerSequence.length / gameState.sequence.length) * 100;
+                    progressBar.style.width = `${progress}%`;
+                    progressBar.textContent = `${Math.floor(progress)}%`;
+                }
+            }
+            
+            // Switch between screens
+            function switchScreen(screenId) {
+                document.querySelectorAll('.game-screens > div').forEach(screen => {
+                    screen.classList.remove('active');
+                });
+                document.getElementById(screenId).classList.add('active');
+                
+                if (screenId === 'game-screen') {
+                    createColorOptions();
+                }
+            }
+            
+            // Start timer
+            function startTimer() {
+                let seconds = 0;
+                clearInterval(gameState.timerInterval);
+                
+                gameState.timerInterval = setInterval(() => {
+                    seconds++;
+                    timerEl.textContent = formatTime(seconds);
+                }, 1000);
+            }
+            
+            // Format time (seconds to MM:SS)
+            function formatTime(totalSeconds) {
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            // Create confetti effect for successful level completion
+            function createConfetti() {
+                const confettiCount = 50;
+                const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+                
+                for (let i = 0; i < confettiCount; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.left = `${Math.random() * 100}%`;
+                    confetti.style.top = '0';
+                    document.body.appendChild(confetti);
+                    
+                    const animationDuration = Math.random() * 2 + 1;
+                    const horizontalPosition = (Math.random() - 0.5) * 100;
+                    
+                    confetti.animate([
+                        { transform: 'translate(0, 0)', opacity: 1 },
+                        { transform: `translate(${horizontalPosition}px, ${window.innerHeight}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+                    ], {
+                        duration: animationDuration * 1000,
+                        easing: 'cubic-bezier(0.1, 0.8, 0.3, 1)'
+                    });
+                    
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, animationDuration * 1000);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

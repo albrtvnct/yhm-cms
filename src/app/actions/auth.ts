@@ -46,3 +46,36 @@ export async function logoutAction() {
   await deleteSession();
   redirect("/");
 }
+
+export async function resolveChurchPortalAction(prevState: any, formData: FormData) {
+  const email = formData.get("email") as string;
+
+  if (!email) {
+    return { error: "Email wajib diisi" };
+  }
+
+  let slug = "";
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { church: true }
+    });
+
+    if (!user) {
+      return { error: "Email admin tidak terdaftar di gereja manapun." };
+    }
+
+    if (!user.church || !user.church.slug) {
+      return { error: "Gereja untuk akun ini tidak memiliki slug portal yang valid." };
+    }
+
+    slug = user.church.slug;
+  } catch (error: unknown) {
+    console.error("Resolve portal error:", error);
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    return { error: `Gagal mencari portal: ${msg}` };
+  }
+
+  redirect(`/portal/${slug}/login`);
+}
+

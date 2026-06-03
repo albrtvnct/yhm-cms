@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Belajar - Game Anak</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background-color: #ff9900;
+            width: 100%;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .game-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .game-button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: transform 0.3s, background-color 0.3s;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .game-button:hover {
+            transform: scale(1.05);
+            background-color: #45a049;
+        }
+        
+        #game-area {
+            width: 100%;
+            min-height: 400px;
+            background-color: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .color-match {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+        }
+        
+        .color-options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .color-box {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+        
+        .color-box:hover {
+            transform: scale(1.05);
+        }
+        
+        .shapes-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+        }
+        
+        .shape {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .shape:hover {
+            transform: scale(1.1);
+        }
+        
+        .shape svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .counting-game {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+        }
+        
+        .objects-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .object {
+            width: 60px;
+            height: 60px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        .number-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .number-option {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffc107;
+            border-radius: 50%;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+        
+        .number-option:hover {
+            transform: scale(1.1);
+        }
+        
+        .memory-game {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .memory-card {
+            height: 100px;
+            background-color: #3498db;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        
+        .memory-card.flipped {
+            background-color: white;
+            font-size: 36px;
+            transform: rotateY(180deg);
+        }
+        
+        .feedback {
+            font-size: 1.5rem;
+            margin-top: 20px;
+            height: 30px;
+            font-weight: bold;
+        }
+        
+        .success-feedback {
+            color: #4caf50;
+        }
+        
+        .error-feedback {
+            color: #f44336;
+        }
+        
+        .score-display {
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+        
+        .game-instructions {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .start-screen {
+            text-align: center;
+        }
+        
+        .start-screen h2 {
+            color: #ff9900;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        
+        .start-screen p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .start-button {
+            background-color: #ff9900;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.3s, background-color 0.3s;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .start-button:hover {
+            transform: scale(1.05);
+            background-color: #e68a00;
+        }
+        
+        .audio-btn {
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        
+        .audio-btn:hover {
+            transform: scale(1.05);
+            background-color: #8e44ad;
+        }
+        
+        .audio-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        @media (max-width: 600px) {
+            .memory-game {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .color-box, .shape {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 Petualangan Belajar 🎮</h1>
+    </div>
+    
+    <div class="container">
+        <div id="game-area">
+            <div class="start-screen">
+                <h2>Selamat Datang di Petualangan Belajar!</h2>
+                <p>Game interaktif dan seru untuk anak usia 3-6 tahun yang akan membantu melatih kemampuan berpikir, memori, dan pengenalan warna, bentuk, dan angka.</p>
+                <button class="audio-btn" onclick="playWelcomeAudio()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                    </svg>
+                    Dengarkan Petunjuk
+                </button>
+                <button class="start-button" onclick="showGameSelector()">Mulai Bermain!</button>
+            </div>
+            
+            <div class="game-selector hidden">
+                <button class="game-button" onclick="startColorGame()">Mencocokkan Warna</button>
+                <button class="game-button" onclick="startShapeGame()">Mengenal Bentuk</button>
+                <button class="game-button" onclick="startCountingGame()">Belajar Berhitung</button>
+                <button class="game-button" onclick="startMemoryGame()">Latihan Memori</button>
+            </div>
+            
+            <div class="color-match hidden">
+                <div class="game-instructions">Pilih warna yang sesuai dengan nama warna berikut:</div>
+                <h2 id="target-color-name">Merah</h2>
+                <button class="audio-btn" onclick="playColorInstruction()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                    Dengarkan Soal
+                </button>
+                <div class="color-options" id="color-options"></div>
+                <div class="feedback" id="color-feedback"></div>
+                <div class="score-display">Skor: <span id="color-score">0</span></div>
+            </div>
+            
+            <div class="shape-game hidden">
+                <div class="game-instructions">Pilih bentuk yang disebutkan:</div>
+                <h2 id="target-shape-name">Lingkaran</h2>
+                <button class="audio-btn" onclick="playShapeInstruction()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                    Dengarkan Soal
+                </button>
+                <div class="shapes-container" id="shapes-container"></div>
+                <div class="feedback" id="shape-feedback"></div>
+                <div class="score-display">Skor: <span id="shape-score">0</span></div>
+            </div>
+            
+            <div class="counting-game hidden">
+                <div class="game-instructions">Hitung jumlah objek berikut, lalu pilih angka yang sesuai:</div>
+                <button class="audio-btn" onclick="playCountingInstruction()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                    Dengarkan Soal
+                </button>
+                <div class="objects-container" id="objects-container"></div>
+                <div class="number-options" id="number-options"></div>
+                <div class="feedback" id="counting-feedback"></div>
+                <div class="score-display">Skor: <span id="counting-score">0</span></div>
+            </div>
+            
+            <div class="memory-game-container hidden">
+                <div class="game-instructions">Cobalah untuk menemukan pasangan gambar yang sama!</div>
+                <button class="audio-btn" onclick="playMemoryInstruction()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                    Dengarkan Petunjuk
+                </button>
+                <div class="memory-game" id="memory-game"></div>
+                <div class="feedback" id="memory-feedback"></div>
+                <div class="score-display">Pasangan ditemukan: <span id="memory-score">0</span> dari 6</div>
+            </div>
+        </div>
+        
+        <div class="game-selector hidden" id="back-selector">
+            <button class="game-button" onclick="showGameSelector()">Kembali ke Menu</button>
+        </div>
+    </div>
+    
+    <script>
+         // Variabel untuk menyimpan skor setiap game
+        let colorScore = 0;
+        let shapeScore = 0;
+        let countingScore = 0;
+        let memoryScore = 0;
+        
+        // Variabel untuk current game state
+        let currentColorName = "";
+        let currentShapeName = "";
+        let currentObjectCount = 0;
+        
+        // API Suara (menggunakan Web Speech API atau solusi audio alternatif)
+        const synth = window.speechSynthesis;
+        
+        // Kumpulan audio frasa dalam Bahasa Indonesia
+        const audioFiles = {
+            welcome: "Selamat datang di Petualangan Belajar! Game seru untuk anak usia 3 sampai 6 tahun. Mari mulai belajar sambil bermain!",
+            selectGame: "Pilih permainan yang ingin kamu mainkan. Ada mencocokkan warna, mengenal bentuk, belajar berhitung, dan latihan memori.",
+            colorIntro: "Mari belajar warna! Pilih warna yang sesuai dengan nama yang ditampilkan.",
+            shapeIntro: "Mari belajar bentuk! Pilih bentuk yang sesuai dengan nama yang ditampilkan.",
+            countingIntro: "Mari belajar berhitung! Hitung jumlah gambar dan pilih angka yang tepat.",
+            memoryIntro: "Mari bermain kartu memori! Temukan pasangan gambar yang sama.",
+            correct: "Benar! Hebat sekali! Kamu pintar!",
+            tryAgain: "Coba lagi ya, kamu pasti bisa!",
+            memorySuccess: "Selamat! Kamu berhasil menemukan semua pasangan!"
+        };
+        
+        // Fungsi untuk text-to-speech dalam Bahasa Indonesia
+        function playAudio(text, forceIndonesian = true) {
+            // Hentikan suara yang sedang berjalan
+            synth.cancel();
+            
+            // Buat objek ucapan baru
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Pastikan bahasa adalah Bahasa Indonesia
+            utterance.lang = 'id-ID';
+            utterance.rate = 0.9; // Kecepatan bicara (lebih lambat untuk anak-anak)
+            utterance.pitch = 1.1; // Tinggi suara (sedikit lebih tinggi untuk kesan ramah)
+            
+            // Coba temukan suara Bahasa Indonesia jika tersedia
+            let voices = synth.getVoices();
+            let indonesianVoice = voices.find(voice => voice.lang.includes('id'));
+            
+            if (indonesianVoice) {
+                utterance.voice = indonesianVoice;
+            }
+            
+            // Mainkan suara
+            synth.speak(utterance);
+        }
+        
+        // Kumpulan audio berdasarkan jenis game
+        function createColorAudio(colorName) {
+            return `Pilih warna ${colorName}. Manakah kotak dengan warna ${colorName}?`;
+        }
+        
+        function createShapeAudio(shapeName) {
+            return `Pilih bentuk ${shapeName}. Manakah gambar berbentuk ${shapeName}?`;
+        }
+        
+        function createCountingAudio() {
+            return "Hitung banyaknya gambar yang ada. Berapa jumlah gambar yang kamu lihat? Pilih angka yang tepat.";
+        }
+        
+        function createMemoryAudio() {
+            return "Cari pasangan gambar yang sama. Klik pada kartu untuk membaliknya dan temukan gambar yang sama.";
+        }
+        
+        // Fungsi untuk memainkan audio
+        function playWelcomeAudio() {
+            playAudio(audioFiles.welcome);
+        }
+        
+        function playColorInstruction() {
+            playAudio(createColorAudio(currentColorName));
+        }
+        
+        function playShapeInstruction() {
+            playAudio(createShapeAudio(currentShapeName));
+        }
+        
+        function playCountingInstruction() {
+            playAudio(createCountingAudio());
+        }
+        
+        function playMemoryInstruction() {
+            playAudio(createMemoryAudio());
+        }
+        
+        function playCorrectSound() {
+            playAudio(audioFiles.correct);
+        }
+        
+        function playWrongSound() {
+            playAudio(audioFiles.tryAgain);
+        }
+        
+        
+        // Data warna
+        const colors = [
+            { name: "Merah", hex: "#e74c3c" },
+            { name: "Biru", hex: "#3498db" },
+            { name: "Hijau", hex: "#2ecc71" },
+            { name: "Kuning", hex: "#f1c40f" },
+            { name: "Ungu", hex: "#9b59b6" },
+            { name: "Oranye", hex: "#e67e22" }
+        ];
+        
+        // Data bentuk
+        const shapes = [
+            { name: "Lingkaran", svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#e74c3c"/></svg>' },
+            { name: "Persegi", svg: '<svg viewBox="0 0 100 100"><rect x="5" y="5" width="90" height="90" fill="#3498db"/></svg>' },
+            { name: "Segitiga", svg: '<svg viewBox="0 0 100 100"><polygon points="50,5 95,95 5,95" fill="#2ecc71"/></svg>' },
+            { name: "Bintang", svg: '<svg viewBox="0 0 100 100"><polygon points="50,5 61,40 98,40 68,62 79,95 50,75 21,95 32,62 2,40 39,40" fill="#f1c40f"/></svg>' }
+        ];
+
+        // Data objek untuk game berhitung
+        const countObjects = [
+            { name: "Apel", svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#e74c3c"/><rect x="48" y="10" width="4" height="15" fill="#27ae60"/><path d="M60,20 Q65,5 75,15" fill="none" stroke="#27ae60" stroke-width="3"/></svg>' },
+            { name: "Balon", svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="40" r="35" fill="#3498db"/><path d="M50,75 L45,100" fill="none" stroke="#34495e" stroke-width="3"/></svg>' },
+            { name: "Bunga", svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="20" fill="#f1c40f"/><circle cx="50" cy="10" r="15" fill="#e74c3c"/><circle cx="50" cy="90" r="15" fill="#e74c3c"/><circle cx="10" cy="50" r="15" fill="#e74c3c"/><circle cx="90" cy="50" r="15" fill="#e74c3c"/><circle cx="25" cy="25" r="15" fill="#e74c3c"/><circle cx="75" cy="25" r="15" fill="#e74c3c"/><circle cx="25" cy="75" r="15" fill="#e74c3c"/><circle cx="75" cy="75" r="15" fill="#e74c3c"/></svg>' }
+        ];
+        
+        // Data untuk game memori
+        const memoryItems = [
+            '🍎', '🍌', '🐶', '🐱', '🚗', '🌈'
+        ];
+        
+        // Fungsi untuk menampilkan pemilih game
+        function showGameSelector() {
+            document.querySelector('.start-screen').classList.add('hidden');
+            document.querySelector('.color-match').classList.add('hidden');
+            document.querySelector('.shape-game').classList.add('hidden');
+            document.querySelector('.counting-game').classList.add('hidden');
+            document.querySelector('.memory-game-container').classList.add('hidden');
+            document.querySelector('.game-selector').classList.remove('hidden');
+            document.getElementById('back-selector').classList.add('hidden');
+            
+            // Mainkan audio petunjuk untuk pilih game
+            speak("Pilih permainan yang ingin kamu mainkan. Ada mencocokkan warna, mengenal bentuk, belajar berhitung, dan latihan memori.");
+        }
+        
+        // Fungsi untuk memulai game warna
+        function startColorGame() {
+            document.querySelector('.game-selector').classList.add('hidden');
+            document.querySelector('.color-match').classList.remove('hidden');
+            document.getElementById('back-selector').classList.remove('hidden');
+            
+            setupColorGame();
+            
+            // Mainkan audio petunjuk
+            speak("Mari belajar warna! Pilih warna yang sesuai dengan nama yang ditampilkan.");
+            setTimeout(() => {
+                playColorInstruction();
+            }, 2500);
+        }
+        
+        // Fungsi untuk memulai game bentuk
+        function startShapeGame() {
+            document.querySelector('.game-selector').classList.add('hidden');
+            document.querySelector('.shape-game').classList.remove('hidden');
+            document.getElementById('back-selector').classList.remove('hidden');
+            
+            setupShapeGame();
+            
+            // Mainkan audio petunjuk
+            speak("Mari belajar bentuk! Pilih bentuk yang sesuai dengan nama yang ditampilkan.");
+            setTimeout(() => {
+                playShapeInstruction();
+            }, 2500);
+        }
+        
+        // Fungsi untuk memulai game berhitung
+        function startCountingGame() {
+            document.querySelector('.game-selector').classList.add('hidden');
+            document.querySelector('.counting-game').classList.remove('hidden');
+            document.getElementById('back-selector').classList.remove('hidden');
+            
+            setupCountingGame();
+            
+            // Mainkan audio petunjuk
+            speak("Mari belajar berhitung! Hitung jumlah gambar dan pilih angka yang tepat.");
+            setTimeout(() => {
+                playCountingInstruction();
+            }, 2500);
+        }
+        
+        // Fungsi untuk memulai game memori
+        function startMemoryGame() {
+            document.querySelector('.game-selector').classList.add('hidden');
+            document.querySelector('.memory-game-container').classList.remove('hidden');
+            document.getElementById('back-selector').classList.remove('hidden');
+            
+            setupMemoryGame();
+            
+            // Mainkan audio petunjuk
+            speak("Mari bermain kartu memori! Temukan pasangan gambar yang sama.");
+            setTimeout(() => {
+                playMemoryInstruction();
+            }, 2500);
+        }
+        
+        // Fungsi untuk mengatur game warna
+        function setupColorGame() {
+            const colorOptions = document.getElementById('color-options');
+            colorOptions.innerHTML = '';
+            
+            // Acak urutan warna
+            const shuffledColors = [...colors].sort(() => Math.random() - 0.5);
+            
+            // Pilih warna target secara acak
+            const targetColorIndex = Math.floor(Math.random() * colors.length);
+            const targetColor = shuffledColors[targetColorIndex];
+            document.getElementById('target-color-name').textContent = targetColor.name;
+            currentColorName = targetColor.name;
+            
+            // Tampilkan kotak warna
+            shuffledColors.forEach(color => {
+                const colorBox = document.createElement('div');
+                colorBox.className = 'color-box';
+                colorBox.style.backgroundColor = color.hex;
+                colorBox.dataset.color = color.name;
+                
+                colorBox.addEventListener('click', () => {
+                    if (color.name === targetColor.name) {
+                        document.getElementById('color-feedback').textContent = 'Benar! 🎉';
+                        document.getElementById('color-feedback').className = 'feedback success-feedback';
+                        colorScore++;
+                        document.getElementById('color-score').textContent = colorScore;
+                        
+                        // Mainkan suara benar
+                        playCorrectSound();
+                        
+                        // Siapkan putaran berikutnya setelah jeda
+                        setTimeout(() => {
+                            setupColorGame();
+                            document.getElementById('color-feedback').textContent = '';
+                            setTimeout(() => {
+                                playColorInstruction();
+                            }, 500);
+                        }, 2000);
+                    } else {
+                        document.getElementById('color-feedback').textContent = 'Coba lagi!';
+                        document.getElementById('color-feedback').className = 'feedback error-feedback';
+                        
+                        // Mainkan suara salah
+                        playWrongSound();
+                    }
+                });
+                
+                colorOptions.appendChild(colorBox);
+            });
+        }
+        
+        // Fungsi untuk mengatur game bentuk
+        function setupShapeGame() {
+            const shapesContainer = document.getElementById('shapes-container');
+            shapesContainer.innerHTML = '';
+            
+            // Acak urutan bentuk
+            const shuffledShapes = [...shapes].sort(() => Math.random() - 0.5);
+            
+            // Pilih bentuk target secara acak
+            const targetShapeIndex = Math.floor(Math.random() * shapes.length);
+            const targetShape = shuffledShapes[targetShapeIndex];
+            document.getElementById('target-shape-name').textContent = targetShape.name;
+            currentShapeName = targetShape.name;
+            
+            // Tampilkan bentuk
+            shuffledShapes.forEach(shape => {
+                const shapeElement = document.createElement('div');
+                shapeElement.className = 'shape';
+                shapeElement.innerHTML = shape.svg;
+                shapeElement.dataset.shape = shape.name;
+                
+                shapeElement.addEventListener('click', () => {
+                    if (shape.name === targetShape.name) {
+                        document.getElementById('shape-feedback').textContent = 'Benar! 🎉';
+                        document.getElementById('shape-feedback').className = 'feedback success-feedback';
+                        shapeScore++;
+                        document.getElementById('shape-score').textContent = shapeScore;
+                        
+                        // Mainkan suara benar
+                        playCorrectSound();
+                        
+                        // Siapkan putaran berikutnya setelah jeda
+                        setTimeout(() => {
+                            setupShapeGame();
+                            document.getElementById('shape-feedback').textContent = '';
+                            setTimeout(() => {
+                                playShapeInstruction();
+                            }, 500);
+                        }, 2000);
+                    } else {
+                        document.getElementById('shape-feedback').textContent = 'Coba lagi!';
+                        document.getElementById('shape-feedback').className = 'feedback error-feedback';
+                        
+                        // Mainkan suara salah
+                        playWrongSound();
+                    }
+                });
+                
+                shapesContainer.appendChild(shapeElement);
+            });
+        }
+        
+        // Fungsi untuk mengatur game berhitung
+        function setupCountingGame() {
+            const objectsContainer = document.getElementById('objects-container');
+            const numberOptions = document.getElementById('number-options');
+            objectsContainer.innerHTML = '';
+            numberOptions.innerHTML = '';
+            
+            // Pilih objek secara acak
+            const randomObjectIndex = Math.floor(Math.random() * countObjects.length);
+            const selectedObject = countObjects[randomObjectIndex];
+            
+            // Tentukan jumlah yang akan ditampilkan (1-6)
+            const count = Math.floor(Math.random() * 6) + 1;
+            currentObjectCount = count;
+            
+            // Tampilkan objek-objek
+            for (let i = 0; i < count; i++) {
+                const objectElement = document.createElement('div');
+                objectElement.className = 'object';
+                objectElement.innerHTML = selectedObject.svg;
+                objectsContainer.appendChild(objectElement);
+            }
+            
+            // Buat pilihan angka (1-6)
+            for (let i = 1; i <= 6; i++) {
+                const numberOption = document.createElement('div');
+                numberOption.className = 'number-option';
+                numberOption.textContent = i;
+                
+                numberOption.addEventListener('click', () => {
+                    if (i === count) {
+                        document.getElementById('counting-feedback').textContent = 'Benar! 🎉';
+                        document.getElementById('counting-feedback').className = 'feedback success-feedback';
+                        countingScore++;
+                        document.getElementById('counting-score').textContent = countingScore;
+                        
+                        // Mainkan suara benar
+                        playCorrectSound();
+                        
+                       // Siapkan putaran berikutnya setelah jeda
+                        setTimeout(() => {
+                            setupCountingGame();
+                            document.getElementById('counting-feedback').textContent = '';
+                            setTimeout(() => {
+                                playCountingInstruction();
+                            }, 500);
+                        }, 2000);
+                    } else {
+                        document.getElementById('counting-feedback').textContent = 'Coba lagi!';
+                        document.getElementById('counting-feedback').className = 'feedback error-feedback';
+                        
+                        // Mainkan suara salah
+                        playWrongSound();
+                    }
+                });
+                
+                numberOptions.appendChild(numberOption);
+            }
+        }
+        
+        // Fungsi untuk mengatur game memori
+        function setupMemoryGame() {
+            const memoryGame = document.getElementById('memory-game');
+            memoryGame.innerHTML = '';
+            document.getElementById('memory-score').textContent = '0';
+            memoryScore = 0;
+            
+            // Buat array dengan pasangan kartu
+            const memoryPairs = [...memoryItems, ...memoryItems];
+            
+            // Acak urutan kartu
+            const shuffledMemoryItems = memoryPairs.sort(() => Math.random() - 0.5);
+            
+            // Variabel untuk tracking kartu yang dibuka
+            let flippedCards = [];
+            let matchedPairs = 0;
+            
+            // Tampilkan kartu
+            shuffledMemoryItems.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.value = item;
+                card.dataset.index = index;
+                
+                card.addEventListener('click', function() {
+                    // Jangan lakukan apa-apa jika kartu sudah terbuka atau sudah cocok
+                    if (this.classList.contains('flipped') || flippedCards.length >= 2) {
+                        return;
+                    }
+                    
+                    // Balik kartu
+                    this.classList.add('flipped');
+                    this.textContent = item;
+                    flippedCards.push(this);
+                    
+                    // Jika sudah ada dua kartu yang dibuka, periksa kecocokan
+                    if (flippedCards.length === 2) {
+                        if (flippedCards[0].dataset.value === flippedCards[1].dataset.value) {
+                            // Kartu cocok
+                            matchedPairs++;
+                            document.getElementById('memory-score').textContent = matchedPairs;
+                            document.getElementById('memory-feedback').textContent = 'Cocok! 🎉';
+                            document.getElementById('memory-feedback').className = 'feedback success-feedback';
+                            
+                            // Mainkan suara benar
+                            playCorrectSound();
+                            
+                            // Reset array kartu yang dibuka
+                            flippedCards = [];
+                            
+                            // Cek apakah semua pasangan telah ditemukan
+                            if (matchedPairs === memoryItems.length) {
+                                setTimeout(() => {
+                                    speak("Selamat! Kamu berhasil menemukan semua pasangan!");
+                                    document.getElementById('memory-feedback').textContent = 'Selamat! 🎉 Semua pasangan ditemukan!';
+                                }, 1000);
+                            }
+                        } else {
+                            // Kartu tidak cocok
+                            document.getElementById('memory-feedback').textContent = 'Tidak cocok, coba lagi!';
+                            document.getElementById('memory-feedback').className = 'feedback error-feedback';
+                            
+                            // Mainkan suara salah
+                            playWrongSound();
+                            
+                            // Kembalikan kartu setelah jeda
+                            setTimeout(() => {
+                                flippedCards.forEach(card => {
+                                    card.classList.remove('flipped');
+                                    card.textContent = '';
+                                });
+                                flippedCards = [];
+                                document.getElementById('memory-feedback').textContent = '';
+                            }, 1000);
+                        }
+                    }
+                });
+                
+                memoryGame.appendChild(card);
+            });
+        }
+        
+        // Event listener untuk memastikan suara tersedia saat halaman dimuat
+        window.addEventListener('DOMContentLoaded', () => {
+            // Isi suara saat halaman dimuat
+            synth.getVoices();
+            
+            // Inisialisasi game dengan layar sambutan
+            document.querySelector('.start-screen').classList.remove('hidden');
+        });
+        
+        // Kode untuk memastikan suara diinisialisasi dengan benar
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = function() {
+                // Log untuk debugging
+                console.log("Voices loaded:", synth.getVoices().length);
+            };
+        }
+    </script>
+</body>
+</html>

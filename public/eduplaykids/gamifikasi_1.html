@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Alfabet - Belajar Huruf</title>
+    <style>
+/* CSS UTAMA (TANPA PERUBAHAN) */
+body {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #ffebee;
+    overflow-y: auto;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    color: #ff5722;
+    font-size: 2.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #7e57c2;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.game-container {
+    background-color: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+.game-area {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height: 300px;
+}
+
+.letter-display {
+    font-size: 8rem;
+    color: #2196f3;
+    text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, color 0.3s;
+    cursor: pointer;
+    user-select: none;
+}
+
+.letter-display:hover {
+    transform: scale(1.1);
+}
+
+.letter-display.animate {
+    animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 25px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+
+.control-btn:hover {
+    transform: scale(1.05);
+    background-color: #388e3c;
+}
+
+.mode-btn {
+    background-color: #ff9800;
+}
+
+.mode-btn:hover {
+    background-color: #f57c00;
+}
+
+.floating-item {
+    position: absolute;
+    font-size: 1.5rem;
+    animation: float 15s linear infinite;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(120%) rotate(0deg);
+    }
+    100% {
+        transform: translateY(-100vh) rotate(360deg);
+    }
+}
+
+.image-container {
+    margin-top: 20px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.word-image {
+    max-height: 100%;
+    max-width: 80%;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.word-text {
+    font-size: 1.5rem;
+    color: #673ab7;
+    margin-top: 10px;
+    font-weight: bold;
+    min-height: 2rem;
+}
+
+.progress-container {
+    width: 100%;
+    height: 20px;
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0;
+    background-color: #8bc34a;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.stars-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.star {
+    font-size: 1.5rem;
+    color: #e0e0e0;
+    transition: color 0.3s;
+}
+
+.star.earned {
+    color: #ffc107;
+    animation: star-pulse 0.5s ease;
+}
+
+@keyframes star-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+}
+
+.quiz-container {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+}
+
+.quiz-question {
+    font-size: 1.5rem;
+    color: #673ab7;
+    margin-bottom: 20px;
+}
+
+.options-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.option-btn {
+    background-color: #bbdefb;
+    border: 3px solid #64b5f6;
+    border-radius: 15px;
+    font-size: 2rem;
+    padding: 15px 25px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    min-width: 80px;
+}
+
+.option-btn:hover {
+    transform: scale(1.05);
+    background-color: #90caf9;
+}
+
+.option-btn.correct {
+    background-color: #a5d6a7;
+    border-color: #4caf50;
+    animation: correct-answer 0.5s ease;
+}
+
+.option-btn.wrong {
+    background-color: #ffcdd2;
+    border-color: #ef5350;
+    animation: wrong-answer 0.5s ease;
+}
+
+@keyframes correct-answer {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes wrong-answer {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.game-over {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+}
+
+.game-over-text {
+    font-size: 2rem;
+    color: #ff5722;
+    margin-bottom: 20px;
+}
+
+.reward-animation {
+    font-size: 3rem;
+    animation: celebration 1s infinite alternate;
+}
+
+@keyframes celebration {
+    0% { transform: scale(1) rotate(-10deg); }
+    100% { transform: scale(1.2) rotate(10deg); }
+}
+
+.bubble {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    animation: bubble-float 8s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes bubble-float {
+    0% {
+        transform: translate(0, 100vh) scale(1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: translate(0, -100px) scale(0.3);
+        opacity: 0;
+    }
+}
+
+#audio-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #e91e63;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+#audio-btn:hover {
+    background-color: #c2185b;
+}
+
+/* RESPONSIVE DESIGN */
+
+/* Tablet & Desktop */
+@media (min-width: 768px) {
+    .letter-display {
+        font-size: 10rem;
+    }
+
+    .control-btn {
+        font-size: 1.4rem;
+        padding: 14px 30px;
+    }
+
+    .option-btn {
+        font-size: 2rem;
+    }
+
+    .quiz-question {
+        font-size: 2rem;
+    }
+
+    .word-text {
+        font-size: 1.8rem;
+    }
+
+    .game-over-text {
+        font-size: 2.5rem;
+    }
+
+    .reward-animation {
+        font-size: 4rem;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    h1 {
+        font-size: 2rem;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+    }
+
+    .letter-display {
+        font-size: 5rem;
+    }
+
+    .control-btn {
+        font-size: 1rem;
+        padding: 10px 18px;
+    }
+
+    .option-btn {
+        font-size: 1.5rem;
+        padding: 10px 18px;
+    }
+
+    .quiz-question {
+        font-size: 1.3rem;
+        text-align: center;
+    }
+
+    .game-over-text {
+        font-size: 1.5rem;
+    }
+
+    .reward-animation {
+        font-size: 2.5rem;
+    }
+
+    #audio-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    .image-container {
+        height: 120px;
+    }
+
+    .word-text {
+        font-size: 1.2rem;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Petualangan Alfabet</h1>
+        <div class="subtitle">Mari Belajar Huruf Sambil Bermain!</div>
+        
+        <div class="game-container">
+            <button id="audio-btn">🔊</button>
+
+            <!-- Main letter learning mode -->
+            <div class="game-area" id="letter-mode">
+                <div class="letter-display" id="current-letter">A</div>
+            </div>
+
+            <!-- Image association area -->
+            <div class="image-container">
+                <img src="/api/placeholder/300/200" alt="Gambar kata" class="word-image" id="word-image">
+            </div>
+            <div class="word-text" id="word-text"></div>
+
+            <!-- Quiz mode (initially hidden) -->
+            <div class="quiz-container" id="quiz-mode">
+                <div class="quiz-question">Huruf apa ini?</div>
+                <div class="options-container" id="options-container">
+                    <!-- Options will be added here by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Game over screen (initially hidden) -->
+            <div class="game-over" id="game-over">
+                <div class="game-over-text">Hebat! Kamu Telah Menyelesaikan Permainan!</div>
+                <div class="reward-animation">🎉 🌟 🎈</div>
+                <button id="restart-btn" class="control-btn">Main Lagi!</button>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button id="prev-btn" class="control-btn">◀️ Sebelumnya</button>
+                <button id="play-sound-btn" class="control-btn">🔊 Dengarkan</button>
+                <button id="next-btn" class="control-btn">Selanjutnya ▶️</button>
+                <button id="mode-btn" class="control-btn mode-btn">Kuis</button>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <div class="stars-container" id="stars-container">
+                <span class="star">⭐</span>
+                <span class="star">⭐</span>
+                <span class="star">⭐</span>
+                <span class="star">⭐</span>
+                <span class="star">⭐</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        // Game data dengan path gambar
+const alphabet = [
+    { letter: 'A', word: 'Apel', imageDesc: 'gambar apel merah', imageSrc: 'gamifikasi1/1.png' },
+    { letter: 'B', word: 'Bola', imageDesc: 'gambar bola warna-warni', imageSrc: 'gamifikasi1/2.png' },
+    { letter: 'C', word: 'Cilukba', imageDesc: 'gambar anak bermain cilukba', imageSrc: 'gamifikasi1/3.png' },
+    { letter: 'D', word: 'Daun', imageDesc: 'gambar daun hijau', imageSrc: 'gamifikasi1/4.png' },
+    { letter: 'E', word: 'Elang', imageDesc: 'gambar burung elang', imageSrc: 'gamifikasi1/5.png' },
+    { letter: 'F', word: 'Feri', imageDesc: 'gambar kapal feri', imageSrc: 'gamifikasi1/6.png' },
+    { letter: 'G', word: 'Gajah', imageDesc: 'gambar gajah', imageSrc: 'gamifikasi1/7.png' },
+    { letter: 'H', word: 'Harimau', imageDesc: 'gambar harimau', imageSrc: 'gamifikasi1/8.png' },
+    { letter: 'I', word: 'Ikan', imageDesc: 'gambar ikan', imageSrc: 'gamifikasi1/9.png' },
+    { letter: 'J', word: 'Jerapah', imageDesc: 'gambar jerapah', imageSrc: 'gamifikasi1/10.png' },
+    { letter: 'K', word: 'Kucing', imageDesc: 'gambar kucing', imageSrc: 'gamifikasi1/11.png' },
+    { letter: 'L', word: 'Lebah', imageDesc: 'gambar lebah', imageSrc: 'gamifikasi1/12.png' },
+    { letter: 'M', word: 'Monyet', imageDesc: 'gambar monyet', imageSrc: 'gamifikasi1/13.png' },
+    { letter: 'N', word: 'Nanas', imageDesc: 'gambar nanas', imageSrc: 'gamifikasi1/14.png' },
+    { letter: 'O', word: 'Ombak', imageDesc: 'gambar ombak di pantai', imageSrc: 'gamifikasi1/15.png' },
+    { letter: 'P', word: 'Pesawat', imageDesc: 'gambar pesawat terbang', imageSrc: 'gamifikasi1/16.png' },
+    { letter: 'Q', word: 'Qur\'an', imageDesc: 'gambar kitab Al-Quran', imageSrc: 'gamifikasi1/17.png' },
+    { letter: 'R', word: 'Rusa', imageDesc: 'gambar rusa', imageSrc: 'gamifikasi1/18.png' },
+    { letter: 'S', word: 'Singa', imageDesc: 'gambar singa', imageSrc: 'gamifikasi1/19.png' },
+    { letter: 'T', word: 'Telur', imageDesc: 'gambar telur', imageSrc: 'gamifikasi1/20.png' },
+    { letter: 'U', word: 'Ular', imageDesc: 'gambar ular', imageSrc: 'gamifikasi1/21.png' },
+    { letter: 'V', word: 'Vas', imageDesc: 'gambar vas bunga', imageSrc: 'gamifikasi1/22.png' },
+    { letter: 'W', word: 'Wajan', imageDesc: 'gambar wajan', imageSrc: 'gamifikasi1/23.png' },
+    { letter: 'X', word: 'Xilofon', imageDesc: 'gambar xilofon', imageSrc: 'gamifikasi1/24.png' },
+    { letter: 'Y', word: 'Yoyo', imageDesc: 'gambar mainan yoyo', imageSrc: 'gamifikasi1/25.png' },
+    { letter: 'Z', word: 'Zebra', imageDesc: 'gambar zebra', imageSrc: 'gamifikasi1/26.png' }
+];
+
+        // Game state
+        let currentIndex = 0;
+        let currentMode = 'learn';
+        let score = 0;
+        let audioEnabled = true;
+        let completedLetters = new Set();
+
+        // Audio contexts and elements
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const audioElements = {};
+        let audioPendingPlay = null;
+
+        // DOM elements
+        const currentLetterEl = document.getElementById('current-letter');
+        const wordImageEl = document.getElementById('word-image');
+        const wordTextEl = document.getElementById('word-text');
+        const letterModeEl = document.getElementById('letter-mode');
+        const quizModeEl = document.getElementById('quiz-mode');
+        const gameOverEl = document.getElementById('game-over');
+        const optionsContainerEl = document.getElementById('options-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const playSoundBtn = document.getElementById('play-sound-btn');
+        const modeBtn = document.getElementById('mode-btn');
+        const audioBtn = document.getElementById('audio-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const progressBarEl = document.getElementById('progress-bar');
+        const starsContainerEl = document.getElementById('stars-container');
+
+        // Initialize the game
+        function initGame() {
+            updateDisplay();
+            createBubbles();
+            createFloatingItems();
+            updateProgressBar();
+            
+            // Welcome message with audio
+            setTimeout(() => {
+                speak("Selamat datang di Petualangan Alfabet! Mari belajar huruf sambil bermain!");
+            }, 500);
+        }
+
+      // Ubah menjadi:
+function updateDisplay() {
+    const currentData = alphabet[currentIndex];
+    currentLetterEl.textContent = currentData.letter;
+    wordTextEl.textContent = currentData.word;
+    
+    // Gunakan gambar yang sebenarnya
+    wordImageEl.src = currentData.imageSrc;
+    wordImageEl.alt = currentData.imageDesc;
+    wordImageEl.style.opacity = "1";
+            
+            // Animation effect
+            currentLetterEl.classList.add('animate');
+            setTimeout(() => {
+                currentLetterEl.classList.remove('animate');
+            }, 500);
+            
+            // Update button states
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex === alphabet.length - 1;
+        }
+
+        // Generate speech for text
+        function speak(text) {
+            if (!audioEnabled) return;
+            
+            // Create speech synthesis
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'id-ID';
+            utterance.rate = 0.9;
+            utterance.pitch = 1.2;
+            
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            // Speak
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Play current letter sound
+        function playCurrentLetterSound() {
+            const currentData = alphabet[currentIndex];
+            speak(currentData.letter + ". " + currentData.word + ". " + currentData.letter + " untuk " + currentData.word);
+        }
+
+        // Move to previous letter
+        function goToPrevLetter() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateDisplay();
+                playCurrentLetterSound();
+            }
+        }
+
+        // Move to next letter
+        function goToNextLetter() {
+            if (currentIndex < alphabet.length - 1) {
+                currentIndex++;
+                updateDisplay();
+                playCurrentLetterSound();
+                
+                // Mark as completed
+                completedLetters.add(currentIndex);
+                updateProgressBar();
+                
+                // Check if all letters have been viewed
+                if (completedLetters.size >= alphabet.length) {
+                    awardStar();
+                }
+            }
+        }
+
+        // Toggle game mode (learn or quiz)
+       function toggleMode() {
+    if (currentMode === 'learn') {
+        currentMode = 'quiz';
+        modeBtn.textContent = 'Belajar';
+        setupQuiz();
+        letterModeEl.style.display = 'none';
+        quizModeEl.style.display = 'flex';
+        // Jangan sembunyikan gambar, hapus atau ubah baris berikut:
+        // wordImageEl.style.opacity = "0";
+        wordImageEl.style.opacity = "1"; // Pastikan gambar tetap terlihat
+        // Biarkan teks kata tetap ada
+        // wordTextEl.textContent = "";
+        speak("Mari bermain kuis! Pilih huruf yang benar.");
+    } else {
+        currentMode = 'learn';
+        modeBtn.textContent = 'Kuis';
+        letterModeEl.style.display = 'flex';
+        quizModeEl.style.display = 'none';
+        updateDisplay();
+        speak("Mari belajar huruf lagi!");
+    }
+}
+
+        // Setup the quiz with options
+        function setupQuiz() {
+            // Clear previous options
+            optionsContainerEl.innerHTML = '';
+            
+            // Get the correct answer
+            const correctAnswer = alphabet[currentIndex].letter;
+            
+            // Generate 3 unique random options
+            let options = [correctAnswer];
+            while (options.length < 4) {
+                const randomIndex = Math.floor(Math.random() * alphabet.length);
+                const randomLetter = alphabet[randomIndex].letter;
+                if (!options.includes(randomLetter)) {
+                    options.push(randomLetter);
+                }
+            }
+            
+            // Shuffle options
+            options = shuffleArray(options);
+            
+            // Create option buttons
+            options.forEach(option => {
+                const optionBtn = document.createElement('button');
+                optionBtn.className = 'option-btn';
+                optionBtn.textContent = option;
+                optionBtn.addEventListener('click', () => checkAnswer(option, correctAnswer, optionBtn));
+                optionsContainerEl.appendChild(optionBtn);
+            });
+        }
+
+        // Check quiz answer
+        function checkAnswer(selected, correct, button) {
+            const isCorrect = selected === correct;
+            
+            // Disable all buttons
+            const allButtons = document.querySelectorAll('.option-btn');
+            allButtons.forEach(btn => {
+                btn.disabled = true;
+            });
+            
+           // Dalam fungsi checkAnswer, saat jawaban benar dan pindah ke soal berikutnya:
+if (isCorrect) {
+    button.classList.add('correct');
+    speak("Benar! Hebat!");
+    score++;
+    
+    // Jika semua huruf telah dijawab dengan benar, berikan bintang
+    if (score % 5 === 0) {
+        awardStar();
+    }
+    
+    // Tandai sebagai selesai
+    completedLetters.add(currentIndex);
+    updateProgressBar();
+    
+    // Pindah ke pertanyaan berikutnya setelah jeda
+    setTimeout(() => {
+        if (currentIndex < alphabet.length - 1) {
+            currentIndex++;
+            // Pastikan gambar diperbarui juga:
+            const currentData = alphabet[currentIndex];
+            wordImageEl.src = currentData.imageSrc || `/api/placeholder/300/200`;
+            wordImageEl.alt = currentData.imageDesc;
+            wordTextEl.textContent = currentData.word; // Opsional: tampilkan kata juga
+            
+            updateDisplay(); // Ini akan memperbarui huruf
+            setupQuiz();     // Ini akan memperbarui opsi kuis
+            allButtons.forEach(btn => {
+                btn.disabled = false;
+            });
+        } else {
+            // Game selesai
+            showGameOver();
+        }
+    }, 1500);
+            } else {
+                button.classList.add('wrong');
+                speak("Coba lagi ya!");
+                
+                // Show correct answer
+                allButtons.forEach(btn => {
+                    if (btn.textContent === correct) {
+                        btn.classList.add('correct');
+                    }
+                });
+                
+                // Try again after delay
+                setTimeout(() => {
+                    setupQuiz(); 
+                }, 2000);
+            }
+        }
+
+        // Show game over screen
+        function showGameOver() {
+            letterModeEl.style.display = 'none';
+            quizModeEl.style.display = 'none';
+            gameOverEl.style.display = 'flex';
+            speak("Hebat! Kamu telah menyelesaikan permainan! Kamu mendapatkan " + score + " bintang!");
+            
+            // Create celebration animation
+            createConfetti();
+        }
+
+        // Restart the game
+        function restartGame() {
+            currentIndex = 0;
+            currentMode = 'learn';
+            score = 0;
+            completedLetters = new Set();
+            
+            // Reset UI
+            letterModeEl.style.display = 'flex';
+            quizModeEl.style.display = 'none';
+            gameOverEl.style.display = 'none';
+            modeBtn.textContent = 'Kuis';
+            
+            // Reset stars
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(star => {
+                star.classList.remove('earned');
+            });
+            
+            updateDisplay();
+            updateProgressBar();
+            speak("Mari bermain lagi!");
+        }
+
+        // Award a star
+        function awardStar() {
+            const stars = document.querySelectorAll('.star');
+            let awardedCount = 0;
+            
+            for (let i = 0; i < stars.length; i++) {
+                if (stars[i].classList.contains('earned')) {
+                    awardedCount++;
+                    continue;
+                }
+                
+                stars[i].classList.add('earned');
+                stars[i].style.animation = 'none';
+                stars[i].offsetHeight; // Force reflow
+                stars[i].style.animation = 'star-pulse 0.5s ease';
+                speak("Kamu mendapatkan bintang!");
+                break;
+            }
+            
+            // If all stars are earned, show celebration
+            if (awardedCount + 1 >= stars.length) {
+                setTimeout(showGameOver, 1500);
+            }
+        }
+
+        // Update progress bar
+        function updateProgressBar() {
+            const progress = (completedLetters.size / alphabet.length) * 100;
+            progressBarEl.style.width = `${progress}%`;
+        }
+
+        // Toggle audio
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            audioBtn.textContent = audioEnabled ? '🔊' : '🔇';
+            
+            if (audioEnabled) {
+                speak("Suara diaktifkan");
+            }
+        }
+
+        // Create bubbles animation
+        function createBubbles() {
+            const container = document.querySelector('.game-container');
+            
+            for (let i = 0; i < 10; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                
+                // Random size
+                const size = Math.floor(Math.random() * 50) + 20;
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                
+                // Random position
+                const posX = Math.floor(Math.random() * 100);
+                bubble.style.left = `${posX}%`;
+                
+                // Random delay
+                const delay = Math.random() * 8;
+                bubble.style.animationDelay = `${delay}s`;
+                
+                container.appendChild(bubble);
+            }
+        }
+
+        // Create floating items (letters) animation
+        function createFloatingItems() {
+            const container = document.querySelector('.game-container');
+            
+            for (let i = 0; i < 15; i++) {
+                const item = document.createElement('div');
+                item.className = 'floating-item';
+                
+                // Random letter
+                const randomIndex = Math.floor(Math.random() * alphabet.length);
+                item.textContent = alphabet[randomIndex].letter;
+                
+                // Random color
+                const colors = ['#ff9800', '#4caf50', '#2196f3', '#e91e63', '#9c27b0'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                item.style.color = randomColor;
+                
+                // Random position
+                const posX = Math.floor(Math.random() * 100);
+                item.style.left = `${posX}%`;
+                
+                // Random speed
+                const duration = Math.random() * 10 + 10;
+                item.style.animationDuration = `${duration}s`;
+                
+                // Random delay
+                const delay = Math.random() * 10;
+                item.style.animationDelay = `${delay}s`;
+                
+                container.appendChild(item);
+            }
+        }
+
+        // Create confetti animation for celebration
+        function createConfetti() {
+            const container = document.querySelector('.game-container');
+            const confettiCount = 100;
+            const colors = ['#ff9800', '#4caf50', '#2196f3', '#e91e63', '#9c27b0', '#ffeb3b'];
+            
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'absolute';
+                confetti.style.width = `${Math.random() * 10 + 5}px`;
+                confetti.style.height = `${Math.random() * 10 + 5}px`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.top = '-20px';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.opacity = Math.random() * 0.5 + 0.5;
+                
+                // Animation
+                confetti.style.animation = `confetti-fall ${Math.random() * 3 + 2}s linear`;
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                container.appendChild(confetti);
+                
+                // Remove after animation
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+            
+            // Add CSS for confetti animation if it doesn't exist
+            if (!document.getElementById('confetti-style')) {
+                const style = document.createElement('style');
+                style.id = 'confetti-style';
+                style.textContent = `
+                    @keyframes confetti-fall {
+                        0% { transform: translateY(0) rotate(0); }
+                        100% { transform: translateY(100vh) rotate(720deg); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        // Utility function to shuffle array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Event listeners
+        currentLetterEl.addEventListener('click', playCurrentLetterSound);
+        prevBtn.addEventListener('click', goToPrevLetter);
+        nextBtn.addEventListener('click', goToNextLetter);
+        playSoundBtn.addEventListener('click', playCurrentLetterSound);
+        modeBtn.addEventListener('click', toggleMode);
+        audioBtn.addEventListener('click', toggleAudio);
+        restartBtn.addEventListener('click', restartGame);
+
+        // Handle user interaction to enable audio
+        document.addEventListener('click', function initAudio() {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            document.removeEventListener('click', initAudio);
+        }, { once: true });
+
+        // Initialize the game when page loads
+        window.addEventListener('load', initGame);
+
+        // Make sure audio works on Safari and mobile devices
+        document.addEventListener('touchstart', function() {
+            if (audioPendingPlay) {
+                audioPendingPlay.play();
+                audioPendingPlay = null;
+            }
+        }, { once: true });
+    </script>
+</body>
+</html>

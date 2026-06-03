@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoShoes SWOT Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .swot-container {
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            overflow: hidden;
+            width: 1000px;
+            height: 700px;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateX(0) translateY(0); }
+            100% { transform: translateX(-20px) translateY(-20px); }
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            font-weight: 800;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .swot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            height: calc(100% - 100px);
+        }
+
+        .quadrant {
+            padding: 30px 25px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .strengths {
+            background: linear-gradient(135deg, #e8f8f5, #d5f4e6);
+            border-right: 3px solid #27ae60;
+            border-bottom: 3px solid #27ae60;
+        }
+
+        .weaknesses {
+            background: linear-gradient(135deg, #fef9e7, #fcf3cf);
+            border-bottom: 3px solid #f39c12;
+        }
+
+        .opportunities {
+            background: linear-gradient(135deg, #ebf5ff, #d6eaff);
+            border-right: 3px solid #3498db;
+        }
+
+        .threats {
+            background: linear-gradient(135deg, #fdeaea, #fadbd8);
+        }
+
+        .quadrant-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(0,0,0,0.1);
+        }
+
+        .icon {
+            font-size: 2.5em;
+            margin-right: 12px;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .strengths .icon {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+        }
+
+        .weaknesses .icon {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+        }
+
+        .opportunities .icon {
+            background: linear-gradient(45deg, #3498db, #5dade2);
+        }
+
+        .threats .icon {
+            background: linear-gradient(45deg, #e74c3c, #ec7063);
+        }
+
+        .quadrant-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .items-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .item {
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 12px;
+            border-left: 4px solid;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            font-size: 0.85em;
+            line-height: 1.3;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .strengths .item {
+            border-left-color: #27ae60;
+        }
+
+        .weaknesses .item {
+            border-left-color: #f39c12;
+        }
+
+        .opportunities .item {
+            border-left-color: #3498db;
+        }
+
+        .threats .item {
+            border-left-color: #e74c3c;
+        }
+
+        .item-emoji {
+            font-size: 1.1em;
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="swot-container">
+        <div class="header">
+            <h1>ANALISIS SWOT GOSHOES</h1>
+            <p>Platform Layanan Laundry Sepatu Digital</p>
+        </div>
+        
+        <div class="swot-grid">
+            <!-- STRENGTHS -->
+            <div class="quadrant strengths">
+                <div class="quadrant-header">
+                    <div class="icon">S</div>
+                    <div class="quadrant-title">STRENGTHS</div>
+                </div>
+                
+                <div class="items-container">
+                    <div class="item">
+                        <span class="item-emoji">📱</span>Layanan praktis dengan sistem antar-jemput
+                    </div>
+                    <div class="item">
+                        <span class="item-emoji">🎯</span>Fokus pada niche market sneaker enthusiast
+                    </div>
+                    <div class="item">
+                        <span class="item-emoji">🔧</span>Teknologi AI, Google Maps & Firebase
+                    </div>
+                    <div class="item">
+                        <span class="item-emoji">👥</span>Interface user-friendly untuk semua kalangan
+                    </div>
+                    <div class="item">
+                        <span class="item-emoji">🤝</span>Memberdayakan UMKM lokal
+                    </div>
+                </div>
+            </div>
+            
+            <!-- WEAKNESSES -->
+            <div class="quadrant weaknesses">
+                <div class="quadrant-header">
+                    <div class="icon">W</div>
+                    <div class="quadrant-title">WEAKNESSES</div>
+                </div>
+                
+                <div class="items-container">
+                    <div class="item">
+                        <span class="item-emoji">📶</span>Ketergantungan pada koneksi internet stabil
+                    </div>
+                    <div class="item">
+                        <span class="item-emoji">🏙️</span>Jangkauan terbatas di wilayah non-perkotaan
+                    </div>
+                    <div class="item">
+                        <span class="item-emoji">💰</span>Biaya pengembangan & operasional tinggi
+                    </div>
+                </div>
+            </div>
+            
+            <!-- OPPORTUNITIES -->
+            <div class="quadrant opportunities">
+                <div class="quadrant-header">
+                    <div class="icon">O</div>
+                    <div class="quadrant-title">OPPORTUNITIES</div>
+                </div>
+                
+                <div class="items-container">
+                    <div class="item">
+                        <span class="item-emoji">👔</span>Tren gaya hidup urban & fashion meningkat
+                    </div>
+                    <div class="item">
+                        <span class="item-emoji">🤝</span>Kolaborasi dengan brand & komunitas sepatu
+                    </div>
+                    <div class="item">
+                        <span class="item-emoji">📈</span>Ekspansi ke layanan restorasi & express
+                    </div>
+                    <div class="item">
+                        <span class="item-emoji">📱</span>Adopsi teknologi digital semakin tinggi
+                    </div>
+                </div>
+            </div>
+            
+            <!-- THREATS -->
+            <div class="quadrant threats">
+                <div class="quadrant-header">
+                    <div class="icon">T</div>
+                    <div class="quadrant-title">THREATS</div>
+                </div>
+                
+                <div class="items-container">
+                    <div class="item">
+                        <span class="item-emoji">🏃</span>Kompetitor dengan platform serupa
+                    </div>
+                    <div class="item">
+                        <span class="item-emoji">☁️</span>Ketergantungan pada layanan pihak ketiga
+                    </div>
+                    <div class="item">
+                        <span class="item-emoji">⭐</span>Risiko kualitas mitra tidak konsisten
+                    </div>
+                    <div class="item">
+                        <span class="item-emoji">📉</span>Perubahan tren fashion & perilaku konsumen
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

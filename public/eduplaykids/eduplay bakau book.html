@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduPlay Kids - Virtual Book</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="book.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading">
+        <div class="loading-animation">
+            <div class="loading-circles">
+                <div class="loading-circle"></div>
+                <div class="loading-circle"></div>
+                <div class="loading-circle"></div>
+                <div class="loading-circle"></div>
+            </div>
+            <div class="loading-text">Memuat Buku Virtual...</div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="logo">
+            <img src="asset/Eduplay.png" alt="EduPlay Kids Logo">
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="#" class="active">Book</a>
+            <a href="index.html">Kelas</a>
+            <a href="index.html">Instructors</a>
+            <a href="#">About</a>
+        </div>
+        <div class="search-container">
+            <input type="text" placeholder="Cari pelajaran...">
+            <button><i class="fas fa-search"></i></button>
+        </div>
+        <div class="auth-buttons">
+            <a href="#" class="btn btn-outline">Sign In</a>
+            <a href="#" class="btn btn-filled">Register</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="#">Home</a> / <a href="#">Courses</a> / <span>Bakau Book</span>
+        </div>
+
+        <!-- Virtual Book Container -->
+        <div class="book-container">
+            <div class="book-header">
+                <div class="book-title">
+                    <h1>Mengenal Huruf dan Angka: Bermain Sambil Belajar</h1>
+                    <div class="book-details">
+                        <span><i class="fas fa-user"></i> Cahaya Alya</span>
+                        <span><i class="fas fa-calendar"></i> 15 April 2025</span>
+                        <span><i class="fas fa-eye"></i> 1,245 dilihat</span>
+                        <span><i class="fas fa-clock"></i> 15 menit</span>
+                    </div>
+                </div>
+                <div class="book-actions">
+                    <button class="btn-book" id="btn-guide"><i class="fas fa-question-circle"></i> Panduan</button>
+                    <button class="btn-book" id="btn-download"><i class="fas fa-download"></i> Unduh PDF</button>
+                    <button class="btn-book" id="btn-fullscreen"><i class="fas fa-expand"></i> Layar Penuh</button>
+                </div>
+            </div>
+            <div class="book-viewer">
+                <div class="book-content">
+                    <!-- Pages will be inserted here by JavaScript -->
+                </div>
+            </div>
+            <div class="controls">
+                <div class="control-left">
+                    <button class="btn-control" id="btn-first" title="Halaman Pertama">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    <button class="btn-control" id="btn-prev" title="Halaman Sebelumnya">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                </div>
+                <div class="control-center">
+                    <span class="page-count">Halaman <span id="current-page">1</span> dari <span id="total-pages">10</span></span>
+                </div>
+                <div class="control-right">
+                    <button class="btn-control" id="btn-next" title="Halaman Selanjutnya">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="btn-control" id="btn-last" title="Halaman Terakhir">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Section -->
+        <div class="task-section">
+            <div class="task-header">
+                <h2><i class="fas fa-tasks"></i> Penugasan</h2>
+            </div>
+            <div class="task-list">
+                <div class="task-card">
+                    <div class="task-title">Mengenal Hewan Hutan Bakau</div>
+                    <div class="task-meta">
+                        <span><i class="fas fa-calendar"></i> Deadline: 5 Mei 2025</span>
+                        <span><i class="fas fa-star"></i> Poin: 10</span>
+                    </div>
+                    <div class="task-description">
+                       Ajak anak mencari dan memfoto 5 gambar hewan yang hidup di hutan bakau (seperti kepiting, ikan, burung bakau, dll). Upload hasilnya pada link di bawah ini.
+                    </div>
+                    <button class="task-button">Kerjakan Tugas</button>
+                </div>
+                <div class="task-card">
+                    <div class="task-title">Mewarnai Pohon Bakau</div>
+                    <div class="task-meta">
+                        <span><i class="fas fa-calendar"></i> Deadline: 10 Mei 2025</span>
+                        <span><i class="fas fa-star"></i> Poin: 15</span>
+                    </div>
+                    <div class="task-description">
+                      Download lembar kerja, cetak, dan minta anak untuk mewarnai gambar pohon bakau beserta akar-akarnya. Upload foto hasil karya anak.
+                    </div>
+                    <button class="task-button">Kerjakan Tugas</button>
+                </div>
+                <div class="task-card">
+                    <div class="task-title">Simulasi Menanam Bakau</div>
+                    <div class="task-meta">
+                        <span><i class="fas fa-calendar"></i> Deadline: 15 Mei 2025</span>
+                        <span><i class="fas fa-star"></i> Poin: 20</span>
+                    </div>
+                    <div class="task-description">
+Lakukan aktivitas simulasi menanam bakau bersama anak menggunakan bahan sederhana di rumah (seperti stik es krim untuk batang dan plastisin untuk akar). Rekam video pendek saat aktivitas dan upload pada link yang tersedia.
+                    </div>
+                    <button class="task-button">Kerjakan Tugas</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Player -->
+    <div class="audio-player" id="audio-player">
+        <div class="audio-play">
+            <i class="fas fa-pause" id="audio-play-icon"></i>
+        </div>
+        <div class="audio-info">
+            <div class="audio-title">Memperkenalkan huruf "A"</div>
+            <div class="audio-progress">
+                <div class="audio-progress-bar" id="audio-progress-bar"></div>
+            </div>
+        </div>
+        <div class="audio-close" id="audio-close">
+            <i class="fas fa-times"></i>
+        </div>
+    </div>
+
+    <!-- Guide Overlay -->
+    <div class="guide-overlay" id="guide-overlay">
+        <div class="guide-content">
+            <div class="guide-close" id="guide-close">
+                <i class="fas fa-times"></i>
+            </div>
+            <div class="guide-title">
+                <i class="fas fa-book-open"></i> Cara Menggunakan Buku Virtual
+            </div>
+            <ul class="guide-steps">
+                <li class="guide-step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">Gunakan tombol panah untuk berpindah halaman</div>
+                </li>
+                <li class="guide-step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">Klik pada area berwarna di setiap halaman untuk mendengarkan audio</div>
+                </li>
+                <li class="guide-step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">Klik tombol unduh untuk menyimpan buku dalam format PDF</div>
+                </li>
+                <li class="guide-step">
+                    <div class="step-number">4</div>
+                    <div class="step-text">Setelah membaca, kerjakan tugas-tugas yang tersedia di bawah</div>
+                </li>
+            </ul>
+            <div class="guide-footer">
+                <button class="btn-start" id="guide-start">Mulai Membaca</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simulate loading
+            setTimeout(() => {
+                document.querySelector('.loading').classList.add('hidden');
+                showGuide();
+            }, 1500);
+            
+            // Book data (would normally come from server)
+            const bookData = {
+                title: "Mengenal Huruf dan Angka: Bermain Sambil Belajar",
+                author: "Cahaya Alya",
+                totalPages: 14,
+                pages: [
+        {
+            image: "bakau book/1.png", // Gambar cover buku
+            audioZones: [
+                {
+                    x: 150,
+                    y: 200,
+                    width: 200,
+                    height: 100,
+                    audio: "audio/intro.mp3",
+                    title: "Pengenalan Buku"
+                }
+            ]
+        },
+        {
+            image: "bakau book/2.png", // Halaman pertama
+            audioZones: [
+
+                {
+                    x: 250,
+                    y: 150,
+                    width: 500,
+                    height: 500,
+                    audio: "audio bakau book/1.mp3",
+                title: "Audio 1"
+                }
+            ]
+        },
+        {
+            image: "bakau book/3.png", // Halaman kedua
+            audioZones: [
+                {
+                    x: 50,
+                    y: 50,
+                    width: 1000,
+                    height: 1000,
+                    audio: "audio bakau book/halaman 3.mp3",
+                    title: "Belajar Huruf B"
+                }
+            ]
+        },
+        {
+            image: "bakau book/5.png", // Halaman kedua
+            audioZones: [
+                {
+                    x: 50,
+                    y: 50,
+                    width: 1000,
+                    height: 1000,
+                    audio: "audio bakau book/4.mp3",
+                    title: "Belajar Angka 3"
+                }
+            ]
+        },
+        {
+            image: "bakau book/6.png", // Halaman kedua
+            audioZones: [
+                {
+                    x: 50,
+                    y: 50,
+                    width: 1000,
+                    height: 1000,
+                    audio: "audio bakau book/5.mp3",
+                    title: "Belajar Angka 5"
+                }
+            ]
+        },
+        {
+            image: "bakau book/7.png", // Halaman kedua
+            audioZones: [
+                {
+                    x: 50,
+                    y: 50,
+                    width: 1000,
+                    height: 1000,
+                    audio: "audio bakau book/6.mp3",
+                    title: "Belajar Angka 6"
+                }
+            ]
+        },
+        {
+            image: "bakau book/8.png", // Halaman kedua
+            audioZones: [
+                {
+                    x: 50,
+                    y: 50,
+                    width: 1000,
+                    height: 1000,
+                    audio: "audio bakau book/7.mp3",
+                    title: "Belajar Angka 7"
+                }
+            ]
+        },
+        {
+            image: "bakau book/9.png", // Halaman kedua
+            audioZones: [
+                {
+                    x: 50,
+                    y: 50,
+                    width: 1000,
+                    height: 1000,
+                    audio: "audio bakau book/8.mp3",
+                    title: "Belajar Angka 8"
+                }
+            ]
+        },
+        {
+            image: "bakau book/10.png", // Halaman kedua
+            audioZones: [
+                {
+                    x: 50,
+                    y: 50,
+                    width: 1000,
+                    height: 1000,
+                    audio: "audio bakau book/9.mp3",
+                    title: "Belajar Angka 9"
+                }
+            ]
+        },
+        {
+            image: "bakau book/11.png", // Halaman kedua
+            audioZones: [
+                {
+                    x: 50,
+                    y: 50,
+                    width: 1000,
+                    height: 1000,
+                    audio: "audio bakau book/10.mp3",
+                    title: "Belajar Angka 10"
+                }
+            ]
+        },
+        {
+            image: "bakau book/12.png", // Halaman kedua
+            audioZones: [
+                {
+                    x: 50,
+                    y: 50,
+                    width: 1000,
+                    height: 1000,
+                    audio: "audio bakau book/11.mp3",
+                    title: "Belajar Angka 11"
+                }
+            ]
+        },
+        {
+            image: "bakau book/13.png", // Halaman kedua
+            audioZones: [
+                {
+                    x: 50,
+                    y: 50,
+                    width: 1000,
+                    height: 1000,
+                    audio: "audio bakau book/12.mp3",
+                    title: "Belajar Huruf B"
+                }
+            ]
+        },
+        {
+            image: "bakau book/14.png", // Halaman kedua
+            audioZones: [
+                {
+                    x: 50,
+                    y: 50,
+                    width: 1000,
+                    height: 1000,
+                    audio: "audio bakau book/13.mp3",
+                    title: "Belajar Angka 13"
+                }
+            ]
+        },
+        {
+            image: "bakau book/15.png", // Halaman kedua
+            audioZones: [
+                {
+                    x: 50,
+                    y: 50,
+                    width: 1000,
+                    height: 1000,
+                    audio: "audio bakau book/14.mp3",
+                    title: "Belajar Angka 14"
+                }
+            ]
+        },
+        // Tambahkan halaman-halaman lainnya sesuai kebutuhan
+        {
+            image: "images/pages/page9.jpg", // Halaman terakhir
+            audioZones: [
+                {
+                    x: 100,
+                    y: 100,
+                    width: 200,
+                    height: 100,
+                    audio: "audio/kesimpulan.mp3",
+                    title: "Kesimpulan"
+                },
+                {
+                    x: 100,
+                    y: 250,
+                    width: 200,
+                    height: 100,
+                    audio: "audio/penutup.mp3",
+                    title: "Penutup"
+                }
+            ]
+        }
+    ]
+};
+            
+            // Variables
+            let currentPage = 0;
+            let audioElement = null;
+            
+            // DOM Elements
+            const bookContent = document.querySelector('.book-content');
+            const currentPageEl = document.getElementById('current-page');
+            const totalPagesEl = document.getElementById('total-pages');
+            const btnFirst = document.getElementById('btn-first');
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const btnLast = document.getElementById('btn-last');
+            const btnGuide = document.getElementById('btn-guide');
+            const btnDownload = document.getElementById('btn-download');
+            const btnFullscreen = document.getElementById('btn-fullscreen');
+            const guideOverlay = document.getElementById('guide-overlay');
+            const guideClose = document.getElementById('guide-close');
+            const guideStart = document.getElementById('guide-start');
+            const audioPlayer = document.getElementById('audio-player');
+            const audioPlayIcon = document.getElementById('audio-play-icon');
+            const audioProgressBar = document.getElementById('audio-progress-bar');
+            const audioClose = document.getElementById('audio-close');
+            
+            // Initialize book
+            function initBook() {
+                totalPagesEl.textContent = bookData.totalPages;
+                
+                // Create pages
+                bookData.pages.forEach((page, index) => {
+                    const pageElement = document.createElement('div');
+                    pageElement.className = 'page';
+                    pageElement.style.display = index === currentPage ? 'flex' : 'none';
+                    
+                    const pageImg = document.createElement('img');
+                    pageImg.src = page.image;
+                    pageImg.alt = `Page ${index + 1}`;
+                    
+                    pageElement.appendChild(pageImg);
+                    
+                    // Create audio zones
+                    const audioZonesContainer = document.createElement('div');
+                    audioZonesContainer.className = 'audio-zones';
+                    
+                    page.audioZones.forEach(zone => {
+                        const audioZone = document.createElement('div');
+                        audioZone.className = 'audio-zone';
+                        audioZone.style.left = `${zone.x}px`;
+                        audioZone.style.top = `${zone.y}px`;
+                        audioZone.style.width = `${zone.width}px`;
+                        audioZone.style.height = `${zone.height}px`;
+                        
+                        audioZone.addEventListener('click', () => {
+                            playAudio(zone.audio, zone.title);
+                        });
+                        
+                        audioZonesContainer.appendChild(audioZone);
+                    });
+                    
+                    pageElement.appendChild(audioZonesContainer);
+                    bookContent.appendChild(pageElement);
+                });
+                
+                updateControls();
+            }
+            
+            // Navigation functions
+            function goToPage(pageIndex) {
+                if (pageIndex < 0 || pageIndex >= bookData.totalPages) return;
+                
+                const pages = document.querySelectorAll('.page');
+                
+                // Hide current page
+                pages[currentPage].style.display = 'none';
+                
+                // Show new page
+                pages[pageIndex].style.display = 'flex';
+                
+                // Animation based on direction
+                if (pageIndex > currentPage) {
+                    pages[pageIndex].style.animation = 'pageInRight 0.5s forwards';
+                } else {
+                    pages[pageIndex].style.animation = 'pageInLeft 0.5s forwards';
+                }
+                
+                currentPage = pageIndex;
+                currentPageEl.textContent = currentPage + 1;
+                
+                updateControls();
+            }
+            
+            function updateControls() {
+                btnFirst.disabled = currentPage === 0;
+                btnPrev.disabled = currentPage === 0;
+                btnNext.disabled = currentPage === bookData.totalPages - 1;
+                btnLast.disabled = currentPage === bookData.totalPages - 1;
+                
+                btnFirst.style.opacity = currentPage === 0 ? 0.5 : 1;
+                btnPrev.style.opacity = currentPage === 0 ? 0.5 : 1;
+                btnNext.style.opacity = currentPage === bookData.totalPages - 1 ? 0.5 : 1;
+                btnLast.style.opacity = currentPage === bookData.totalPages - 1 ? 0.5 : 1;
+            }
+            
+            // Audio functions
+            function playAudio(audioId, title) {
+                // In a real implementation, you would load the actual audio file
+                // For this example, we'll simulate audio playback
+                
+                // Stop any currently playing audio
+                if (audioElement) {
+                    audioElement.pause();
+                    audioElement = null;
+                }
+                
+                // Create audio element (in reality, you'd set the source to a real audio file)
+                audioElement = new Audio();
+                
+                // Simulate audio for demo purposes
+                audioElement.duration = 10; // 10 seconds
+                let currentTime = 0;
+                
+                // Update UI
+                document.querySelector('.audio-title').textContent = title;
+                audioPlayer.classList.add('active');
+                
+                // Simulate playback
+                const playbackInterval = setInterval(() => {
+                    currentTime += 0.1;
+                    
+                    // Update progress bar
+                    const progress = (currentTime / audioElement.duration) * 100;
+                    audioProgressBar.style.width = `${progress}%`;
+                    
+                    // End playback when complete
+                    if (currentTime >= audioElement.duration) {
+                        clearInterval(playbackInterval);
+                        audioPlayIcon.classList.remove('fa-pause');
+                        audioPlayIcon.classList.add('fa-play');
+                    }
+                }, 100);
+                
+                // Store interval in audio element for cleanup
+                audioElement.playbackInterval = playbackInterval;
+            }
+            // Perbaikan pada fungsi playAudio
+function playAudio(audioSrc, title) {
+    // Hentikan audio yang sedang diputar
+    if (audioElement) {
+        audioElement.pause();
+        clearInterval(audioElement.playbackInterval);
+        audioElement = null;
+    }
+    
+    // Buat elemen audio baru dengan sumber yang benar
+    audioElement = new Audio(audioSrc);
+    
+    // Update UI
+    document.querySelector('.audio-title').textContent = title;
+    audioPlayer.classList.add('active');
+    audioPlayIcon.classList.remove('fa-play');
+    audioPlayIcon.classList.add('fa-pause');
+    
+    // Mulai pemutaran
+    audioElement.play();
+    
+    // Atur event listener untuk update progress bar
+    audioElement.addEventListener('timeupdate', function() {
+        const progress = (audioElement.currentTime / audioElement.duration) * 100;
+        audioProgressBar.style.width = `${progress}%`;
+    });
+    
+    // Event ketika audio selesai
+    audioElement.addEventListener('ended', function() {
+        audioPlayIcon.classList.remove('fa-pause');
+        audioPlayIcon.classList.add('fa-play');
+    });
+}
+
+// Perbaikan pada event listener untuk tombol play/pause
+audioPlayIcon.addEventListener('click', function() {
+    if (audioElement) {
+        if (audioPlayIcon.classList.contains('fa-pause')) {
+            // Pause audio
+            audioElement.pause();
+            audioPlayIcon.classList.remove('fa-pause');
+            audioPlayIcon.classList.add('fa-play');
+        } else {
+            // Resume audio
+            audioElement.play();
+            audioPlayIcon.classList.remove('fa-play');
+            audioPlayIcon.classList.add('fa-pause');
+        }
+    }
+});
+
+// Perbaikan pada event listener untuk tombol close
+audioClose.addEventListener('click', function() {
+    if (audioElement) {
+        audioElement.pause();
+        audioElement = null;
+    }
+    audioPlayer.classList.remove('active');
+});
+            
+            // Event Listeners
+            btnFirst.addEventListener('click', () => goToPage(0));
+            btnPrev.addEventListener('click', () => goToPage(currentPage - 1));
+            btnNext.addEventListener('click', () => goToPage(currentPage + 1));
+            btnLast.addEventListener('click', () => goToPage(bookData.totalPages - 1));
+            
+            btnGuide.addEventListener('click', showGuide);
+            guideClose.addEventListener('click', hideGuide);
+            guideStart.addEventListener('click', hideGuide);
+            
+            btnDownload.addEventListener('click', function() {
+                // In a real implementation, you would trigger the PDF download
+                alert('Unduh PDF buku virtual berhasil!');
+            });
+            
+            btnFullscreen.addEventListener('click', function() {
+                if (!document.fullscreenElement) {
+                    document.querySelector('.book-container').requestFullscreen();
+                    btnFullscreen.innerHTML = '<i class="fas fa-compress"></i> Normal';
+                } else {
+                    document.exitFullscreen();
+                    btnFullscreen.innerHTML = '<i class="fas fa-expand"></i> Layar Penuh';
+                }
+            });
+            
+            audioPlayIcon.addEventListener('click', function() {
+                if (audioElement) {
+                    if (audioPlayIcon.classList.contains('fa-pause')) {
+                        // Pause audio
+                        clearInterval(audioElement.playbackInterval);
+                        audioPlayIcon.classList.remove('fa-pause');
+                        audioPlayIcon.classList.add('fa-play');
+                    } else {
+                        // Resume audio
+                        // For this example, we won't implement resume functionality
+                        audioPlayIcon.classList.remove('fa-play');
+                        audioPlayIcon.classList.add('fa-pause');
+                    }
+                }
+            });
+            
+            audioClose.addEventListener('click', function() {
+                if (audioElement) {
+                    clearInterval(audioElement.playbackInterval);
+                    audioElement = null;
+                }
+                audioPlayer.classList.remove('active');
+            });
+            
+            // Guide functions
+            function showGuide() {
+                guideOverlay.classList.add('active');
+            }
+            
+            function hideGuide() {
+                guideOverlay.classList.remove('active');
+            }
+            
+            // Initialize the book
+            initBook();
+            
+            // Add keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                switch (e.key) {
+                    case 'ArrowLeft':
+                        if (currentPage > 0) goToPage(currentPage - 1);
+                        break;
+                    case 'ArrowRight':
+                        if (currentPage < bookData.totalPages - 1) goToPage(currentPage + 1);
+                        break;
+                    case 'Home':
+                        goToPage(0);
+                        break;
+                    case 'End':
+                        goToPage(bookData.totalPages - 1);
+                        break;
+                }
+            });
+            
+            // PDF viewer integration functions
+            // This would need to be implemented with a real PDF library like PDF.js
+            // For this example, we're just showing placeholders for the pages
+            
+            // Function to handle PDF upload and display
+            function handlePDFUpload(pdfFile) {
+                // This would be implemented with actual PDF parsing
+                console.log('PDF uploaded:', pdfFile);
+                // Then you would extract pages, set them up with audio zones, etc.
+            }
+            
+            // Function to add audio zone to page
+            function addAudioZone(pageIndex, x, y, width, height, audioFile, title) {
+                // This would add an interactive audio zone to a specific page
+                // For a real implementation, this would be part of an admin interface
+            }
+        });
+    </script>
+</body>
+</html>
+                       

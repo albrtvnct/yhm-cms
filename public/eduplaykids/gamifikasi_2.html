@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Matematika Cilik</title>
+    <style>
+       body {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    background-color: #f0f8ff;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+.container {
+    max-width: 800px;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+header {
+    background-color: #ff9900;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    width: 100%;
+}
+
+h1 {
+    margin: 0;
+    font-size: 2.2rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.game-container {
+    background-color: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 500px;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+}
+
+.game-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 15px;
+    font-size: 1.5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    width: 100%;
+    box-shadow: 0 4px 0 #2E7D32;
+}
+
+.game-button:hover {
+    transform: translateY(-3px);
+    background-color: #3e8e41;
+}
+
+.game-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 0 #2E7D32;
+}
+
+#game1 {
+    background-color: #FF5722;
+    box-shadow: 0 4px 0 #D84315;
+}
+
+#game1:hover {
+    background-color: #E64A19;
+}
+
+#game2 {
+    background-color: #2196F3;
+    box-shadow: 0 4px 0 #1976D2;
+}
+
+#game2:hover {
+    background-color: #1E88E5;
+}
+
+#game3 {
+    background-color: #9C27B0;
+    box-shadow: 0 4px 0 #7B1FA2;
+}
+
+#game3:hover {
+    background-color: #8E24AA;
+}
+
+.game-area {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.question {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.option {
+    background-color: #FFD54F;
+    border: 3px solid #FFB300;
+    border-radius: 15px;
+    padding: 15px;
+    font-size: 2rem;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    min-width: 70px;
+    height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.option:hover {
+    transform: scale(1.05);
+    background-color: #FFECB3;
+}
+
+.drop-area {
+    border: 3px dashed #2196F3;
+    border-radius: 10px;
+    padding: 20px;
+    min-height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 15px 0;
+    background-color: #E3F2FD;
+    width: 100%;
+}
+
+.draggable {
+    width: 60px;
+    height: 60px;
+    margin: 5px;
+    cursor: grab;
+    user-select: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    border-radius: 50%;
+    background-color: #FF9800;
+    color: white;
+    box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+}
+
+.draggable:active {
+    cursor: grabbing;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.action-button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.check-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.check-button:hover {
+    background-color: #3e8e41;
+}
+
+.back-button {
+    background-color: #F44336;
+    color: white;
+}
+
+.back-button:hover {
+    background-color: #D32F2F;
+}
+
+.next-button {
+    background-color: #2196F3;
+    color: white;
+}
+
+.next-button:hover {
+    background-color: #1976D2;
+}
+
+.result-message {
+    font-size: 1.5rem;
+    margin: 15px 0;
+    text-align: center;
+    padding: 10px;
+    border-radius: 10px;
+    width: 100%;
+    animation: bounceIn 0.5s;
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    70% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); }
+}
+
+.correct {
+    background-color: #DCEDC8;
+    color: #33691E;
+    border: 2px solid #8BC34A;
+}
+
+.incorrect {
+    background-color: #FFCDD2;
+    color: #B71C1C;
+    border: 2px solid #EF5350;
+}
+
+.progress-container {
+    width: 100%;
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    margin: 15px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 20px;
+    background-color: #4CAF50;
+    width: 0%;
+    border-radius: 10px;
+    transition: width 0.5s ease-in-out;
+}
+
+.score-display {
+    font-size: 1.2rem;
+    margin: 10px 0;
+    color: #2E7D32;
+    font-weight: bold;
+}
+
+.item-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    margin: 15px 0;
+}
+
+.item {
+    width: 40px;
+    height: 40px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.fruit-apple {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='60' r='35' fill='%23e53935'/%3E%3Cpath d='M50 25 L53 5 L58 15 Z' fill='%23795548'/%3E%3Cpath d='M50 25 Q65 25 60 35' fill='%238BC34A'/%3E%3C/svg%3E");
+}
+
+.fruit-banana {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M20 20 Q60 0 80 40 T75 80 Q40 90 25 65 T20 20' fill='%23FFEB3B'/%3E%3C/svg%3E");
+}
+
+.fruit-orange {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23FF9800'/%3E%3Cpath d='M50 10 L53 0 L58 5 Z' fill='%238BC34A'/%3E%3C/svg%3E");
+}
+
+.success-animation {
+    animation: success 1s;
+}
+
+@keyframes success {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1) rotate(5deg); }
+}
+
+.shake-animation {
+    animation: shake 0.5s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-5px); }
+    40%, 80% { transform: translateX(5px); }
+}
+
+.stars-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.star {
+    width: 30px;
+    height: 30px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z' fill='%23BDBDBD'/%3E%3C/svg%3E");
+    background-size: contain;
+    transition: background-image 0.3s;
+}
+
+.star.filled {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z' fill='%23FFD700'/%3E%3C/svg%3E");
+}
+
+.celebration {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100;
+    display: none;
+}
+
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #f00;
+    border-radius: 50%;
+    animation: fall 3s ease-in forwards;
+}
+
+@keyframes fall {
+    0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(calc(100vh + 100px)) rotate(720deg); opacity: 0; }
+}
+
+/* Media queries untuk responsivitas */
+
+/* Layar kecil (mobile) */
+@media screen and (max-width: 480px) {
+    .container {
+        padding: 10px;
+    }
+    
+    header {
+        padding: 8px 15px;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    .game-container {
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .game-button {
+        padding: 12px;
+        font-size: 1.2rem;
+    }
+    
+    .question {
+        font-size: 1.4rem;
+        margin-bottom: 15px;
+    }
+    
+    .option {
+        min-width: 60px;
+        height: 60px;
+        padding: 10px;
+        font-size: 1.6rem;
+    }
+    
+    .draggable {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .result-message {
+        font-size: 1.2rem;
+        padding: 8px;
+    }
+    
+    .item {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .star {
+        width: 25px;
+        height: 25px;
+    }
+    
+    .action-button {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Layar medium (tablet) */
+@media screen and (min-width: 481px) and (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .option {
+        min-width: 65px;
+        height: 65px;
+    }
+}
+
+/* Layar besar (desktop) */
+@media screen and (min-width: 769px) {
+    .container {
+        padding: 20px;
+    }
+    
+    .game-container {
+        padding: 25px;
+    }
+    
+    .option:hover {
+        transform: scale(1.1);
+    }
+    
+    /* Tambahkan efek hover untuk desktop */
+    .game-button:hover {
+        transform: translateY(-5px);
+    }
+}
+
+/* Layar sangat kecil */
+@media screen and (max-width: 320px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    .question {
+        font-size: 1.2rem;
+    }
+    
+    .option {
+        min-width: 50px;
+        height: 50px;
+        font-size: 1.4rem;
+    }
+    
+    .options {
+        gap: 10px;
+    }
+    
+    .action-buttons {
+        gap: 5px;
+    }
+    
+    .action-button {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Orientasi landscape pada mobile */
+@media screen and (max-height: 480px) and (orientation: landscape) {
+    .container {
+        padding: 10px;
+    }
+    
+    header {
+        padding: 5px 10px;
+        margin-bottom: 10px;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    .game-container {
+        padding: 10px;
+    }
+    
+    .question {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+    
+    .options {
+        margin-bottom: 10px;
+    }
+    
+    .option {
+        min-width: 55px;
+        height: 55px;
+        font-size: 1.4rem;
+    }
+    
+    .progress-container {
+        margin: 10px 0;
+    }
+    
+    .item-container {
+        margin: 10px 0;
+    }
+    
+    .stars-container {
+        margin: 5px 0;
+    }
+    
+    .action-buttons {
+        margin-top: 10px;
+    }
+}
+
+/* Dukungan untuk layar sentuh */
+@media (hover: none) {
+    .option:hover, .game-button:hover {
+        transform: none;
+    }
+    
+    .option:active, .game-button:active {
+        transform: scale(0.95);
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Petualangan Matematika Cilik</h1>
+        </header>
+        
+        <div class="game-container">
+            <div id="main-menu" class="menu">
+                <button id="game1" class="game-button">Mengenali Angka</button>
+                <button id="game2" class="game-button">Menghitung Benda</button>
+                <button id="game3" class="game-button">Pasangkan Angka</button>
+            </div>
+            
+            <div id="game-area1" class="game-area">
+                <div class="question">Pilih angka yang tepat:</div>
+                <div id="number-question" class="question"></div>
+                <div id="number-options" class="options"></div>
+                <div class="result-message" id="result1"></div>
+                <div class="progress-container">
+                    <div id="progress1" class="progress-bar"></div>
+                </div>
+                <div class="score-display" id="score1">Skor: 0</div>
+                <div class="stars-container" id="stars1">
+                    <div class="star"></div>
+                    <div class="star"></div>
+                    <div class="star"></div>
+                </div>
+                <div class="action-buttons">
+                    <button id="back1" class="action-button back-button">Kembali</button>
+                    <button id="next1" class="action-button next-button" style="display: none;">Selanjutnya</button>
+                </div>
+            </div>
+            
+            <div id="game-area2" class="game-area">
+                <div class="question">Hitung jumlah benda berikut:</div>
+                <div id="counting-container" class="item-container"></div>
+                <div class="question">Berapa jumlahnya?</div>
+                <div id="counting-options" class="options"></div>
+                <div class="result-message" id="result2"></div>
+                <div class="progress-container">
+                    <div id="progress2" class="progress-bar"></div>
+                </div>
+                <div class="score-display" id="score2">Skor: 0</div>
+                <div class="stars-container" id="stars2">
+                    <div class="star"></div>
+                    <div class="star"></div>
+                    <div class="star"></div>
+                </div>
+                <div class="action-buttons">
+                    <button id="back2" class="action-button back-button">Kembali</button>
+                    <button id="next2" class="action-button next-button" style="display: none;">Selanjutnya</button>
+                </div>
+            </div>
+            
+            <div id="game-area3" class="game-area">
+                <div class="question">Pasangkan jumlah benda dengan angkanya:</div>
+                <div id="matching-container" class="item-container"></div>
+                <div class="drop-area" id="drop-area">
+                    <span>Letakkan angka di sini</span>
+                </div>
+                <div id="draggable-numbers" class="options"></div>
+                <div class="result-message" id="result3"></div>
+                <div class="progress-container">
+                    <div id="progress3" class="progress-bar"></div>
+                </div>
+                <div class="score-display" id="score3">Skor: 0</div>
+                <div class="stars-container" id="stars3">
+                    <div class="star"></div>
+                    <div class="star"></div>
+                    <div class="star"></div>
+                </div>
+                <div class="action-buttons">
+                    <button id="check3" class="action-button check-button">Periksa</button>
+                    <button id="back3" class="action-button back-button">Kembali</button>
+                    <button id="next3" class="action-button next-button" style="display: none;">Selanjutnya</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="celebration" id="celebration"></div>
+    
+    <script>
+        // Variabel global untuk menyimpan skor
+        let scores = {
+            game1: 0,
+            game2: 0,
+            game3: 0
+        };
+        
+        // Variabel untuk menyimpan jumlah pertanyaan yang telah dijawab
+        let questionCounts = {
+            game1: 0,
+            game2: 0,
+            game3: 0
+        };
+        
+        // Jumlah maksimal pertanyaan per game
+        const MAX_QUESTIONS = 5;
+        
+        // Fungsi untuk tampilan menu utama dan semua area permainan
+        function setupUI() {
+            const mainMenu = document.getElementById('main-menu');
+            const gameAreas = [
+                document.getElementById('game-area1'),
+                document.getElementById('game-area2'),
+                document.getElementById('game-area3')
+            ];
+            
+            // Button listeners untuk menu utama
+            document.getElementById('game1').addEventListener('click', () => {
+                mainMenu.style.display = 'none';
+                gameAreas[0].style.display = 'flex';
+                startGame1();
+            });
+            
+            document.getElementById('game2').addEventListener('click', () => {
+                mainMenu.style.display = 'none';
+                gameAreas[1].style.display = 'flex';
+                startGame2();
+            });
+            
+            document.getElementById('game3').addEventListener('click', () => {
+                mainMenu.style.display = 'none';
+                gameAreas[2].style.display = 'flex';
+                startGame3();
+            });
+            
+            // Button listeners untuk tombol kembali
+            document.getElementById('back1').addEventListener('click', () => {
+                gameAreas[0].style.display = 'none';
+                mainMenu.style.display = 'flex';
+                resetGame(1);
+            });
+            
+            document.getElementById('back2').addEventListener('click', () => {
+                gameAreas[1].style.display = 'none';
+                mainMenu.style.display = 'flex';
+                resetGame(2);
+            });
+            
+            document.getElementById('back3').addEventListener('click', () => {
+                gameAreas[2].style.display = 'none';
+                mainMenu.style.display = 'flex';
+                resetGame(3);
+            });
+            
+            // Button listeners untuk tombol selanjutnya
+            document.getElementById('next1').addEventListener('click', () => {
+                document.getElementById('next1').style.display = 'none';
+                document.getElementById('result1').textContent = '';
+                document.getElementById('result1').className = 'result-message';
+                startGame1();
+            });
+            
+            document.getElementById('next2').addEventListener('click', () => {
+                document.getElementById('next2').style.display = 'none';
+                document.getElementById('result2').textContent = '';
+                document.getElementById('result2').className = 'result-message';
+                startGame2();
+            });
+            
+            document.getElementById('next3').addEventListener('click', () => {
+                document.getElementById('next3').style.display = 'none';
+                document.getElementById('result3').textContent = '';
+                document.getElementById('result3').className = 'result-message';
+                startGame3();
+            });
+            
+            // Button listener untuk tombol periksa di game 3
+            document.getElementById('check3').addEventListener('click', checkMatching);
+        }
+        
+        // Fungsi untuk mereset permainan
+        function resetGame(gameNumber) {
+            scores[`game${gameNumber}`] = 0;
+            questionCounts[`game${gameNumber}`] = 0;
+            document.getElementById(`score${gameNumber}`).textContent = `Skor: 0`;
+            document.getElementById(`progress${gameNumber}`).style.width = '0%';
+            document.getElementById(`result${gameNumber}`).textContent = '';
+            document.getElementById(`result${gameNumber}`).className = 'result-message';
+            
+            // Reset bintang
+            const stars = document.querySelectorAll(`#stars${gameNumber} .star`);
+            stars.forEach(star => star.classList.remove('filled'));
+        }
+        
+        // Fungsi untuk menampilkan pesan hasil jawaban
+        function showResult(gameId, correct, answer) {
+            const resultElement = document.getElementById(`result${gameId}`);
+            const nextButton = document.getElementById(`next${gameId}`);
+            
+            if (correct) {
+                resultElement.textContent = `Benar! Jawabannya adalah ${answer}`;
+                resultElement.className = 'result-message correct';
+                playSuccessAnimation();
+                scores[`game${gameId}`]++;
+            } else {
+                resultElement.textContent = `Coba lagi. Jawabannya adalah ${answer}`;
+                resultElement.className = 'result-message incorrect';
+                shakeElement(resultElement);
+            }
+            
+            // Update skor dan progress
+            document.getElementById(`score${gameId}`).textContent = `Skor: ${scores[`game${gameId}`]}`;
+            questionCounts[`game${gameId}`]++;
+            
+            const progressPercentage = (questionCounts[`game${gameId}`] / MAX_QUESTIONS) * 100;
+            document.getElementById(`progress${gameId}`).style.width = `${progressPercentage}%`;
+            
+            // Update bintang
+            updateStars(gameId);
+            
+            // Tampilkan tombol selanjutnya atau kembali ke menu jika sudah selesai
+            if (questionCounts[`game${gameId}`] < MAX_QUESTIONS) {
+                nextButton.style.display = 'block';
+            } else {
+                // Game selesai
+                celebrate();
+                setTimeout(() => {
+                    alert(`Permainan Selesai! Skor akhir kamu: ${scores[`game${gameId}`]} dari ${MAX_QUESTIONS}`);
+                    document.getElementById(`game-area${gameId}`).style.display = 'none';
+                    document.getElementById('main-menu').style.display = 'flex';
+                    resetGame(gameId);
+                }, 2000);
+            }
+        }
+        
+        // Fungsi untuk update bintang berdasarkan skor
+        function updateStars(gameId) {
+            const stars = document.querySelectorAll(`#stars${gameId} .star`);
+            const score = scores[`game${gameId}`];
+            const maxScore = questionCounts[`game${gameId}`];
+            
+            // Reset bintang terlebih dahulu
+            stars.forEach(star => star.classList.remove('filled'));
+            
+            // Hitung persentase skor
+            const percentage = score / maxScore;
+            
+            if (percentage >= 0.33) {
+                stars[0].classList.add('filled');
+            }
+            if (percentage >= 0.66) {
+                stars[1].classList.add('filled');
+            }
+            if (percentage === 1) {
+                stars[2].classList.add('filled');
+            }
+        }
+        
+        // Fungsi untuk memulai Game 1: Mengenali Angka
+        function startGame1() {
+            const questionElement = document.getElementById('number-question');
+            const optionsElement = document.getElementById('number-options');
+            
+            // Bersihkan opsi sebelumnya
+            optionsElement.innerHTML = '';
+            
+            // Pilih angka acak antara 1-10
+            const correctNumber = Math.floor(Math.random() * 10) + 1;
+            
+            // Tampilkan pertanyaan dengan gambar angka
+            questionElement.innerHTML = `
+                <div style="font-size: 4rem; color: #FF5722; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">
+                    ${correctNumber}
+                </div>
+                <div>Angka berapa ini?</div>
+            `;
+            
+            // Buat array opsi jawaban
+            let options = [correctNumber];
+            while (options.length < 3) {
+                const randomOption = Math.floor(Math.random() * 10) + 1;
+                if (!options.includes(randomOption)) {
+                    options.push(randomOption);
+                }
+            }
+            
+            // Acak urutan opsi
+            options = shuffleArray(options);
+            
+            // Tampilkan opsi
+            options.forEach(option => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => {
+                    // Cek jawaban
+                    const isCorrect = option === correctNumber;
+                    showResult(1, isCorrect, correctNumber);
+                });
+                optionsElement.appendChild(optionElement);
+            });
+        }
+        
+        // Fungsi untuk memulai Game 2: Menghitung Benda
+        function startGame2() {
+            const countingContainer = document.getElementById('counting-container');
+            const optionsElement = document.getElementById('counting-options');
+            
+            // Bersihkan elemen sebelumnya
+            countingContainer.innerHTML = '';
+            optionsElement.innerHTML = '';
+            
+            // Pilih jumlah benda secara acak (1-5)
+            const correctCount = Math.floor(Math.random() * 5) + 1;
+            
+            // Array jenis buah
+            const fruitTypes = ['fruit-apple', 'fruit-banana', 'fruit-orange'];
+            const selectedFruit = fruitTypes[Math.floor(Math.random() * fruitTypes.length)];
+            
+            // Tampilkan benda sejumlah correctCount
+            for (let i = 0; i < correctCount; i++) {
+                const item = document.createElement('div');
+                item.className = `item ${selectedFruit}`;
+                countingContainer.appendChild(item);
+            }
+            
+            // Buat array opsi jawaban
+            let options = [correctCount];
+            while (options.length < 3) {
+                const randomOption = Math.floor(Math.random() * 5) + 1;
+                if (!options.includes(randomOption)) {
+                    options.push(randomOption);
+                }
+            }
+            
+            // Acak urutan opsi
+            options = shuffleArray(options);
+            
+            // Tampilkan opsi
+            options.forEach(option => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => {
+                    // Cek jawaban
+                    const isCorrect = option === correctCount;
+                    showResult(2, isCorrect, correctCount);
+                });
+                optionsElement.appendChild(optionElement);
+            });
+        }
+        
+        // Variabel global untuk game 3
+        let correctMatchingNumber = 0;
+        
+        // Fungsi untuk memulai Game 3: Pasangkan Angka
+        function startGame3() {
+            const matchingContainer = document.getElementById('matching-container');
+            const draggableNumbers = document.getElementById('draggable-numbers');
+            const dropArea = document.getElementById('drop-area');
+            
+            // Bersihkan elemen sebelumnya
+            matchingContainer.innerHTML = '';
+            draggableNumbers.innerHTML = '';
+            dropArea.innerHTML = '<span>Letakkan angka di sini</span>';
+            
+            // Sembunyikan tombol next3
+            document.getElementById('next3').style.display = 'none';
+            
+            // Tampilkan tombol check3
+            document.getElementById('check3').style.display = 'block';
+            
+            // Pilih jumlah benda secara acak (1-5)
+            correctMatchingNumber = Math.floor(Math.random() * 5) + 1;
+            
+            // Array jenis buah
+            const fruitTypes = ['fruit-apple', 'fruit-banana', 'fruit-orange'];
+            const selectedFruit = fruitTypes[Math.floor(Math.random() * fruitTypes.length)];
+            
+            // Tampilkan benda sejumlah correctMatchingNumber
+            for (let i = 0; i < correctMatchingNumber; i++) {
+                const item = document.createElement('div');
+                item.className = `item ${selectedFruit}`;
+                matchingContainer.appendChild(item);
+            }
+            
+            // Buat array opsi jawaban
+            let options = [1, 2, 3, 4, 5];
+            
+            // Acak urutan opsi
+            options = shuffleArray(options);
+            
+            // Tampilkan opsi angka yang dapat digeser
+            options.forEach(option => {
+                const draggable = document.createElement('div');
+                draggable.className = 'draggable';
+                draggable.textContent = option;
+                draggable.setAttribute('draggable', 'true');
+                
+                // Event listeners untuk drag and drop
+                draggable.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', option);
+                    setTimeout(() => {
+                        draggable.style.opacity = '0.4';
+                    }, 0);
+                });
+                
+                draggable.addEventListener('dragend', () => {
+                    draggable.style.opacity = '1';
+                });
+                
+                draggableNumbers.appendChild(draggable);
+            });
+            
+            // Setup drop area
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.style.backgroundColor = '#BBDEFB';
+            });
+            
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.style.backgroundColor = '#E3F2FD';
+            });
+            
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.style.backgroundColor = '#E3F2FD';
+                
+                const data = e.dataTransfer.getData('text/plain');
+                dropArea.innerHTML = '';
+                
+                const newElement = document.createElement('div');
+                newElement.className = 'draggable';
+                newElement.textContent = data;
+                newElement.style.margin = 'auto';
+                dropArea.appendChild(newElement);
+            });
+        }
+        
+        // Fungsi untuk memeriksa jawaban pada Game 3
+        function checkMatching() {
+            const dropArea = document.getElementById('drop-area');
+            
+            // Periksa apakah ada angka di drop area
+            if (dropArea.querySelector('.draggable')) {
+                const userAnswer = parseInt(dropArea.querySelector('.draggable').textContent);
+                const isCorrect = userAnswer === correctMatchingNumber;
+                
+                // Sembunyikan tombol periksa
+                document.getElementById('check3').style.display = 'none';
+                
+                // Tampilkan hasil
+                showResult(3, isCorrect, correctMatchingNumber);
+            } else {
+                alert('Silahkan pasangkan angka terlebih dahulu!');
+            }
+        }
+        
+        // Fungsi untuk mengacak array
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            
+            // Selama masih ada elemen untuk diacak
+            while (currentIndex != 0) {
+                // Pilih elemen yang tersisa secara acak
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                
+                // Tukar dengan elemen saat ini
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            
+            return array;
+        }
+        
+        // Fungsi untuk animasi berhasil
+        function playSuccessAnimation() {
+            const container = document.querySelector('.game-container');
+            container.classList.add('success-animation');
+            setTimeout(() => {
+                container.classList.remove('success-animation');
+            }, 1000);
+        }
+        
+        // Fungsi untuk animasi getar
+        function shakeElement(element) {
+            element.classList.add('shake-animation');
+            setTimeout(() => {
+                element.classList.remove('shake-animation');
+            }, 500);
+        }
+        
+        // Fungsi untuk animasi perayaan
+        function celebrate() {
+            const celebrationElement = document.getElementById('celebration');
+            celebrationElement.style.display = 'block';
+            celebrationElement.innerHTML = '';
+            
+            // Buat banyak confetti
+            for (let i = 0; i < 50; i++) {
+                createConfetti(celebrationElement);
+            }
+            
+            setTimeout(() => {
+                celebrationElement.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Fungsi untuk membuat satu confetti
+        function createConfetti(parent) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            
+            // Set posisi awal acak
+            const startPositionX = Math.random() * window.innerWidth;
+            confetti.style.left = `${startPositionX}px`;
+            
+            // Set warna acak
+            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Set ukuran acak
+            const size = Math.random() * 10 + 5;
+            confetti.style.width = `${size}px`;
+            confetti.style.height = `${size}px`;
+            
+            // Set durasi animasi acak
+            const duration = Math.random() * 2 + 1;
+            confetti.style.animationDuration = `${duration}s`;
+            
+            parent.appendChild(confetti);
+            
+            // Hapus elemen setelah animasi selesai
+            setTimeout(() => {
+                parent.removeChild(confetti);
+            }, duration * 1000);
+        }
+        
+        // Jalankan setup UI saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', setupUI);
+    </script>
+</body>
+</html>

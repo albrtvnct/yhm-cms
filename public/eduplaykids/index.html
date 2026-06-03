@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduPLay  - Platform Pembelajaran Online</title>
+    <link href="asset/Eduplay.png" rel="icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link href="style.css" rel="stylesheet">
+</head>
+<script>
+    function filterCourses(category) {
+        const courseCards = document.querySelectorAll('.course-card');
+        const tabs = document.querySelectorAll('.course-tab');
+
+        // Ubah tampilan aktif di tab
+        tabs.forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.textContent === category) {
+                tab.classList.add('active');
+            }
+        });
+
+        // Tampilkan semua jika kategori 'All'
+        courseCards.forEach(card => {
+            const cardCategory = card.getAttribute('data-category');
+            if (category === 'All' || cardCategory === category) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    // Inisialisasi filter saat halaman dimuat (tampilkan Web Design secara default)
+    document.addEventListener('DOMContentLoaded', () => {
+        filterCourses('Web Design');
+    });
+</script>
+<body>
+    <!-- Header -->
+    <header class="header">
+    <div class="container">
+        <nav class="navbar">
+            <a href="#" class="logo">
+                <img src="asset/Eduplay.png" alt="EduPlay Logo" class="logo-img">
+            </a>
+            <div class="nav-menu">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">Book<i class="fa-solid fa-chevron-down"></i></a>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item">Coming Soon</a>
+                            <a href="#" class="dropdown-item">Coming Soon</a>
+                            <a href="#" class="dropdown-item">Coming Soon</a>
+                            <a href="#" class="dropdown-item">Coming Soon</a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">Courses <i class="fa-solid fa-chevron-down"></i></a>
+                        <div class="dropdown-menu">
+                            <a href="main_video_edukasi.html" class="dropdown-item">Course List</a>
+                            <a href="main_video_edukasi.html" class="dropdown-item">Course Categories</a>
+                            <a href="main_video_edukasi.html" class="dropdown-item">Course Detail</a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a href="qu" class="nav-link">Quizz<i class="fa-solid fa-chevron-down"></i></a>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item">Coming Soon</a>
+                            <a href="#" class="dropdown-item">Coming Soon</a>
+                        </div>
+                    </li>
+                </ul>
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="Search...">
+                    <button class="search-btn"><i class="fa-solid fa-search"></i></button>
+                </div>
+                <div class="nav-buttons">
+                    <a href="#" class="btn btn-sm btn-outline-primary">Sign In</a>
+                    <a href="#" class="btn btn-sm btn-primary">Register</a>
+                </div>
+                <button class="mobile-menu-btn">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <!-- Hero Image - Moved here before the hero text -->
+            <div class="hero-image">
+                <img src="asset/homee.png" alt="Happy Student" class="hero-img">
+            </div>
+            <div class="hero-text">
+                <h1 class="hero-title">Dunia belajar seru kini ada di genggaman <span class="highlight">si kecil!</span></h1>
+                <p class="hero-description">Belajar kini bisa seasyik menonton video favorit! Eduplay Kids menggabungkan video edukatif dari YouTube, latihan soal menarik, dan gamifikasi</p>
+                <div class="hero-features">
+                    <div class="hero-feature">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Konten edukatif</span>
+                    </div>
+                    <div class="hero-feature">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Latihan soal</span>
+                    </div>
+                    <div class="hero-feature">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Pengawasan orang tua</span>
+                    </div>
+                </div>
+                <div class="hero-buttons">
+                    <a href="#" class="btn btn-primary">Get Started</a>
+                    <a href="#" class="btn btn-outline"><i class="fa-solid fa-play"></i> Watch video</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-container">
+                <div class="stat-item">
+                    <i class="fa-solid fa-video fa-2xl" style="color: #FFD43B;"></i>
+                    <h3 class="stat-number">1K+</h3>
+                    <p class="stat-text">Video Edukatif</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fa-solid fa-user-tie stat-icon users"></i>
+                    <h3 class="stat-number">100+</h3>
+                    <p class="stat-text">Konten Terverifikasi</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fa-solid fa-user-graduate stat-icon student"></i>
+                    <h3 class="stat-number">50K+ </h3>
+                    <p class="stat-text">Anak Belajar Lebih Cerdas</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fa-solid fa-certificate stat-icon certificate"></i>
+                    <h3 class="stat-number">10+</h3>
+                    <p class="stat-text">Lembaga Pendidikan</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular Courses Section -->
+    <section class="courses">
+        <div class="container">
+            <h2 class="section-title">Konten Edukasi Terpopuler</h2>
+            <p class="section-subtitle">Jelajahi konten pembelajaran terbaik dari kreator favorit anak Anda.</p>
+            
+            <div class="courses-tabs">
+                <div class="course-tab active" onclick="filterCourses('Web Design')">Literasi Awal</div>
+                <div class="course-tab" onclick="filterCourses('Development')">Matematika Dasar</div>
+                <div class="course-tab" onclick="filterCourses('Graphic Design')">Kognitif Dasar</div>
+                <div class="course-tab" onclick="filterCourses('Marketing')">Sains Sederhana</div>
+                <div class="course-tab" onclick="filterCourses('All')">All</div>
+            </div>
+            
+            <div class="courses-grid">
+                <!-- Web Design Courses -->
+            <a href="mengenal huruf.html" style="text-decoration: none; color: inherit;">
+                <div class="course-card" data-category="Web Design">
+                    <div class="position-relative">
+                        <div class="course-image">
+                            <img src="asset/huruf.jpg" alt="Web Design" class="course-img">
+                        </div>
+                        <div class="course-badge">Trending</div>
+                        <div class="add-to-cart">
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-category">Membaca</span>
+                        <a href="mengenal huruf.html" class="course-title">Belajar Pengenalan Huruf Seru! A-Z</a>
+                        <p class="course-description">Kembali lagi belajar bersama Kak Yaya!   
+                            Hari ini, kita akan bermain sambil belajar mengenal huruf! Yuk, kenalan dengan huruf-huruf ajaib yang membawa kita ke dunia membaca dan menulis! 📖✨  
+                            </p>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star-half-alt"></i>
+                            </div>
+                            <span class="rating-number">4.5/5.0</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>7 Min</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>01 Video</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>    
+            
+            <a href="mengeja.html" style="text-decoration: none; color: inherit;">
+                <div class="course-card" data-category="Web Design">
+                    <div class="position-relative">
+                        <div class="course-image">
+                            <img src="asset/Belajar Membaca.png" alt="Web Design" class="course-img">
+                        </div>
+                        <div class="course-badge">Popular</div>
+                        <div class="add-to-cart">
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-category">Membaca</span>
+                        <a href="mengeja.html" class="course-title">Ayo Belajar Mengeja Kata bersama </a>
+                        <p class="course-description">Hari ini kita akan belajar mengeja nama-nama kendaraan yang sering kita lihat, seperti mobil, motor, pesawat, kereta api, hingga roket!. Belajar mengeja jadi lebih mudah dan menyenangkan bersama Kak Yaya!🎤✨</p>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.8/5.0</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>6 Min</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>02 Video</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>   
+
+            <a href="video membaca.html" style="text-decoration: none; color: inherit;">
+                <div class="course-card" data-category="Web Design">
+                    <div class="position-relative">
+                        <div class="course-image">
+                            <img src="asset/Menulis.jpg" alt="Web Design" class="course-img">
+                        </div>
+                        <div class="course-badge">Popular</div>
+                        <div class="add-to-cart">
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-category">Membaca</span>
+                        <a href="video membaca.html" class="course-title">Belajar Membaca dan Medongeng Seru! </a>
+                        <p class="course-description">Kembali lagi bersama Kak Yaya yang siap menemani kalian belajar dengan seru! Hari ini, kita akan mengenal huruf, belajar menulis, dan mendengarkan dongeng seru di akhir sesi! Waaah, pasti menyenangkan! 😍
+                        </p>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.8/5.0</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>14 Min</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>03 video</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+                <!-- Design Course -->
+                <!-- Development Courses -->
+            <a href="video mengenal angka.html" style="text-decoration: none; color: inherit;">
+                <div class="course-card" data-category="Development">
+                    <div class="position-relative">
+                        <div class="course-image">
+                            <img src="asset/angka.jpg" alt="Development" class="course-img">
+                        </div>
+                        <div class="course-badge">New</div>
+                        <div class="add-to-cart">
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-category">Matematika</span>
+                        <a href="video mengenal angka.html" class="course-title">Mengenal Angka Bersama </a>
+                        <p class="course-description">Hari ini kita akan belajar mengenal angka 1 sampai 10 dengan cara yang seru dan menyenangkan! Yuk, ikuti Kak Yaya berhitung sambil melihat gambar buah dan sayur yang lucu-lucu! 🍎🍓🥕</p>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star-half-alt"></i>
+                            </div>
+                            <span class="rating-number">4.7/5.0</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>04 Min</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>01 Video</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="penjumlahan.html" style="text-decoration: none; color: inherit;">
+                <div class="course-card" data-category="Development">
+                    <div class="position-relative">
+                        <div class="course-image">
+                            <img src="asset/penjumlahan.jpg" alt="Web Design" class="course-img">
+                        </div>
+                        <div class="course-badge">Popular</div>
+                        <div class="add-to-cart">
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-category">Matematika</span>
+                        <a href="penjumlahan.html" class="course-title">Ayo Belajar Penjumlahan! </a>
+                        <p class="course-description">Belajar penjumlahan tidak perlu susah! Di video ini, anak-anak usia 5-6 tahun akan diajak memahami konsep penjumlahan dengan cara yang seru dan interaktif. Dengan gambar-gambar lucu dan penjelasan sederhana </p>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.8/5.0</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>6 Min</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>02 Video</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            
+            <a href="video pengurangan.html" style="text-decoration: none; color: inherit;">
+                <div class="course-card" data-category="Development">
+                    <div class="position-relative">
+                        <div class="course-image">
+                            <img src="asset/pengurangan.jpg" alt="Web Design" class="course-img">
+                        </div>
+                        <div class="course-badge">Popular</div>
+                        <div class="add-to-cart">
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-category">Matematika</span>
+                        <a href="video pengurangan.html" class="course-title">Ayo Belajar Pengurangan! </a>
+                        <p class="course-description">Belajar pengurangan tidak perlu susah! Di video ini, anak-anak usia 5-6 tahun akan diajak memahami konsep pengurangan dengan cara yang seru dan interaktif. Dengan gambar-gambar lucu dan penjelasan sederhana</p>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.8/5.0</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>6 Min</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>03 Video</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        
+            <a href="video perkalian.html" style="text-decoration: none; color: inherit;">
+                <div class="course-card" data-category="Development">
+                    <div class="position-relative">
+                        <div class="course-image">
+                            <img src="asset/perkalian.jpg" alt="Web Design" class="course-img">
+                        </div>
+                        <div class="course-badge">Popular</div>
+                        <div class="add-to-cart">
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-category">Matematika</span>
+                        <a href="video perkalian.html" class="course-title">Serunya Belajar Perkalian dengan Mudah! </a>
+                        <p class="course-description">Di episode 2 kali ini, Kak Desin akan mengajak kalian belajar perkalian dengan cara yang super mudah dan menyenangkan! 
+                            Yuk, tonton bersama dan ajak mereka belajar sambil bermain! </p>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.8/5.0</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>6 Min</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>04 Video</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="video pembagian.html" style="text-decoration: none; color: inherit;">
+                <div class="course-card" data-category="Development">
+                    <div class="position-relative">
+                        <div class="course-image">
+                            <img src="asset/pembagian.jpg" alt="Web Design" class="course-img">
+                        </div>
+                        <div class="course-badge">Popular</div>
+                        <div class="add-to-cart">
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-category">Matematika</span>
+                        <a href="#" class="course-title">Ayo Belajar Pembagian!</a>
+                        <p class="course-description">Belajar pembagian tidak perlu susah! Di video ini, anak-anak usia 5-6 tahun akan diajak memahami konsep pembagian dengan cara yang seru dan interaktif. </p>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.8/5.0</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>06 Min</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>05 Video</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+
+                
+                <!-- Graphic Design Courses -->
+            <a href="video warna.html" style="text-decoration: none; color: inherit;">
+                <div class="course-card" data-category="Graphic Design">
+                    <div class="position-relative">
+                        <div class="course-image">
+                            <img src="asset/warna.jpg" alt="Graphic Design" class="course-img">
+                        </div>
+                        <div class="course-badge">New</div>
+                        <div class="add-to-cart">
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-category">Koknitif</span>
+                        <a href="video warna.html" class="course-title">Mengenal Warna Bersama Kak Desin! </a>
+                        <p class="course-description">Kembali lagi belajar seru bersama Kak Desin! 🤗🎉
+                            Hari ini, kita akan bermain sambil mengenal berbagai macam warna! 🎨🌈
+                            Yuk, ikuti keseruannya, nyanyikan lagunya, dan jadilah jagoan warna! 🎶🎤</p>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star-half-alt"></i>
+                            </div>
+                            <span class="rating-number">4.6/5.0</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>03 Min</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>01 Video</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="video bentuk.html" style="text-decoration: none; color: inherit;">
+                <div class="course-card" data-category="Graphic Design">
+                    <div class="position-relative">
+                        <div class="course-image">
+                            <img src="asset/Bentuk.jpg" alt="Web Design" class="course-img">
+                        </div>
+                        <div class="course-badge">Popular</div>
+                        <div class="add-to-cart">
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-category">Koknitif</span>
+                        <a href="video bentuk.html" class="course-title">Mengenal Bangun Datar untuk Anak</a>
+                        <p class="course-description">Hari ini, kita akan belajar tentang bangun datar! 🟢🔺🟦
+                            Yuk, kenalan dengan lingkaran, segitiga, persegi, dan bentuk lainnya melalui animasi seru dan lagu menyenangkan! 🎶🎨</p>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.8/5.0</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>10 Min</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>02 Video</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+                
+                
+                <!-- Marketing Courses -->
+            <a href="video tubuh.html" style="text-decoration: none; color: inherit;">
+                <div class="course-card" data-category="Marketing">
+                    <div class="position-relative">
+                        <div class="course-image">
+                            <img src="asset/Tubuh.jpg" alt="Marketing" class="course-img">
+                        </div>
+                        <div class="course-badge">Trending</div>
+                        <div class="add-to-cart">
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-category">Sains Sederhana</span>
+                        <a href="video tubuh.html" class="course-title">WOW! Kenalan dengan Tubuh Kita</a>
+                        <p class="course-description">Hari ini kita akan bertualang mengenal tubuh manusia! 
+                            Di video ini, kita akan belajar tentang bagian-bagian tubuh yang luar biasa bersama kak Nadiah! Yuk, tonton sampai habis!😍  </p>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star-half-alt"></i>
+                            </div>
+                            <span class="rating-number">4.5/5.0</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>02 Min</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>01 Video</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+                <!-- Finance Courses -->
+                <div class="course-card" data-category="Finance">
+                    <div class="position-relative">
+                        <div class="course-image">
+                            <img src="/api/placeholder/400/250" alt="Finance" class="course-img">
+                        </div>
+                        <div class="course-badge">Popular</div>
+                        <div class="add-to-cart">
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-category">Finance</span>
+                        <a href="#" class="course-title">Personal Finance Management</a>
+                        <p class="course-description">Take control of your finances with smart strategies</p>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.3/5.0</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>150 Min</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>40 lectures</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+   
+    <!-- Trending Courses Section -->
+<a href="quizz_membaca.html" style="text-decoration: none; color: inherit;">
+    <section class="trending">
+        <div class="container">
+            <div class="trending-header">
+                <h2 class="trending-title">Rekomendasi Quizz EduPlay Kids</h2>
+                <a href="#" class="trending-link">Temukan QUizz Buah Hati Anda  <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            
+            <div class="trending-grid">
+                <div class="trending-card">
+                    <div class="card-img">
+                        <img src="asset/1.jpg" alt="Time Management Course">
+                    </div>
+                    <div class="card-badges">
+                        <span class="card-badge">Quizz</span>
+                        <span class="card-badge">Usia 3+</span>
+                    </div>
+                    <div class="card-favourite">
+                        <i class="fa-regular fa-heart"></i>
+                    </div>
+                    <div class="card-content">
+                        <a href="eduplay bakau book.html" class="course-title">Bermain Sekaligus Belajar? Bisa! Yuk Kenalan Sama Huruf A-Z!</a>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.0 (8000 Mengerjakan)</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span> 10 Soal Bergambar Dan Beraudio</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="quizz_membaca.html" style="text-decoration: none; color: inherit;">
+                <div class="trending-card">
+                    <div class="card-img">
+                        <img src="asset/2.jpg" alt="Time Management Course">
+                    </div>
+                    <div class="card-badges">
+                        <span class="card-badge">Quizz</span>
+                        <span class="card-badge">Usia 3+</span>
+                    </div>
+                    <div class="card-favourite">
+                        <i class="fa-regular fa-heart"></i>
+                    </div>
+                    <div class="card-content">
+                        <a href="eduplay bakau book.html" class="course-title">Kuis Sains Seru: Yuk, Temukan Keajaiban di Sekitarmu!</a>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.0 (8000 Mengerjakan)</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span> 10 Soal Bergambar Dan Beraudio</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>   
+
+            <a href="quizz_membaca.html" style="text-decoration: none; color: inherit;">
+                <div class="trending-card">
+                    <div class="card-img">
+                        <img src="asset/3.jpg" alt="Time Management Course">
+                    </div>
+                    <div class="card-badges">
+                        <span class="card-badge">Quizz</span>
+                        <span class="card-badge">Usia 3+</span>
+                    </div>
+                    <div class="card-favourite">
+                        <i class="fa-regular fa-heart"></i>
+                    </div>
+                    <div class="card-content">
+                        <a href="eduplay bakau book.html" class="course-title">Ayo Kenalan Sama Angka! Kuis Matematika Lucu untuk Anak 3–5 Tahun"</a>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.0 (8000 Mengerjakan)</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span> 10 Soal Bergambar Dan Beraudio</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </a>
+        </div>
+    </section>
+
+    <!-- Become Instructor Section -->
+    <section class="instructor">
+        <div class="container">
+            <div class="instructor-banner">
+                <div class="instructor-content">
+                    <h2 class="instructor-title">Ingin Berkontribusi?</h2>
+                    <p class="instructor-text">Jadilah bagian dari perubahan! Eduplay Kids membuka kesempatan bagi kreator konten edukatif untuk menginspirasi jutaan anak.</p>
+                    <a href="#" class="btn btn-light">Gabung Sekarang</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <!-- Trending gamifikasi Section -->
+    <section class="trending">
+        <div class="container">
+            <div class="trending-header">
+            <h2 class="section-title">Konten Edukasi Terpopuler</h2>
+            <p class="section-subtitle">Jelajahi konten pembelajaran terbaik dari kreator favorit anak Anda.</p>
+            </div>
+            
+            <div class="trending-grid">
+                <div class="trending-card">
+                    <div class="card-img">
+                        <img src="asset/buku bakau.jpg" alt="Time Management Course">
+                    </div>
+                    <div class="card-badges">
+                        <span class="card-badge">Virtual Book</span>
+                        <span class="card-badge">Usia 5+</span>
+                    </div>
+                    <div class="card-favourite">
+                        <i class="fa-regular fa-heart"></i>
+                    </div>
+                    <div class="card-content">
+                        <a href="eduplay bakau book.html" class="course-title">Petualangan di Hutan Bakau: Jelajahi Alam & Lindungi Bumi!</a>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.0 (8000 Anak Membaca)</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span> 20 Halaman Bergambar</span>
+                            </div>
+                        </div>
+                        <div class="card-price">Rp 20.000</div>
+                        <div class="card-instructor">
+                            <img src="asset/inung.png" alt="Instructor" class="instructor-img">
+                            <div class="instructor-name">Penulis Khusnul Kotimah</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="trending-card">
+                    <div class="card-img">
+                        <img src="asset/buku hujan.jpg" alt="Time Management Course">
+                    </div>
+                    <div class="card-badges">
+                        <span class="card-badge">Virtual Book</span>
+                        <span class="card-badge">Usia 5+</span>
+                    </div>
+                    <div class="card-favourite">
+                        <i class="fa-regular fa-heart"></i>
+                    </div>
+                    <div class="card-content">
+                        <a href="#" class="course-title">Awan Bercerita: Proses Terbentuknya Hujan yang Seru!</a>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.0 (1200 Anak Membaca)</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>21 Halaman Interaktif</span>
+                            </div>
+                        </div>
+                        <div class="card-price">Rp 25.000</div>
+                        <div class="card-instructor">
+                            <img src="asset/samuel.png" alt="Instructor" class="instructor-img">
+                            <div class="instructor-name">Penulis Samuel Domatius</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="trending-card">
+                    <div class="card-img">
+                        <img src="asset/buku ikan.jpg" alt="Digital Marketing Course">
+                    </div>
+                    <div class="card-badges">
+                        <span class="card-badge">Virtual Book</span>
+                        <span class="card-badge">Usia 5+</span>
+                    </div>
+                    <div class="card-favourite">
+                        <i class="fa-regular fa-heart"></i>
+                    </div>
+                    <div class="card-content">
+                        <a href="#" class="course-title">Aku Cinta Laut: Mengenal Ikan & Kehidupan Bawah Air</a>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                            <span class="rating-number">5.0 (6500 Anak Membaca)</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>10 Halaman Edukatif</span>
+                            </div>
+                        </div>
+                        <div class="card-price">Free</div>
+                        <div class="card-instructor">
+                            <img src="asset/Desinta.png" alt="Instructor" class="instructor-img">
+                            <div class="instructor-name">Penulis Desinta</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+ <!-- Trending Courses Section -->
+<a href="gamifikasi_4.html" style="text-decoration: none; color: inherit;">
+    <section class="trending">
+        <div class="container">
+            <div class="trending-header">
+                <h2 class="trending-title">Yukk Mainkan Game Kamu</h2>
+            </div>
+            
+            <div class="trending-grid">
+                <div class="trending-card">
+                    <div class="card-img">
+                        <img src="gamifikasi1/berbicara.png" alt="Time Management Course">
+                    </div>
+                    <div class="card-badges">
+                        <span class="card-badge">Game Speech</span>
+                        <span class="card-badge">Usia 3+</span>
+                    </div>
+                    <div class="card-favourite">
+                        <i class="fa-regular fa-heart"></i>
+                    </div>
+                    <div class="card-content">
+                        <a href="gamifikasi_4.html" class="course-title">Asiyknya Bermain Sambil Berbicara</a>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.0 (8000 Bermain)</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>Game Beraudio</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            <a href="gamifikasi_5.html" style="text-decoration: none; color: inherit;">
+                <div class="trending-card">
+                    <div class="card-img">
+                        <img src="gamifikasi1/koknitif.png" alt="Time Management Course">
+                    </div>
+                    <div class="card-badges">
+                        <span class="card-badge">Game Koknitif</span>
+                        <span class="card-badge">Usia 3+</span>
+                    </div>
+                    <div class="card-favourite">
+                        <i class="fa-regular fa-heart"></i>
+                    </div>
+                    <div class="card-content">
+                        <a href="gamifikasi_5.html" class="course-title">Yuk Bermain Sambil Melatih Otak</a>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.0 (4000 Bermain)</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>Game Beraudio</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a> 
+                        <a href="gamifikasi_1.html" style="text-decoration: none; color: inherit;">
+                <div class="trending-card">
+                    <div class="card-img">
+                        <img src="gamifikasi1/huruf.png" alt="Time Management Course">
+                    </div>
+                    <div class="card-badges">
+                        <span class="card-badge">Game Alphabet</span>
+                        <span class="card-badge">Usia 3+</span>
+                    </div>
+                    <div class="card-favourite">
+                        <i class="fa-regular fa-heart"></i>
+                    </div>
+                    <div class="card-content">
+                        <a href="gamifikasi_1.html" class="course-title">Mari Bermain Sambil Belajar Huruf</a>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.0 (6000 Bermain)</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>Game Beraudio</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a> 
+            <a href="gamifikasi_3.html" style="text-decoration: none; color: inherit;">
+                <div class="trending-card">
+                    <div class="card-img">
+                        <img src="gamifikasi1/32.jpg" alt="Time Management Course">
+                    </div>
+                    <div class="card-badges">
+                        <span class="card-badge">Game Warna</span>
+                        <span class="card-badge">Usia 3+</span>
+                    </div>
+                    <div class="card-favourite">
+                        <i class="fa-regular fa-heart"></i>
+                    </div>
+                    <div class="card-content">
+                        <a href="gamifikasi_3.html" class="course-title">Yuk Bermain Sambil Menghafal Warna</a>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.0 (8000 Mengerjakan)</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>Game Beraudio</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>   
+
+            <a href="gamifikasi_2.html" style="text-decoration: none; color: inherit;">
+                <div class="trending-card">
+                    <div class="card-img">
+                        <img src="gamifikasi1/matematika.png" alt="Time Management Course">
+                    </div>
+                    <div class="card-badges">
+                        <span class="card-badge">Game Math</span>
+                        <span class="card-badge">Usia 3+</span>
+                    </div>
+                    <div class="card-favourite">
+                        <i class="fa-regular fa-heart"></i>
+                    </div>
+                    <div class="card-content">
+                        <a href="gamifikasi_2.html" class="course-title">Belajar Matematika Terasa Seperti Bermain</a>
+                        <div class="course-rating">
+                            <div class="rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="rating-number">4.0 (3000 Bermain)</span>
+                        </div>
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>Game Beraudio</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </a>
+        </div>
+    </section> 
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="container">
+            <div class="testimonial-container">
+                <div class="testimonial-left">
+                    <div class="testimonial-card">
+                        <i class="fa-solid fa-quote-left quote-icon"></i>
+                        <p class="testimonial-text">Eduplay Kids benar-benar membuat kegiatan belajar jadi menyenangkan! Anak saya jadi lebih aktif, penasaran, dan semangat belajar setiap hari karena materinya interaktif dan penuh warna.</p>
+                        <div class="testimonial-user">
+                            <img src="asset/samuel.png" alt="User" class="testimonial-avatar">
+                            <span class="testimonial-user-name">Samuel Domatius CEO & Founder</span>
+                        </div>
+                        <div class="testimonial-rating">4.5/5.0</div>
+                    </div>
+                    
+                    <div class="verified-badge">
+                        <div class="badge-title">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>10+ Verified Mentors</span>
+                        </div>
+                        <div class="badge-profiles">
+                            <div class="profile-item">
+                                <img src="asset/inung.png" alt="Mentor" class="profile-img">
+                                <div>
+                                    <div class="profile-name">Kuhsnul Kotimah</div>
+                                    <div class="profile-title">Mentor Koknitif</div>
+                                </div>
+                            </div>
+                            <div class="profile-item">
+                                <img src="asset/Desinta.png" alt="Mentor" class="profile-img">
+                                <div>
+                                    <div class="profile-name">Desinta</div>
+                                    <div class="profile-title">Mentor Matematika</div>
+                                </div>
+                            </div>
+                            <div class="profile-item">
+                                <img src="asset/cahaya.png" alt="Mentor" class="profile-img">
+                                <div>
+                                    <div class="profile-name">Cahaya</div>
+                                    <div class="profile-title">Mentor Literasi</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-right">
+                    <h2 class="testimonial-title">Feedback dari pengguna Eduplay Kids</h2>
+                    <p class="testimonial-quote">Anak-anak dan orang tua merasakan perubahan nyata sejak bergabung. Dari kesulitan fokus menjadi antusias belajar, dari bosan di rumah jadi aktif setiap hari. Eduplay Kids bukan hanya platform belajar tapi sahabat bermain dan tumbuh kembang anak Anda.</p>
+                    <a href="#" class="btn btn-primary testimonial-button">Kirim Feedback</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <a href="#" class="footer-logo">
+                        <span>EduPlay Kids</span>
+                    </a>
+                    <p class="footer-about">Platform belajar menyenangkan berbasis YouTube untuk anak usia dini.
+                        Ikuti kami di: </p>
+                    <div class="footer-social">
+                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h4 class="footer-title">Company</h4>
+                    <ul class="footer-links">
+                        <li class="footer-link"><a href="#">About us</a></li>
+                        <li class="footer-link"><a href="#">Contact us</a></li>
+                        <li class="footer-link"><a href="#">News and Blogs</a></li>
+                        <li class="footer-link"><a href="#">Library</a></li>
+                        <li class="footer-link"><a href="#">Career</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h4 class="footer-title">Community</h4>
+                    <ul class="footer-links">
+                        <li class="footer-link"><a href="#">Documentation</a></li>
+                        <li class="footer-link"><a href="#">FAQ</a></li>
+                        <li class="footer-link"><a href="#">Forum</a></li>
+                        <li class="footer-link"><a href="#">Sitemap</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h4 class="footer-title">Teaching</h4>
+                    <ul class="footer-links">
+                        <li class="footer-link"><a href="#">Become a teacher</a></li>
+                        <li class="footer-link"><a href="#">How to guide</a></li>
+                        <li class="footer-link"><a href="#">Terms & Conditions</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h4 class="footer-title">Contact</h4>
+                    <ul class="footer-links">
+                        <li class="footer-link"><a href="#">Tell: +123 456 789</a></li>
+                        <li class="footer-link"><a href="#">Email: example@gmail.com</a></li>
+                    </ul>
+                    <div class="app-buttons">
+                        <a href="#" class="app-button">
+                            <i class="fab fa-google-play app-icon"></i>
+                            <div class="app-text">
+                                <span class="app-text-small">Get it on</span>
+                                <span class="app-text-big">Google Play</span>
+                            </div>
+                        </a>
+                        <a href="#" class="app-button">
+                            <i class="fab fa-apple app-icon"></i>
+                            <div class="app-text">
+                                <span class="app-text-small">Download on the</span>
+                                <span class="app-text-big">App Store</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="copyright">Copyright ©2024 Eduport. Built by Webestica</div>
+                <div class="footer-bottom-links">
+                    <a href="#" class="footer-bottom-link">Language</a>
+                    <a href="#" class="footer-bottom-link">Terms of use</a>
+                    <a href="#" class="footer-bottom-link">Privacy policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="main.js"></script>
+
+</body>
+</html>
+<h1>Hallo semua</h1>
