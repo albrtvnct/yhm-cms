@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { createSession, deleteSession } from "@/lib/session";
+import { createSession, deleteSession, getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 
 
@@ -43,8 +43,28 @@ export async function loginAction(prevState: any, formData: FormData) {
 }
 
 export async function logoutAction() {
+  let slug = "";
+  try {
+    const session = await getSession();
+    if (session && session.churchId) {
+      const church = await prisma.church.findUnique({
+        where: { id: session.churchId }
+      });
+      if (church && church.slug) {
+        slug = church.slug;
+      }
+    }
+  } catch (error) {
+    console.error("Logout resolution error:", error);
+  }
+
   await deleteSession();
-  redirect("/");
+
+  if (slug) {
+    redirect(`/portal/${slug}/login`);
+  } else {
+    redirect("/");
+  }
 }
 
 export async function resolveChurchPortalAction(prevState: any, formData: FormData) {
@@ -76,6 +96,6 @@ export async function resolveChurchPortalAction(prevState: any, formData: FormDa
     return { error: `Gagal mencari portal: ${msg}` };
   }
 
-  redirect(`/portal/${slug}/login`);
+  redirect(`/portal/${slug}/login?email=${encodeURIComponent(email)}`);
 }
 

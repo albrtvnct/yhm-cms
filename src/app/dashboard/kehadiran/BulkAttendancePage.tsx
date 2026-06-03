@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { getBulkAttendance, addBulkAttendance, deleteBulkAttendance, updateAttendanceRecord } from "@/app/actions/attendance";
+import { 
+  getBulkAttendance, 
+  addBulkAttendance, 
+  deleteBulkAttendance, 
+  updateAttendanceRecord, 
+  getActiveChurchMembers,
+  IbadahMetadata 
+} from "@/app/actions/attendance";
 import Portal from "@/components/Portal";
 
 interface AttendanceRow {
@@ -12,6 +19,8 @@ interface AttendanceRow {
   female: number;
   total: number;
   notes: string | null;
+  metadata?: IbadahMetadata;
+  createdAt: string;
 }
 
 interface Stats {
@@ -49,6 +58,10 @@ export default function BulkAttendancePage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  // Active Church Members for Absensi Checklist
+  const [membersList, setMembersList] = useState<{ id: string; name: string; nij: string | null }[]>([]);
+  const [searchMemberQuery, setSearchMemberQuery] = useState("");
+
   // AI Analyst State
   const [aiState, setAiState] = useState<'idle' | 'loading' | 'analyzed' | 'error'>('idle');
   const [insightText, setInsightText] = useState<string>('');
@@ -58,8 +71,16 @@ export default function BulkAttendancePage() {
   const [formType, setFormType] = useState("Ibadah Umum");
   const [formMale, setFormMale] = useState("");
   const [formFemale, setFormFemale] = useState("");
-  const [formNotes, setFormNotes] = useState("");
   const [formError, setFormError] = useState("");
+  
+  // New Form states (Ibadah metadata)
+  const [formJudul, setFormJudul] = useState("");
+  const [formTema, setFormTema] = useState("");
+  const [formPengkhotbah, setFormPengkhotbah] = useState("");
+  const [formAbsensi, setFormAbsensi] = useState<string[]>([]);
+  const [formJumlahKehadiran, setFormJumlahKehadiran] = useState("");
+  const [formFoto, setFormFoto] = useState(""); // base64 string
+  const [formKeterangan, setFormKeterangan] = useState("");
 
   // Detail & Edit State
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRow | null>(null);
@@ -68,9 +89,17 @@ export default function BulkAttendancePage() {
   const [editType, setEditType] = useState("Ibadah Umum");
   const [editMale, setEditMale] = useState("");
   const [editFemale, setEditFemale] = useState("");
-  const [editNotes, setEditNotes] = useState("");
   const [editError, setEditError] = useState("");
   const [editSubmitting, setEditSubmitting] = useState(false);
+
+  // New Edit Form states (Ibadah metadata)
+  const [editJudul, setEditJudul] = useState("");
+  const [editTema, setEditTema] = useState("");
+  const [editPengkhotbah, setEditPengkhotbah] = useState("");
+  const [editAbsensi, setEditAbsensi] = useState<string[]>([]);
+  const [editJumlahKehadiran, setEditJumlahKehadiran] = useState("");
+  const [editFoto, setEditFoto] = useState(""); // base64 string
+  const [editKeterangan, setEditKeterangan] = useState("");
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -84,6 +113,13 @@ export default function BulkAttendancePage() {
       }
     }
     setLoading(false);
+  }, []);
+
+  const fetchMembers = useCallback(async () => {
+    const res = await getActiveChurchMembers();
+    if (res.success && res.data) {
+      setMembersList(res.data);
+    }
   }, []);
 
   const handleRequestAI = async () => {
@@ -100,15 +136,70 @@ export default function BulkAttendancePage() {
     }
   };
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { 
+    loadData(); 
+    fetchMembers();
+  }, [loadData, fetchMembers]);
+
+  // Convert uploaded image file to Base64
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Ukuran berkas terlalu besar. Maksimum adalah 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      if (isEdit) {
+        setEditFoto(base64String);
+      } else {
+        setFormFoto(base64String);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Absensi checklist toggle
+  const toggleMemberAbsensi = (id: string, isEdit: boolean) => {
+    if (isEdit) {
+      setEditAbsensi(prev => {
+        const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+        setEditJumlahKehadiran(next.length.toString());
+        return next;
+      });
+    } else {
+      setFormAbsensi(prev => {
+        const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+        setFormJumlahKehadiran(next.length.toString());
+        return next;
+      });
+    }
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
     if (!formDate) { setFormError("Pilih tanggal ibadah."); return; }
-    const m = parseInt(formMale) || 0;
-    const f = parseInt(formFemale) || 0;
-    if (m + f === 0) { setFormError("Total kehadiran tidak boleh nol."); return; }
+    
+    let total = parseInt(formJumlahKehadiran) || 0;
+    let m = parseInt(formMale) || 0;
+    let f = parseInt(formFemale) || 0;
+
+    // Fallbacks to compute totals and genders automatically
+    if (total === 0 && formAbsensi.length > 0) {
+      total = formAbsensi.length;
+    }
+    if (total === 0 && (m + f) > 0) {
+      total = m + f;
+    }
+    if (total > 0 && m + f === 0) {
+      m = Math.round(total / 2);
+      f = total - m;
+    }
 
     setSubmitting(true);
     await addBulkAttendance({
@@ -116,14 +207,31 @@ export default function BulkAttendancePage() {
       serviceType: formType,
       male: m,
       female: f,
-      notes: formNotes || undefined,
+      metadata: {
+        judulIbadah: formJudul || undefined,
+        temaKhotbah: formTema || undefined,
+        namaPengkhotbah: formPengkhotbah || undefined,
+        absensi: formAbsensi.length > 0 ? formAbsensi : undefined,
+        jumlahKehadiran: total || undefined,
+        foto: formFoto || undefined,
+        keterangan: formKeterangan || undefined,
+      }
     });
     await loadData();
     setShowModal(false);
+    
+    // Reset Add states
     setFormMale("");
     setFormFemale("");
-    setFormNotes("");
     setFormDate(today());
+    setFormJudul("");
+    setFormTema("");
+    setFormPengkhotbah("");
+    setFormAbsensi([]);
+    setFormJumlahKehadiran("");
+    setFormFoto("");
+    setFormKeterangan("");
+    setSearchMemberQuery("");
     setSubmitting(false);
   };
 
@@ -140,8 +248,17 @@ export default function BulkAttendancePage() {
     setEditType(record.serviceType);
     setEditMale(record.male.toString());
     setEditFemale(record.female.toString());
-    setEditNotes(record.notes ?? "");
+    
+    const meta = record.metadata || {};
+    setEditJudul(meta.judulIbadah || "");
+    setEditTema(meta.temaKhotbah || "");
+    setEditPengkhotbah(meta.namaPengkhotbah || "");
+    setEditAbsensi(meta.absensi || []);
+    setEditJumlahKehadiran(meta.jumlahKehadiran?.toString() || (record.male + record.female).toString());
+    setEditFoto(meta.foto || "");
+    setEditKeterangan(meta.keterangan || record.notes || "");
     setEditError("");
+    setSearchMemberQuery("");
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -149,9 +266,21 @@ export default function BulkAttendancePage() {
     setEditError("");
     if (!selectedRecord) return;
     if (!editDate) { setEditError("Pilih tanggal ibadah."); return; }
-    const m = parseInt(editMale) || 0;
-    const f = parseInt(editFemale) || 0;
-    if (m + f === 0) { setEditError("Total kehadiran tidak boleh nol."); return; }
+
+    let total = parseInt(editJumlahKehadiran) || 0;
+    let m = parseInt(editMale) || 0;
+    let f = parseInt(editFemale) || 0;
+
+    if (total === 0 && editAbsensi.length > 0) {
+      total = editAbsensi.length;
+    }
+    if (total === 0 && (m + f) > 0) {
+      total = m + f;
+    }
+    if (total > 0 && m + f === 0) {
+      m = Math.round(total / 2);
+      f = total - m;
+    }
 
     setEditSubmitting(true);
     const res = await updateAttendanceRecord(selectedRecord.id, {
@@ -159,7 +288,15 @@ export default function BulkAttendancePage() {
       serviceType: editType,
       male: m,
       female: f,
-      notes: editNotes || undefined,
+      metadata: {
+        judulIbadah: editJudul || undefined,
+        temaKhotbah: editTema || undefined,
+        namaPengkhotbah: editPengkhotbah || undefined,
+        absensi: editAbsensi.length > 0 ? editAbsensi : undefined,
+        jumlahKehadiran: total || undefined,
+        foto: editFoto || undefined,
+        keterangan: editKeterangan || undefined,
+      }
     });
     if (res.success) {
       await loadData();
@@ -171,7 +308,12 @@ export default function BulkAttendancePage() {
     setEditSubmitting(false);
   };
 
-  const totalLive = (parseInt(formMale) || 0) + (parseInt(formFemale) || 0);
+  const filteredMembers = membersList.filter(m => 
+    m.name.toLowerCase().includes(searchMemberQuery.toLowerCase()) || 
+    (m.nij && m.nij.toLowerCase().includes(searchMemberQuery.toLowerCase()))
+  );
+
+  const calculatedLiveTotal = (parseInt(formJumlahKehadiran) || 0) || (parseInt(formMale) || 0) + (parseInt(formFemale) || 0) || formAbsensi.length;
 
   if (loading) {
     return (
@@ -194,10 +336,10 @@ export default function BulkAttendancePage() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">Kehadiran</h1>
-            <span className="px-2.5 py-1 rounded-lg bg-zinc-100 text-zinc-600 text-[10px] font-black uppercase tracking-widest border border-zinc-200">Absensi Rekap</span>
+            <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">Ibadah</h1>
+            <span className="px-2.5 py-1 rounded-lg bg-zinc-100 text-zinc-600 text-[10px] font-black uppercase tracking-widest border border-zinc-200">Pencatatan Ibadah</span>
           </div>
-          <p className="text-zinc-500 text-sm font-medium">Catat jumlah jemaat per sesi ibadah secara manual.</p>
+          <p className="text-zinc-500 text-sm font-medium">Catat pelaporan ibadah mingguan, tema khotbah, absensi jemaat, dan dokumentasi secara berkala.</p>
         </div>
         <button
           id="btn-catat-kehadiran"
@@ -207,7 +349,7 @@ export default function BulkAttendancePage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
           </svg>
-          Catat Kehadiran
+          Catat Laporan Ibadah
         </button>
       </div>
 
@@ -215,7 +357,7 @@ export default function BulkAttendancePage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
 
         {/* Ibadah terakhir */}
-        <div className="col-span-2 bg-zinc-900 rounded-3xl p-6 shadow-sm relative overflow-hidden hover:-translate-y-1 transition-transform duration-300">
+        <div className="col-span-2 bg-zinc-900 text-white rounded-3xl p-6 shadow-sm relative overflow-hidden hover:-translate-y-1 transition-transform duration-300">
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10">
             <div className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-3 flex items-center gap-2">
@@ -227,7 +369,10 @@ export default function BulkAttendancePage() {
             {lastSunday ? (
               <>
                 <div className="text-4xl font-extrabold text-white tracking-tight mb-1">{lastSunday.total.toLocaleString()}</div>
-                <div className="text-xs text-zinc-400 font-medium mb-4">{fmtDate(lastSunday.serviceDate)} · {lastSunday.serviceType}</div>
+                <div className="text-xs text-zinc-400 font-medium mb-4">
+                  {lastSunday.metadata?.judulIbadah ? `"${lastSunday.metadata.judulIbadah}" · ` : ""}
+                  {fmtDate(lastSunday.serviceDate)} · {lastSunday.serviceType}
+                </div>
                 <div className="flex gap-4">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-full bg-blue-400" />
@@ -241,14 +386,14 @@ export default function BulkAttendancePage() {
                       {lastSunday.female.toLocaleString()} P
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                    <span className="text-xs text-zinc-300 font-semibold">
-                      {lastSunday.total > 0
-                        ? `${Math.round(lastSunday.male / lastSunday.total * 100)}% L`
-                        : "—"}
-                    </span>
-                  </div>
+                  {lastSunday.metadata?.absensi && (
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                      <span className="text-xs text-zinc-300 font-semibold">
+                        {lastSunday.metadata.absensi.length} Absen Individu
+                      </span>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
@@ -291,16 +436,16 @@ export default function BulkAttendancePage() {
       {/* ── BAR CHART VISUAL ─────────────────────────────────────────────────── */}
       {records.length > 0 && (
         <div>
-          <h2 className="text-xs font-black text-zinc-400 tracking-[0.2em] uppercase mb-4 ml-1">Tren Kehadiran</h2>
+          <h2 className="text-xs font-black text-zinc-400 tracking-[0.2em] uppercase mb-4 ml-1">Tren Kehadiran Ibadah</h2>
           <div className="bg-white rounded-3xl border border-zinc-200/60 shadow-sm p-6">
             <div className="flex items-end gap-2 h-40 overflow-x-auto pb-2">
-              {records.slice(0, 20).reverse().map((r, i) => {
+              {records.slice(0, 20).reverse().map((r) => {
                 const maxVal = Math.max(...records.slice(0, 20).map(x => x.total), 1);
                 const heightPct = (r.total / maxVal) * 100;
                 const malePct = r.total > 0 ? (r.male / r.total) * 100 : 50;
                 return (
                   <div key={r.id} className="flex flex-col items-center gap-1 group shrink-0" style={{ minWidth: 28 }}>
-                    <div className="relative w-7 flex flex-col justify-end overflow-hidden rounded-t-lg" style={{ height: "8rem" }} title={`${fmtShortDate(r.serviceDate)}: ${r.total} (L: ${r.male}, P: ${r.female})`}>
+                    <div className="relative w-7 flex flex-col justify-end overflow-hidden rounded-t-lg" style={{ height: "8rem" }} title={`${r.metadata?.judulIbadah ? `"${r.metadata.judulIbadah}"\n` : ""}${fmtShortDate(r.serviceDate)}: ${r.total} (L: ${r.male}, P: ${r.female})`}>
                       {/* Total bar */}
                       <div
                         className="w-full rounded-t-lg overflow-hidden relative transition-all duration-500"
@@ -338,20 +483,20 @@ export default function BulkAttendancePage() {
       {/* ── AI ANALYST ──────────────────────────────────────────────────────── */}
       <div>
         <h2 className="text-xs font-black text-zinc-400 tracking-[0.2em] uppercase mb-4 ml-1">AI Analyst</h2>
-        <div className="bg-zinc-900 rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden group">
+        <div className="bg-zinc-900 text-white rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 blur-[90px] rounded-full pointer-events-none transition-all group-hover:bg-purple-500/20"></div>
           
           <div className="relative z-10 flex flex-col gap-6">
             <div>
               <h3 className="text-sm font-bold text-purple-300 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
-                Analisis Tren & Statistik Kehadiran Ibadah
+                Analisis Tren & Statistik Ibadah
               </h3>
               
               <div className="mt-4">
                 {aiState === 'idle' ? (
                   <div className="text-sm text-zinc-400 italic border-l-2 border-purple-500/30 pl-4 py-2">
-                    Sistem AI YeshProduction siap menganalisis tren kehadiran, perbandingan gender, keaktifan per sesi ibadah, dan wawasan pertumbuhan secara instan.
+                    Sistem AI YeshProduction siap menganalisis tema khotbah, kehadiran jemaat, perbandingan gender, keaktifan per sesi ibadah, dan wawasan pertumbuhan secara instan.
                   </div>
                 ) : aiState === 'loading' ? (
                   <div className="flex items-center gap-3 text-sm text-purple-300 font-medium animate-pulse border-l-2 border-purple-500 pl-4 py-2">
@@ -367,7 +512,7 @@ export default function BulkAttendancePage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-6 border-t border-white/10">
               <div className="flex flex-wrap gap-2">
                 <button className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-xs font-medium text-zinc-300 hover:bg-white/10 transition-colors">Tren kehadiran</button>
-                <button className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-xs font-medium text-zinc-300 hover:bg-white/10 transition-colors">Analisis gender</button>
+                <button className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-xs font-medium text-zinc-300 hover:bg-white/10 transition-colors">Analisis pembicara</button>
               </div>
               
               <button 
@@ -398,14 +543,14 @@ export default function BulkAttendancePage() {
                 </svg>
               </div>
               <div className="text-center">
-                <div className="font-extrabold text-zinc-900 text-lg">Belum ada data kehadiran</div>
-                <div className="text-zinc-500 text-sm mt-1">Mulai catat kehadiran sesi ibadah pertama.</div>
+                <div className="font-extrabold text-zinc-900 text-lg">Belum ada data ibadah</div>
+                <div className="text-zinc-500 text-sm mt-1">Mulai catat laporan sesi ibadah pertama gereja Anda.</div>
               </div>
               <button
                 onClick={() => setShowModal(true)}
                 className="px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-xl transition-all cursor-pointer"
               >
-                + Catat Sekarang
+                + Catat Laporan Baru
               </button>
             </div>
           ) : (
@@ -413,12 +558,11 @@ export default function BulkAttendancePage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-zinc-50 border-b border-zinc-100 text-xs text-zinc-500 uppercase tracking-wider font-bold">
-                    <th className="px-6 py-4">Tanggal Ibadah</th>
+                    <th className="px-6 py-4">Tanggal & Judul Ibadah</th>
                     <th className="px-6 py-4">Jenis Ibadah</th>
-                    <th className="px-6 py-4">Laki-laki</th>
-                    <th className="px-6 py-4">Perempuan</th>
-                    <th className="px-6 py-4">Total</th>
-                    <th className="px-6 py-4">Catatan</th>
+                    <th className="px-6 py-4">Pengkhotbah / Tema</th>
+                    <th className="px-6 py-4">Total Hadir</th>
+                    <th className="px-6 py-4">Media</th>
                     <th className="px-6 py-4" />
                   </tr>
                 </thead>
@@ -429,26 +573,37 @@ export default function BulkAttendancePage() {
                       onClick={() => handleOpenDetail(r)}
                       className="hover:bg-zinc-50/80 transition-colors group cursor-pointer"
                     >
-                      <td className="px-6 py-4 font-bold text-zinc-900 text-sm">{fmtDate(r.serviceDate)}</td>
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-zinc-900 text-sm">{fmtShortDate(r.serviceDate)}</div>
+                        <div className="text-xs text-zinc-500 font-semibold mt-0.5 max-w-[200px] truncate">
+                          {r.metadata?.judulIbadah || "—"}
+                        </div>
+                      </td>
                       <td className="px-6 py-4">
                         <span className="px-2.5 py-1 rounded-lg bg-zinc-100 text-zinc-700 text-xs font-bold border border-zinc-200/60">
                           {r.serviceType}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="flex items-center gap-1.5 text-sm font-extrabold text-blue-600">
-                          <div className="w-2 h-2 rounded-full bg-blue-500" />
-                          {r.male.toLocaleString()}
+                        <div className="text-xs font-bold text-zinc-800">{r.metadata?.namaPengkhotbah || "—"}</div>
+                        <div className="text-[10px] text-zinc-400 italic mt-0.5 max-w-[200px] truncate">
+                          {r.metadata?.temaKhotbah ? `"${r.metadata.temaKhotbah}"` : "—"}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-extrabold text-zinc-900">
+                          {r.total.toLocaleString()}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="flex items-center gap-1.5 text-sm font-extrabold text-pink-600">
-                          <div className="w-2 h-2 rounded-full bg-pink-400" />
-                          {r.female.toLocaleString()}
-                        </span>
+                        {r.metadata?.foto ? (
+                          <div className="w-8 h-8 rounded-lg overflow-hidden border border-zinc-200">
+                            <img src={r.metadata.foto} className="w-full h-full object-cover" alt="Media" />
+                          </div>
+                        ) : (
+                          <span className="text-xs text-zinc-400">—</span>
+                        )}
                       </td>
-                      <td className="px-6 py-4 text-sm font-extrabold text-zinc-900">{r.total.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-sm text-zinc-500">{r.notes ?? "—"}</td>
                       <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
                           <button
@@ -497,112 +652,236 @@ export default function BulkAttendancePage() {
       {showModal && (
         <Portal>
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm animate-fade-in-up">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md border border-zinc-200/60 overflow-hidden animate-fade-in-up">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-zinc-200/60 overflow-hidden animate-fade-in-up max-h-[90vh] flex flex-col">
 
               {/* Header */}
-              <div className="p-6 border-b border-zinc-100 flex items-center justify-between">
+              <div className="p-6 border-b border-zinc-100 flex items-center justify-between shrink-0">
                 <div>
-                  <h3 className="text-xl font-extrabold text-zinc-900">Catat Kehadiran</h3>
-                  <p className="text-sm text-zinc-500 mt-0.5">Input jumlah jemaat per sesi ibadah</p>
+                  <h3 className="text-xl font-extrabold text-zinc-900">Catat Laporan Ibadah</h3>
+                  <p className="text-sm text-zinc-500 mt-0.5">Input laporan jalannya sesi ibadah gereja</p>
                 </div>
                 <button onClick={() => setShowModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 text-zinc-500 hover:bg-zinc-200 transition-colors">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
 
-              <form onSubmit={handleAdd} className="p-6 space-y-5">
+              {/* Body */}
+              <form onSubmit={handleAdd} className="flex-1 overflow-y-auto p-6 space-y-5">
                 {formError && (
                   <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold rounded-xl">
                     {formError}
                   </div>
                 )}
 
+                {/* Judul & Tanggal & Tipe */}
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Judul Ibadah (Opsional)</label>
+                    <input
+                      type="text"
+                      value={formJudul}
+                      onChange={e => setFormJudul(e.target.value)}
+                      placeholder="Contoh: Ibadah Raya 1, Kebaktian Remaja, Kebaktian Anak..."
+                      className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tanggal Ibadah</label>
+                      <input
+                        type="date"
+                        value={formDate}
+                        onChange={e => setFormDate(e.target.value)}
+                        required
+                        className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Jenis Ibadah</label>
+                      <select
+                        value={formType}
+                        onChange={e => setFormType(e.target.value)}
+                        className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all cursor-pointer"
+                      >
+                        {SERVICE_TYPES.map(t => <option key={t}>{t}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tema Khotbah & Nama Pengkhotbah */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tanggal Ibadah</label>
+                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tema Khotbah (Opsional)</label>
                     <input
-                      type="date"
-                      value={formDate}
-                      onChange={e => setFormDate(e.target.value)}
-                      required
+                      type="text"
+                      value={formTema}
+                      onChange={e => setFormTema(e.target.value)}
+                      placeholder="Contoh: Hidup yang Berbuah..."
                       className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Jenis Ibadah</label>
-                    <select
-                      value={formType}
-                      onChange={e => setFormType(e.target.value)}
-                      className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all cursor-pointer"
-                    >
-                      {SERVICE_TYPES.map(t => <option key={t}>{t}</option>)}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Male / Female input */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-blue-500" /> Laki-laki
-                    </label>
+                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Nama Pengkhotbah (Opsional)</label>
                     <input
-                      type="number"
-                      min="0"
-                      value={formMale}
-                      onChange={e => setFormMale(e.target.value)}
-                      placeholder="0"
-                      className="w-full px-3.5 py-2.5 border border-blue-200 rounded-xl text-2xl font-extrabold text-blue-700 bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-center"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-pink-600 uppercase tracking-wider flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-pink-400" /> Perempuan
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formFemale}
-                      onChange={e => setFormFemale(e.target.value)}
-                      placeholder="0"
-                      className="w-full px-3.5 py-2.5 border border-pink-200 rounded-xl text-2xl font-extrabold text-pink-700 bg-pink-50/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all text-center"
+                      type="text"
+                      value={formPengkhotbah}
+                      onChange={e => setFormPengkhotbah(e.target.value)}
+                      placeholder="Contoh: Pdt. Albert Vincent..."
+                      className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
 
-                {/* Live total */}
-                <div className={`rounded-2xl p-4 flex items-center justify-between transition-colors ${totalLive > 0 ? "bg-zinc-900" : "bg-zinc-100"}`}>
-                  <div className={`text-sm font-bold ${totalLive > 0 ? "text-zinc-400" : "text-zinc-500"}`}>Total jemaat hadir</div>
-                  <div className={`text-3xl font-extrabold ${totalLive > 0 ? "text-white" : "text-zinc-400"}`}>
-                    {totalLive.toLocaleString()}
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Catatan (opsional)</label>
+                {/* Absensi Kehadiran checklist */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider flex justify-between items-center">
+                    <span>Absensi Kehadiran Jemaat (Opsional)</span>
+                    <span className="text-zinc-500 font-semibold text-[10px] bg-zinc-100 px-2 py-0.5 rounded-full">{formAbsensi.length} Terpilih</span>
+                  </label>
                   <input
                     type="text"
-                    value={formNotes}
-                    onChange={e => setFormNotes(e.target.value)}
-                    placeholder="Contoh: Ibadah Natal, hari hujan..."
+                    value={searchMemberQuery}
+                    onChange={e => setSearchMemberQuery(e.target.value)}
+                    placeholder="Cari nama jemaat..."
+                    className="w-full px-3.5 py-2 border border-zinc-200 rounded-xl text-xs text-zinc-900 bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  />
+                  <div className="max-h-36 overflow-y-auto border border-zinc-100 rounded-xl p-2 space-y-1.5 bg-zinc-50/30">
+                    {filteredMembers.length === 0 ? (
+                      <div className="text-[11px] text-zinc-400 text-center py-4">Jemaat tidak ditemukan</div>
+                    ) : (
+                      filteredMembers.map(member => {
+                        const isChecked = formAbsensi.includes(member.id);
+                        return (
+                          <label key={member.id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-100/80 rounded-lg cursor-pointer transition-colors text-xs font-medium text-zinc-700">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => toggleMemberAbsensi(member.id, false)}
+                              className="rounded text-zinc-900 focus:ring-zinc-900 h-3.5 w-3.5"
+                            />
+                            <div className="flex-1 truncate">
+                              {member.name} <span className="text-[10px] text-zinc-400 font-normal">{member.nij ? `(${member.nij})` : ""}</span>
+                            </div>
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                {/* Jumlah Kehadiran & Detail Gender (Optional) */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-1.5 col-span-1">
+                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Total Hadir</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formJumlahKehadiran}
+                        onChange={e => setFormJumlahKehadiran(e.target.value)}
+                        placeholder={formAbsensi.length > 0 ? formAbsensi.length.toString() : "0"}
+                        className="w-full px-3 py-2 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-center"
+                      />
+                    </div>
+                    <div className="space-y-1.5 col-span-1">
+                      <label className="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Pria
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formMale}
+                        onChange={e => setFormMale(e.target.value)}
+                        placeholder="0"
+                        className="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm text-blue-700 bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                      />
+                    </div>
+                    <div className="space-y-1.5 col-span-1">
+                      <label className="text-xs font-bold text-pink-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-pink-400" /> Wanita
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formFemale}
+                        onChange={e => setFormFemale(e.target.value)}
+                        placeholder="0"
+                        className="w-full px-3 py-2 border border-pink-200 rounded-xl text-sm text-pink-700 bg-pink-50/50 focus:outline-none focus:ring-2 focus:ring-pink-400 text-center"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Summary calculated info */}
+                  <div className={`rounded-2xl p-4 flex items-center justify-between transition-colors ${calculatedLiveTotal > 0 ? "bg-zinc-900 text-white" : "bg-zinc-100"}`}>
+                    <div className={`text-sm font-bold ${calculatedLiveTotal > 0 ? "text-zinc-400" : "text-zinc-500"}`}>Total kehadiran final:</div>
+                    <div className={`text-3xl font-extrabold ${calculatedLiveTotal > 0 ? "text-white" : "text-zinc-400"}`}>
+                      {calculatedLiveTotal.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dokumentasi Foto */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Dokumentasi Foto (Opsional)</label>
+                  
+                  {formFoto ? (
+                    <div className="relative rounded-2xl overflow-hidden border border-zinc-200 aspect-video">
+                      <img src={formFoto} className="w-full h-full object-cover" alt="Preview" />
+                      <button
+                        type="button"
+                        onClick={() => setFormFoto("")}
+                        className="absolute top-3 right-3 bg-red-600 hover:bg-red-700 text-white rounded-full p-2.5 transition-colors shadow-md cursor-pointer"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 hover:border-zinc-400 rounded-2xl p-6 cursor-pointer transition-colors bg-zinc-50/50">
+                      <svg className="w-8 h-8 text-zinc-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-xs text-zinc-500 font-bold">Pilih foto dokumentasi</span>
+                      <span className="text-[10px] text-zinc-400 mt-1">Maks. 2MB (format JPG, PNG)</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleFileChange(e, false)}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* Keterangan */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Keterangan (Opsional)</label>
+                  <textarea
+                    rows={3}
+                    value={formKeterangan}
+                    onChange={e => setFormKeterangan(e.target.value)}
+                    placeholder="Masukkan keterangan ibadah seperti catatan persembahan kustom, kendala di lokasi, dll..."
                     className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
                   />
                 </div>
-
-                <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setShowModal(false)}
-                    className="flex-1 py-3 rounded-xl border border-zinc-200 text-zinc-700 text-sm font-bold hover:bg-zinc-50 transition-all cursor-pointer">
-                    Batal
-                  </button>
-                  <button type="submit" disabled={submitting}
-                    className="flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer">
-                    {submitting ? (
-                      <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> Menyimpan...</>
-                    ) : "Simpan Data"}
-                  </button>
-                </div>
               </form>
+
+              {/* Footer */}
+              <div className="p-6 border-t border-zinc-100 flex gap-3 shrink-0 bg-zinc-50">
+                <button type="button" onClick={() => setShowModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-zinc-200 text-zinc-700 text-sm font-bold bg-white hover:bg-zinc-50 transition-all cursor-pointer">
+                  Batal
+                </button>
+                <button type="submit" onClick={handleAdd} disabled={submitting}
+                  className="flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer">
+                  {submitting ? (
+                    <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> Menyimpan...</>
+                  ) : "Simpan Data Ibadah"}
+                </button>
+              </div>
             </div>
           </div>
         </Portal>
@@ -618,8 +897,8 @@ export default function BulkAttendancePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </div>
-              <h3 className="text-lg font-extrabold text-zinc-900 mb-2">Hapus data ini?</h3>
-              <p className="text-sm text-zinc-500 mb-6">Data kehadiran sesi ini akan dihapus permanen dan tidak dapat dikembalikan.</p>
+              <h3 className="text-lg font-extrabold text-zinc-900 mb-2">Hapus data ibadah?</h3>
+              <p className="text-sm text-zinc-500 mb-6">Seluruh data laporan ibadah ini akan dihapus permanen dan tidak dapat dikembalikan.</p>
               <div className="flex gap-3">
                 <button onClick={() => setDeleteId(null)} className="flex-1 py-2.5 border border-zinc-200 rounded-xl text-zinc-700 text-sm font-bold hover:bg-zinc-50 cursor-pointer">Batal</button>
                 <button onClick={() => handleDelete(deleteId)} className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold cursor-pointer">Hapus</button>
@@ -633,16 +912,16 @@ export default function BulkAttendancePage() {
       {selectedRecord && (
         <Portal>
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm animate-fade-in-up">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md border border-zinc-200/60 overflow-hidden animate-fade-in-up">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-zinc-200/60 overflow-hidden animate-fade-in-up max-h-[90vh] flex flex-col">
               
               {/* Header */}
-              <div className="p-6 border-b border-zinc-100 flex items-center justify-between">
+              <div className="p-6 border-b border-zinc-100 flex items-center justify-between shrink-0">
                 <div>
                   <h3 className="text-xl font-extrabold text-zinc-900">
-                    {isEditing ? "Edit Sesi Ibadah" : "Detail Sesi Ibadah"}
+                    {isEditing ? "Edit Laporan Ibadah" : "Detail Laporan Ibadah"}
                   </h3>
                   <p className="text-sm text-zinc-500 mt-0.5">
-                    {isEditing ? "Ubah rincian kehadiran jemaat" : "Rincian data kehadiran jemaat"}
+                    {isEditing ? "Ubah rincian laporan jalannya ibadah" : "Rincian detail data laporan ibadah"}
                   </p>
                 </div>
                 <button
@@ -660,100 +939,219 @@ export default function BulkAttendancePage() {
 
               {isEditing ? (
                 /* EDIT MODE */
-                <form onSubmit={handleEditSubmit} className="p-6 space-y-5">
+                <form onSubmit={handleEditSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
                   {editError && (
                     <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold rounded-xl">
                       {editError}
                     </div>
                   )}
 
+                  {/* Judul & Tanggal & Tipe */}
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Judul Ibadah (Opsional)</label>
+                      <input
+                        type="text"
+                        value={editJudul}
+                        onChange={e => setEditJudul(e.target.value)}
+                        placeholder="Contoh: Ibadah Raya 1..."
+                        className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tanggal Ibadah</label>
+                        <input
+                          type="date"
+                          value={editDate}
+                          onChange={(e) => setEditDate(e.target.value)}
+                          required
+                          className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Jenis Ibadah</label>
+                        <select
+                          value={editType}
+                          onChange={(e) => setEditType(e.target.value)}
+                          className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all cursor-pointer"
+                        >
+                          {SERVICE_TYPES.map((t) => (
+                            <option key={t}>{t}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tema & Pengkhotbah */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tanggal Ibadah</label>
+                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tema Khotbah (Opsional)</label>
                       <input
-                        type="date"
-                        value={editDate}
-                        onChange={(e) => setEditDate(e.target.value)}
-                        required
+                        type="text"
+                        value={editTema}
+                        onChange={e => setEditTema(e.target.value)}
                         className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Jenis Ibadah</label>
-                      <select
-                        value={editType}
-                        onChange={(e) => setEditType(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all cursor-pointer"
-                      >
-                        {SERVICE_TYPES.map((t) => (
-                          <option key={t}>{t}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Male / Female input */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-blue-500" /> Laki-laki
-                      </label>
+                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Nama Pengkhotbah (Opsional)</label>
                       <input
-                        type="number"
-                        min="0"
-                        value={editMale}
-                        onChange={(e) => setEditMale(e.target.value)}
-                        placeholder="0"
-                        className="w-full px-3.5 py-2.5 border border-blue-200 rounded-xl text-2xl font-extrabold text-blue-700 bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-center"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-pink-600 uppercase tracking-wider flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-pink-400" /> Perempuan
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={editFemale}
-                        onChange={(e) => setEditFemale(e.target.value)}
-                        placeholder="0"
-                        className="w-full px-3.5 py-2.5 border border-pink-200 rounded-xl text-2xl font-extrabold text-pink-700 bg-pink-50/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all text-center"
+                        type="text"
+                        value={editPengkhotbah}
+                        onChange={e => setEditPengkhotbah(e.target.value)}
+                        className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
                       />
                     </div>
                   </div>
 
-                  {/* Live total */}
-                  {(() => {
-                    const totalLiveEdit = (parseInt(editMale) || 0) + (parseInt(editFemale) || 0);
-                    return (
-                      <div className={`rounded-2xl p-4 flex items-center justify-between transition-colors ${totalLiveEdit > 0 ? "bg-zinc-900" : "bg-zinc-100"}`}>
-                        <div className={`text-sm font-bold ${totalLiveEdit > 0 ? "text-zinc-400" : "text-zinc-500"}`}>Total jemaat hadir</div>
-                        <div className={`text-3xl font-extrabold ${totalLiveEdit > 0 ? "text-white" : "text-zinc-400"}`}>
-                          {totalLiveEdit.toLocaleString()}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Notes */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Catatan (opsional)</label>
+                  {/* Absensi checklist */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider flex justify-between items-center">
+                      <span>Absensi Kehadiran Jemaat (Opsional)</span>
+                      <span className="text-zinc-500 font-semibold text-[10px] bg-zinc-100 px-2 py-0.5 rounded-full">{editAbsensi.length} Terpilih</span>
+                    </label>
                     <input
                       type="text"
-                      value={editNotes}
-                      onChange={(e) => setEditNotes(e.target.value)}
-                      placeholder="Contoh: Ibadah Natal, hari hujan..."
+                      value={searchMemberQuery}
+                      onChange={e => setSearchMemberQuery(e.target.value)}
+                      placeholder="Cari nama jemaat..."
+                      className="w-full px-3.5 py-2 border border-zinc-200 rounded-xl text-xs text-zinc-900 bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                    />
+                    <div className="max-h-36 overflow-y-auto border border-zinc-100 rounded-xl p-2 space-y-1.5 bg-zinc-50/30">
+                      {filteredMembers.length === 0 ? (
+                        <div className="text-[11px] text-zinc-400 text-center py-4">Jemaat tidak ditemukan</div>
+                      ) : (
+                        filteredMembers.map(member => {
+                          const isChecked = editAbsensi.includes(member.id);
+                          return (
+                            <label key={member.id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-100/80 rounded-lg cursor-pointer transition-colors text-xs font-medium text-zinc-700">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => toggleMemberAbsensi(member.id, true)}
+                                className="rounded text-zinc-900 focus:ring-zinc-900 h-3.5 w-3.5"
+                              />
+                              <div className="flex-1 truncate">
+                                {member.name} <span className="text-[10px] text-zinc-400 font-normal">{member.nij ? `(${member.nij})` : ""}</span>
+                              </div>
+                            </label>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Jumlah Kehadiran & Gender */}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-1.5 col-span-1">
+                        <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Total Hadir</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editJumlahKehadiran}
+                          onChange={e => setEditJumlahKehadiran(e.target.value)}
+                          placeholder={editAbsensi.length > 0 ? editAbsensi.length.toString() : "0"}
+                          className="w-full px-3 py-2 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-center"
+                        />
+                      </div>
+                      <div className="space-y-1.5 col-span-1">
+                        <label className="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Pria
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editMale}
+                          onChange={(e) => setEditMale(e.target.value)}
+                          placeholder="0"
+                          className="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm text-blue-700 bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                        />
+                      </div>
+                      <div className="space-y-1.5 col-span-1">
+                        <label className="text-xs font-bold text-pink-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-pink-400" /> Wanita
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editFemale}
+                          onChange={(e) => setEditFemale(e.target.value)}
+                          placeholder="0"
+                          className="w-full px-3 py-2 border border-pink-200 rounded-xl text-sm text-pink-700 bg-pink-50/50 focus:outline-none focus:ring-2 focus:ring-pink-400 text-center"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Calculated live total */}
+                    {(() => {
+                      const totalLiveEdit = (parseInt(editJumlahKehadiran) || 0) || (parseInt(editMale) || 0) + (parseInt(editFemale) || 0) || editAbsensi.length;
+                      return (
+                        <div className={`rounded-2xl p-4 flex items-center justify-between transition-colors ${totalLiveEdit > 0 ? "bg-zinc-900 text-white" : "bg-zinc-100"}`}>
+                          <div className={`text-sm font-bold ${totalLiveEdit > 0 ? "text-zinc-400" : "text-zinc-500"}`}>Total kehadiran final:</div>
+                          <div className={`text-3xl font-extrabold ${totalLiveEdit > 0 ? "text-white" : "text-zinc-400"}`}>
+                            {totalLiveEdit.toLocaleString()}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Foto Dokumentasi */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Dokumentasi Foto (Opsional)</label>
+                    {editFoto ? (
+                      <div className="relative rounded-2xl overflow-hidden border border-zinc-200 aspect-video">
+                        <img src={editFoto} className="w-full h-full object-cover" alt="Preview" />
+                        <button
+                          type="button"
+                          onClick={() => setEditFoto("")}
+                          className="absolute top-3 right-3 bg-red-600 hover:bg-red-700 text-white rounded-full p-2.5 transition-colors shadow-md cursor-pointer"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 hover:border-zinc-400 rounded-2xl p-6 cursor-pointer transition-colors bg-zinc-50/50">
+                        <svg className="w-8 h-8 text-zinc-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                        <span className="text-xs text-zinc-500 font-bold">Pilih foto dokumentasi</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={e => handleFileChange(e, true)}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Keterangan */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Keterangan (Opsional)</label>
+                    <textarea
+                      rows={3}
+                      value={editKeterangan}
+                      onChange={(e) => setEditKeterangan(e.target.value)}
+                      placeholder="Masukkan keterangan ibadah..."
                       className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
                     />
                   </div>
 
-                  <div className="flex gap-3 pt-2">
+                  {/* Submit buttons */}
+                  <div className="flex gap-3 pt-2 bg-zinc-50 p-6 -mx-6 -mb-6 border-t border-zinc-100">
                     <button
                       type="button"
                       onClick={() => setIsEditing(false)}
-                      className="flex-1 py-3 rounded-xl border border-zinc-200 text-zinc-700 text-sm font-bold hover:bg-zinc-50 transition-all cursor-pointer"
+                      className="flex-1 py-3 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-sm font-bold hover:bg-zinc-50 transition-all cursor-pointer"
                     >
-                      Kembali ke Detail
+                      Batal
                     </button>
                     <button
                       type="submit"
@@ -769,25 +1167,36 @@ export default function BulkAttendancePage() {
                   </div>
                 </form>
               ) : (
-                /* DETAIL MODE (READ ONLY WITH CHARTS / STATS) */
-                <div className="p-6 space-y-6">
+                /* DETAIL MODE (READ ONLY VIEW) */
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  
+                  {/* Banner / Foto Dokumentasi */}
+                  {selectedRecord.metadata?.foto && (
+                    <div className="rounded-2xl overflow-hidden border border-zinc-100 aspect-video shadow-md relative group">
+                      <img src={selectedRecord.metadata.foto} className="w-full h-full object-cover" alt="Dokumentasi Ibadah" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
+                        <span className="text-white text-xs font-black tracking-widest uppercase bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">Dokumentasi Foto</span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Big stats card */}
-                  <div className="bg-zinc-900 rounded-2xl p-6 text-center relative overflow-hidden">
+                  <div className="bg-zinc-900 text-white rounded-2xl p-6 text-center relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
                     <div className="relative z-10">
-                      <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-2">Total Kehadiran</div>
+                      <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-2">Total Kehadiran Ibadah</div>
                       <div className="text-5xl font-black text-white tracking-tight">
                         {selectedRecord.total.toLocaleString()}
                       </div>
                       <div className="text-xs text-zinc-400 mt-2 font-semibold">
-                        {selectedRecord.serviceType}
+                        {selectedRecord.serviceType} {selectedRecord.metadata?.judulIbadah ? `· "${selectedRecord.metadata.judulIbadah}"` : ""}
                       </div>
                     </div>
                   </div>
 
-                  {/* Date & Note Info */}
+                  {/* Tanggal & Waktu */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="border border-zinc-100 rounded-2xl p-4">
+                    <div className="border border-zinc-100 rounded-2xl p-4 bg-zinc-50/50">
                       <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Tanggal Ibadah</div>
                       <div className="text-sm font-extrabold text-zinc-900 mt-1">
                         {fmtShortDate(selectedRecord.serviceDate)}
@@ -796,12 +1205,73 @@ export default function BulkAttendancePage() {
                         {new Date(selectedRecord.serviceDate).toLocaleDateString("id-ID", { weekday: "long" })}
                       </div>
                     </div>
-                    <div className="border border-zinc-100 rounded-2xl p-4">
-                      <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Catatan Sesi</div>
-                      <p className="text-sm font-semibold text-zinc-700 mt-1 truncate" title={selectedRecord.notes ?? ""}>
-                        {selectedRecord.notes || "Tidak ada catatan"}
+                    <div className="border border-zinc-100 rounded-2xl p-4 bg-zinc-50/50 flex flex-col justify-center">
+                      <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Hari Pencatatan</div>
+                      <p className="text-sm font-extrabold text-zinc-900 mt-1 truncate" title={fmtShortDate(selectedRecord.createdAt)}>
+                        {fmtShortDate(selectedRecord.createdAt)}
                       </p>
                     </div>
+                  </div>
+
+                  {/* Khotbah Card */}
+                  {(selectedRecord.metadata?.temaKhotbah || selectedRecord.metadata?.namaPengkhotbah) && (
+                    <div className="border border-zinc-100 rounded-2xl p-5 space-y-3 bg-zinc-50/20">
+                      <div className="text-xs font-black text-zinc-400 uppercase tracking-wider">Detail Pemberitaan Firman</div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {selectedRecord.metadata?.namaPengkhotbah && (
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-wide">Pengkhotbah</div>
+                              <div className="text-xs font-bold text-zinc-800 mt-0.5">{selectedRecord.metadata.namaPengkhotbah}</div>
+                            </div>
+                          </div>
+                        )}
+                        {selectedRecord.metadata?.temaKhotbah && (
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" /></svg>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-wide">Tema Khotbah</div>
+                              <div className="text-xs font-bold text-zinc-800 mt-0.5">"{selectedRecord.metadata.temaKhotbah}"</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Absensi Kehadiran Jemaat List */}
+                  <div className="space-y-2">
+                    <div className="text-xs font-black text-zinc-400 uppercase tracking-wider flex justify-between items-center">
+                      <span>Absensi Kehadiran Individu</span>
+                      <span className="text-[10px] text-zinc-500 font-semibold bg-zinc-100 px-2 py-0.5 rounded-full">
+                        {selectedRecord.metadata?.absensi?.length || 0} Jemaat Check-In
+                      </span>
+                    </div>
+
+                    {selectedRecord.metadata?.absensi && selectedRecord.metadata.absensi.length > 0 ? (
+                      <div className="max-h-36 overflow-y-auto border border-zinc-100 bg-zinc-50/10 rounded-2xl p-3 flex flex-wrap gap-1.5">
+                        {selectedRecord.metadata.absensi.map((memberId: string) => {
+                          const m = membersList.find(x => x.id === memberId);
+                          return (
+                            <span 
+                              key={memberId}
+                              className="inline-flex items-center text-[10px] font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200/50 px-2.5 py-1 rounded-lg transition-colors cursor-default"
+                            >
+                              {m ? m.name : "Jemaat"}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-zinc-400 italic bg-zinc-50/50 p-4 border border-zinc-100 rounded-2xl text-center">
+                        Tidak ada jemaat yang di-check-in di absensi sesi ini.
+                      </div>
+                    )}
                   </div>
 
                   {/* Gender breakdown visual */}
@@ -840,20 +1310,29 @@ export default function BulkAttendancePage() {
 
                     {/* Progress bar */}
                     {selectedRecord.total > 0 && (
-                      <div className="h-3 w-full rounded-full overflow-hidden flex bg-zinc-100">
+                      <div className="h-2 w-full rounded-full overflow-hidden flex bg-zinc-100">
                         <div className="bg-blue-500" style={{ width: `${(selectedRecord.male / selectedRecord.total) * 100}%` }} />
                         <div className="bg-pink-400" style={{ width: `${(selectedRecord.female / selectedRecord.total) * 100}%` }} />
                       </div>
                     )}
                   </div>
 
-                  <div className="flex gap-3 pt-2">
+                  {/* Keterangan Card */}
+                  <div className="border border-zinc-100 rounded-2xl p-4 bg-zinc-50/50">
+                    <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Keterangan / Catatan</div>
+                    <p className="text-xs font-medium text-zinc-650 mt-1.5 whitespace-pre-wrap leading-relaxed">
+                      {selectedRecord.metadata?.keterangan || selectedRecord.notes || "Tidak ada keterangan tambahan."}
+                    </p>
+                  </div>
+
+                  {/* Detail footer buttons */}
+                  <div className="flex gap-3 pt-2 bg-zinc-50 p-6 -mx-6 -mb-6 border-t border-zinc-100">
                     <button
                       onClick={() => {
                         setSelectedRecord(null);
                         setIsEditing(false);
                       }}
-                      className="flex-1 py-3 rounded-xl border border-zinc-200 text-zinc-700 text-sm font-bold hover:bg-zinc-50 transition-all cursor-pointer text-center"
+                      className="flex-1 py-3 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-sm font-bold hover:bg-zinc-50 transition-all cursor-pointer text-center"
                     >
                       Tutup
                     </button>
@@ -864,7 +1343,7 @@ export default function BulkAttendancePage() {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
-                      Edit Data
+                      Edit Laporan
                     </button>
                   </div>
                 </div>

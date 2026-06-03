@@ -24,6 +24,16 @@ export async function verifyHadirToken(token: string) {
       return { success: false, error: "Sesi ibadah tidak ditemukan" };
     }
 
+    // Check if session has been marked ended
+    if (record.notes) {
+      try {
+        const metadata = JSON.parse(record.notes);
+        if (metadata && metadata.sessionEnded) {
+          return { success: false, error: "Sesi ibadah ini telah selesai / offline." };
+        }
+      } catch {}
+    }
+
     return {
       success: true,
       data: {
@@ -76,6 +86,21 @@ export async function checkinHadirMember(data: {
 }) {
   try {
     const { churchId, recordId, memberId, name, gender } = data;
+
+    const record = await prisma.attendanceRecord.findUnique({
+      where: { id: recordId }
+    });
+    if (!record || record.churchId !== churchId) {
+      return { success: false, error: "Sesi ibadah tidak ditemukan" };
+    }
+    if (record.notes) {
+      try {
+        const metadata = JSON.parse(record.notes);
+        if (metadata && metadata.sessionEnded) {
+          return { success: false, error: "Sesi ibadah ini telah selesai / offline." };
+        }
+      } catch {}
+    }
 
     let targetGender: "Laki-laki" | "Perempuan" = "Laki-laki";
 

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import SidebarNav from "./SidebarNav";
 import TopbarActions from "./TopbarActions";
@@ -7,14 +7,41 @@ import TopbarActions from "./TopbarActions";
 export default function DashboardLayoutWrapper({
   children,
   user,
+  pendingProgramsCount = 0,
+  pendingPrograms = [],
 }: {
   children: React.ReactNode;
   user: any;
+  pendingProgramsCount?: number;
+  pendingPrograms?: any[];
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("dashboard-theme") || "dark";
+    const dark = savedTheme === "dark";
+    setIsDark(dark);
+    if (dark) {
+      document.documentElement.classList.add("dashboard-dark");
+    } else {
+      document.documentElement.classList.remove("dashboard-dark");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const nextDark = !isDark;
+    setIsDark(nextDark);
+    localStorage.setItem("dashboard-theme", nextDark ? "dark" : "light");
+    if (nextDark) {
+      document.documentElement.classList.add("dashboard-dark");
+    } else {
+      document.documentElement.classList.remove("dashboard-dark");
+    }
+  };
 
   return (
-    <div className="flex h-screen bg-[#f4f4f5] overflow-hidden font-sans text-zinc-900 selection:bg-purple-200">
+    <div className="flex h-screen bg-dashboard-wrapper bg-[#f4f4f5] overflow-hidden font-sans text-zinc-900 selection:bg-purple-200">
       
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
@@ -44,6 +71,7 @@ export default function DashboardLayoutWrapper({
               role={user.role} 
               rolePermissions={user.church.rolePermissions || {}} 
               customPermissions={user.customPermissions}
+              pendingProgramsCount={pendingProgramsCount}
             />
           </div>
         </div>
@@ -76,7 +104,30 @@ export default function DashboardLayoutWrapper({
               <span>{user.church.name}</span>
             </h2>
           </div>
-          <TopbarActions />
+          <div className="flex items-center gap-4">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl border border-zinc-200 text-zinc-500 hover:text-zinc-900 bg-white/50 hover:bg-zinc-100 transition-all cursor-pointer shadow-sm flex items-center justify-center"
+              title={isDark ? "Aktifkan Mode Terang" : "Aktifkan Mode Gelap"}
+            >
+              {isDark ? (
+                /* Sun Icon */
+                <svg className="w-4 h-4 text-amber-500 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 5a7 7 0 100 14 7 7 0 000-14z" />
+                </svg>
+              ) : (
+                /* Moon Icon */
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+             <TopbarActions 
+               pendingPrograms={pendingPrograms} 
+               pendingProgramsCount={pendingProgramsCount} 
+             />
+          </div>
         </header>
 
         {/* Scrollable Page Content */}

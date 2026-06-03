@@ -4,6 +4,20 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 
+export interface IbadahMetadata {
+  judulIbadah?: string;
+  temaKhotbah?: string;
+  namaPengkhotbah?: string;
+  absensi?: string[]; // array of member IDs
+  jumlahKehadiran?: number;
+  foto?: string; // base64 string
+  keterangan?: string; // notes/remarks
+  sessionEnded?: boolean;
+  persembahan?: number;
+  pukul?: string;
+  sesi?: string;
+}
+
 /** Set attendance mode (BULK or QR) for the church */
 export async function setAttendanceMode(mode: "BULK" | "QR") {
   const session = await getSession();
@@ -35,16 +49,47 @@ export async function getKehadiranSetup() {
   };
 }
 
-/** Add a bulk attendance entry (Laki-laki + Perempuan per service) */
+/** Fetch active church members for check-in checklist */
+export async function getActiveChurchMembers() {
+  try {
+    const session = await getSession();
+    if (!session) throw new Error("Unauthorized");
+
+    const members = await prisma.member.findMany({
+      where: {
+        churchId: session.churchId,
+        status: "AKTIF",
+      },
+      select: {
+        id: true,
+        name: true,
+        nij: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    return { success: true, data: members };
+  } catch (error: any) {
+    console.error("getActiveChurchMembers error:", error);
+    return { success: false, error: error.message, data: [] };
+  }
+}
+
+/** Add a bulk attendance entry (Laki-laki + Perempuan per service) with optional metadata */
 export async function addBulkAttendance(data: {
   serviceDate: string;
   serviceType: string;
   male: number;
   female: number;
   notes?: string;
+  metadata?: IbadahMetadata;
 }) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
+
+  const finalNotes = data.metadata ? JSON.stringify(data.metadata) : (data.notes || null);
 
   const record = await prisma.attendanceRecord.create({
     data: {
@@ -53,9 +98,27 @@ export async function addBulkAttendance(data: {
       serviceType: data.serviceType || "Ibadah Umum",
       male: Math.max(0, Number(data.male) || 0),
       female: Math.max(0, Number(data.female) || 0),
-      notes: data.notes || null,
+      notes: finalNotes,
     },
   });
+
+  // Sync member stats if checked-in absensi is present
+  if (data.metadata?.absensi && data.metadata.absensi.length > 0) {
+    try {
+      await prisma.member.updateMany({
+        where: {
+          id: { in: data.metadata.absensi },
+          churchId: session.churchId,
+        },
+        data: {
+          lastAttendance: new Date(data.serviceDate),
+          absentWeeks: 0,
+        },
+      });
+    } catch (err) {
+      console.error("Error updating checked-in members:", err);
+    }
+  }
 
   revalidatePath("/dashboard/kehadiran");
   return { success: true, data: record };
@@ -97,19 +160,35 @@ export async function getBulkAttendance() {
     return r.male + r.female > best.male + best.female ? r : best;
   }, null);
 
+  const parsedRecords = records.map((r) => {
+    let metadata: IbadahMetadata = {};
+    if (r.notes && r.notes.startsWith("{") && r.notes.endsWith("}")) {
+      try {
+        metadata = JSON.parse(r.notes);
+      } catch (e) {
+        metadata = { keterangan: r.notes };
+      }
+    } else {
+      metadata = { keterangan: r.notes || "" };
+    }
+
+    return {
+      id: r.id,
+      serviceDate: r.serviceDate.toISOString(),
+      serviceType: r.serviceType,
+      male: r.male,
+      female: r.female,
+      total: r.male + r.female,
+      notes: r.notes,
+      metadata,
+      createdAt: r.createdAt.toISOString(),
+    };
+  });
+
   return {
     success: true,
     data: {
-      records: records.map((r) => ({
-        id: r.id,
-        serviceDate: r.serviceDate.toISOString(),
-        serviceType: r.serviceType,
-        male: r.male,
-        female: r.female,
-        total: r.male + r.female,
-        notes: r.notes,
-        createdAt: r.createdAt.toISOString(),
-      })),
+      records: parsedRecords,
       stats: {
         totalSessions: total,
         avgHadir,
@@ -179,7 +258,7 @@ export async function getQrSessionStats(recordId: string) {
   }
 }
 
-/** Update an attendance record (date, type, male, female, notes) */
+/** Update an attendance record with optional metadata */
 export async function updateAttendanceRecord(
   id: string,
   data: {
@@ -188,6 +267,7 @@ export async function updateAttendanceRecord(
     male: number;
     female: number;
     notes?: string;
+    metadata?: IbadahMetadata;
   }
 ) {
   try {
@@ -202,6 +282,8 @@ export async function updateAttendanceRecord(
       throw new Error("Record not found");
     }
 
+    const finalNotes = data.metadata ? JSON.stringify(data.metadata) : (data.notes || null);
+
     const updated = await prisma.attendanceRecord.update({
       where: { id },
       data: {
@@ -209,9 +291,27 @@ export async function updateAttendanceRecord(
         serviceType: data.serviceType || "Ibadah Umum",
         male: Math.max(0, Number(data.male) || 0),
         female: Math.max(0, Number(data.female) || 0),
-        notes: data.notes || null,
+        notes: finalNotes,
       },
     });
+
+    // Sync member stats if checked-in absensi is present
+    if (data.metadata?.absensi && data.metadata.absensi.length > 0) {
+      try {
+        await prisma.member.updateMany({
+          where: {
+            id: { in: data.metadata.absensi },
+            churchId: session.churchId,
+          },
+          data: {
+            lastAttendance: new Date(data.serviceDate),
+            absentWeeks: 0,
+          },
+        });
+      } catch (err) {
+        console.error("Error updating checked-in members:", err);
+      }
+    }
 
     revalidatePath("/dashboard/kehadiran");
     return { success: true, data: updated };
@@ -227,9 +327,9 @@ export async function getActiveSession() {
     const session = await getSession();
     if (!session) throw new Error("Unauthorized");
 
-    // Find the most recent record created in the last 12 hours for this church
+    // Find records created in the last 12 hours for this church
     const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
-    const record = await prisma.attendanceRecord.findFirst({
+    const records = await prisma.attendanceRecord.findMany({
       where: {
         churchId: session.churchId,
         createdAt: { gte: twelveHoursAgo }
@@ -237,25 +337,78 @@ export async function getActiveSession() {
       orderBy: { createdAt: "desc" }
     });
 
-    if (!record) {
+    // Find the first record that is not marked as ended
+    const activeRecord = records.find(r => {
+      if (r.notes) {
+        try {
+          const metadata = JSON.parse(r.notes);
+          if (metadata && metadata.sessionEnded) {
+            return false;
+          }
+        } catch {}
+      }
+      return true;
+    });
+
+    if (!activeRecord) {
       return { success: true, data: null };
     }
 
     const token = Buffer.from(
-      JSON.stringify({ churchId: session.churchId, recordId: record.id })
+      JSON.stringify({ churchId: session.churchId, recordId: activeRecord.id })
     ).toString("base64url");
 
     return {
       success: true,
       data: {
         token,
-        recordId: record.id,
-        date: record.serviceDate.toISOString().split("T")[0],
-        type: record.serviceType,
+        recordId: activeRecord.id,
+        date: activeRecord.serviceDate.toISOString().split("T")[0],
+        type: activeRecord.serviceType,
       }
     };
   } catch (error: any) {
     console.error("getActiveSession error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/** Mark an active session as ended (offline) immediately */
+export async function endQrSession(recordId: string) {
+  try {
+    const session = await getSession();
+    if (!session) throw new Error("Unauthorized");
+
+    const record = await prisma.attendanceRecord.findUnique({
+      where: { id: recordId }
+    });
+
+    if (!record || record.churchId !== session.churchId) {
+      throw new Error("Record not found");
+    }
+
+    let metadata: IbadahMetadata = {};
+    if (record.notes) {
+      try {
+        metadata = JSON.parse(record.notes);
+      } catch {
+        metadata = { keterangan: record.notes };
+      }
+    }
+
+    metadata.sessionEnded = true;
+
+    await prisma.attendanceRecord.update({
+      where: { id: recordId },
+      data: {
+        notes: JSON.stringify(metadata)
+      }
+    });
+
+    revalidatePath("/dashboard/kehadiran");
+    return { success: true };
+  } catch (error: any) {
+    console.error("endQrSession error:", error);
     return { success: false, error: error.message };
   }
 }

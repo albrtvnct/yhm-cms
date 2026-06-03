@@ -2,7 +2,17 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import QRCode from "qrcode";
-import { generateQrSession, getBulkAttendance, getQrSessionStats, deleteBulkAttendance, updateAttendanceRecord, getActiveSession } from "@/app/actions/attendance";
+import { 
+  generateQrSession, 
+  getBulkAttendance, 
+  getQrSessionStats, 
+  deleteBulkAttendance, 
+  updateAttendanceRecord, 
+  getActiveSession, 
+  getActiveChurchMembers,
+  endQrSession,
+  IbadahMetadata 
+} from "@/app/actions/attendance";
 import Portal from "@/components/Portal";
 
 const SERVICE_TYPES = [
@@ -50,9 +60,53 @@ export default function QrAttendancePage() {
   const [editType, setEditType] = useState("Ibadah Umum");
   const [editMale, setEditMale] = useState("");
   const [editFemale, setEditFemale] = useState("");
-  const [editNotes, setEditNotes] = useState("");
   const [editError, setEditError] = useState("");
   const [editSubmitting, setEditSubmitting] = useState(false);
+
+  // New Edit Form states (Ibadah metadata)
+  const [editJudul, setEditJudul] = useState("");
+  const [editTema, setEditTema] = useState("");
+  const [editPengkhotbah, setEditPengkhotbah] = useState("");
+  const [editAbsensi, setEditAbsensi] = useState<string[]>([]);
+  const [editJumlahKehadiran, setEditJumlahKehadiran] = useState("");
+  const [editFoto, setEditFoto] = useState(""); // base64 string
+  const [editKeterangan, setEditKeterangan] = useState("");
+  const [editPersembahan, setEditPersembahan] = useState("");
+  const [editPukul, setEditPukul] = useState("");
+  const [editSesi, setEditSesi] = useState("");
+
+  // Finish Session Modal states
+  const [showFinishModal, setShowFinishModal] = useState(false);
+  const [finishRecordId, setFinishRecordId] = useState("");
+  const [finishDate, setFinishDate] = useState("");
+  const [finishJudul, setFinishJudul] = useState("");
+  const [finishPukul, setFinishPukul] = useState("");
+  const [finishSesi, setFinishSesi] = useState("");
+  const [finishPersembahan, setFinishPersembahan] = useState("");
+  const [finishTema, setFinishTema] = useState("");
+  const [finishPengkhotbah, setFinishPengkhotbah] = useState("");
+  const [finishKeterangan, setFinishKeterangan] = useState("");
+  const [finishSubmitting, setFinishSubmitting] = useState(false);
+  const [finishError, setFinishError] = useState("");
+
+  const [membersList, setMembersList] = useState<{ id: string; name: string; nij: string | null }[]>([]);
+  const [searchMemberQuery, setSearchMemberQuery] = useState("");
+
+  const filteredMembers = membersList.filter(m =>
+    m.name.toLowerCase().includes(searchMemberQuery.toLowerCase()) ||
+    (m.nij && m.nij.toLowerCase().includes(searchMemberQuery.toLowerCase()))
+  );
+
+  const fetchMembers = useCallback(async () => {
+    const res = await getActiveChurchMembers();
+    if (res.success && res.data) {
+      setMembersList(res.data);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
 
   const refreshActiveStats = useCallback(async (recordId: string) => {
     const res = await getQrSessionStats(recordId);
@@ -136,6 +190,81 @@ export default function QrAttendancePage() {
     }
   };
 
+  const handleOpenFinishSession = async () => {
+    if (!activeQr) return;
+    const recId = activeQr.recordId;
+    const date = activeQr.date;
+    const type = activeQr.type;
+
+    // Call server action to immediately mark session offline in DB
+    const res = await endQrSession(recId);
+    if (!res.success) {
+      alert("Gagal mematikan sesi QR: " + (res.error || ""));
+      return;
+    }
+
+    // Set form fields
+    setFinishRecordId(recId);
+    setFinishDate(date);
+    setFinishJudul(type);
+    const nowStr = new Date().toTimeString().split(' ')[0].slice(0, 5);
+    setFinishPukul(nowStr);
+    setFinishSesi("Sesi 1");
+    setFinishPersembahan("");
+    setFinishTema("");
+    setFinishPengkhotbah("");
+    setFinishKeterangan("");
+    setFinishError("");
+
+    // Deactivate local display session state immediately
+    setActiveQr(null);
+    setActiveStats(null);
+    setQrDataUrl(null);
+
+    // Show completion modal
+    setShowFinishModal(true);
+  };
+
+  const handleFinishSessionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFinishError("");
+
+    if (!finishJudul.trim()) { setFinishError("Judul Ibadah wajib diisi."); return; }
+    if (!finishPukul.trim()) { setFinishError("Pukul Ibadah wajib diisi."); return; }
+    if (!finishSesi.trim()) { setFinishError("Sesi Ibadah wajib diisi."); return; }
+    if (!finishPersembahan.trim() || isNaN(Number(finishPersembahan)) || Number(finishPersembahan) < 0) {
+      setFinishError("Jumlah Persembahan wajib diisi dengan angka valid.");
+      return;
+    }
+
+    setFinishSubmitting(true);
+    // Submit completed metadata to the record
+    const res = await updateAttendanceRecord(finishRecordId, {
+      serviceDate: finishDate,
+      serviceType: finishJudul,
+      male: activeStats?.male ?? 0,
+      female: activeStats?.female ?? 0,
+      metadata: {
+        judulIbadah: finishJudul,
+        temaKhotbah: finishTema || undefined,
+        namaPengkhotbah: finishPengkhotbah || undefined,
+        keterangan: finishKeterangan || undefined,
+        sessionEnded: true,
+        persembahan: Number(finishPersembahan),
+        pukul: finishPukul,
+        sesi: finishSesi,
+      }
+    });
+
+    if (res.success) {
+      setShowFinishModal(false);
+      await loadData();
+    } else {
+      setFinishError(res.error || "Gagal menyimpan rincian ibadah selesai.");
+    }
+    setFinishSubmitting(false);
+  };
+
   const handleDelete = async (id: string) => {
     await deleteBulkAttendance(id);
     setDeleteId(null);
@@ -149,8 +278,44 @@ export default function QrAttendancePage() {
     setEditType(record.serviceType);
     setEditMale(record.male.toString());
     setEditFemale(record.female.toString());
-    setEditNotes(record.notes ?? "");
+    
+    const meta = record.metadata || {};
+    setEditJudul(meta.judulIbadah || "");
+    setEditTema(meta.temaKhotbah || "");
+    setEditPengkhotbah(meta.namaPengkhotbah || "");
+    setEditAbsensi(meta.absensi || []);
+    setEditJumlahKehadiran(meta.jumlahKehadiran?.toString() || (record.male + record.female).toString());
+    setEditFoto(meta.foto || "");
+    setEditKeterangan(meta.keterangan || record.notes || "");
+    setEditPersembahan(meta.persembahan?.toString() || "");
+    setEditPukul(meta.pukul || "");
+    setEditSesi(meta.sesi || "");
     setEditError("");
+    setSearchMemberQuery("");
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Ukuran berkas terlalu besar. Maksimum adalah 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setEditFoto(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const toggleMemberAbsensi = (id: string) => {
+    setEditAbsensi(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      setEditJumlahKehadiran(next.length.toString());
+      return next;
+    });
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -158,9 +323,21 @@ export default function QrAttendancePage() {
     setEditError("");
     if (!selectedRecord) return;
     if (!editDate) { setEditError("Pilih tanggal ibadah."); return; }
-    const m = parseInt(editMale) || 0;
-    const f = parseInt(editFemale) || 0;
-    if (m + f === 0) { setEditError("Total kehadiran tidak boleh nol."); return; }
+    
+    let total = parseInt(editJumlahKehadiran) || 0;
+    let m = parseInt(editMale) || 0;
+    let f = parseInt(editFemale) || 0;
+
+    if (total === 0 && editAbsensi.length > 0) {
+      total = editAbsensi.length;
+    }
+    if (total === 0 && (m + f) > 0) {
+      total = m + f;
+    }
+    if (total > 0 && m + f === 0) {
+      m = Math.round(total / 2);
+      f = total - m;
+    }
 
     setEditSubmitting(true);
     const res = await updateAttendanceRecord(selectedRecord.id, {
@@ -168,7 +345,19 @@ export default function QrAttendancePage() {
       serviceType: editType,
       male: m,
       female: f,
-      notes: editNotes || undefined,
+      metadata: {
+        judulIbadah: editJudul || undefined,
+        temaKhotbah: editTema || undefined,
+        namaPengkhotbah: editPengkhotbah || undefined,
+        absensi: editAbsensi.length > 0 ? editAbsensi : undefined,
+        jumlahKehadiran: total || undefined,
+        foto: editFoto || undefined,
+        keterangan: editKeterangan || undefined,
+        sessionEnded: selectedRecord.metadata?.sessionEnded || undefined,
+        persembahan: editPersembahan ? Number(editPersembahan) : undefined,
+        pukul: editPukul || undefined,
+        sesi: editSesi || undefined,
+      }
     });
     if (res.success) {
       await loadData();
@@ -238,7 +427,7 @@ export default function QrAttendancePage() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">Kehadiran</h1>
+            <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight">Ibadah</h1>
             <span className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-widest border border-indigo-200/60">Absensi RealTime</span>
           </div>
           <p className="text-zinc-500 text-sm font-medium">Gunakan aplikasi HP Clicker per sesi ibadah untuk mencatat kehadiran secara real-time.</p>
@@ -293,7 +482,7 @@ export default function QrAttendancePage() {
       {activeQr && qrDataUrl ? (
         <div>
           <h2 className="text-xs font-black text-zinc-400 tracking-[0.2em] uppercase mb-4 ml-1">QR Aktif — Siap Ditampilkan</h2>
-          <div className="bg-zinc-900 rounded-3xl p-8 shadow-xl relative overflow-hidden">
+          <div className="bg-zinc-900 text-white rounded-3xl p-8 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
             <div className="relative z-10 flex flex-col lg:flex-row items-center gap-10">
 
@@ -361,6 +550,15 @@ export default function QrAttendancePage() {
                     </svg>
                     Buat QR Baru
                   </button>
+                  <button
+                    onClick={handleOpenFinishSession}
+                    className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-rose-600/20"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Selesai Ibadah
+                  </button>
                 </div>
 
                 {typeof window !== "undefined" && window.location.hostname === "localhost" && (
@@ -401,7 +599,7 @@ export default function QrAttendancePage() {
       {/* ── AI ANALYST ──────────────────────────────────────────────────────── */}
       <div>
         <h2 className="text-xs font-black text-zinc-400 tracking-[0.2em] uppercase mb-4 ml-1">AI Analyst</h2>
-        <div className="bg-zinc-900 rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden group">
+        <div className="bg-zinc-900 text-white rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 blur-[90px] rounded-full pointer-events-none transition-all group-hover:bg-purple-500/20"></div>
           
           <div className="relative z-10 flex flex-col gap-6">
@@ -655,7 +853,7 @@ export default function QrAttendancePage() {
                 </svg>
               </div>
               <h3 className="text-lg font-extrabold text-zinc-900 mb-2">Hapus data ini?</h3>
-              <p className="text-sm text-zinc-500 mb-6">Data kehadiran sesi ini akan dihapus permanen dan tidak dapat dikembalikan.</p>
+              <p className="text-sm text-zinc-500 mb-6">Data sesi ini akan dihapus permanen dan tidak dapat dikembalikan.</p>
               <div className="flex gap-3">
                 <button onClick={() => setDeleteId(null)} className="flex-1 py-2.5 border border-zinc-200 rounded-xl text-zinc-700 text-sm font-bold hover:bg-zinc-50 cursor-pointer">Batal</button>
                 <button onClick={() => handleDelete(deleteId)} className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold cursor-pointer">Hapus</button>
@@ -665,20 +863,165 @@ export default function QrAttendancePage() {
         </Portal>
       )}
 
+      {/* ── MODAL: SELESAI IBADAH (SELESAI QR SESI) ───────────────────────────────────────────── */}
+      {showFinishModal && (
+        <Portal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm animate-fade-in-up">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md border border-zinc-200/60 overflow-hidden animate-fade-in-up flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="p-6 border-b border-zinc-100 flex items-center justify-between shrink-0 bg-zinc-50/50">
+                <div>
+                  <h3 className="text-xl font-extrabold text-zinc-900">Sesi Ibadah Selesai</h3>
+                  <p className="text-xs text-zinc-500 mt-1">Sesi QR offline. Silakan lengkapi laporan penutupan ibadah.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowFinishModal(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 text-zinc-500 hover:bg-zinc-200 transition-colors cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleFinishSessionSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 font-sans text-left">
+                {finishError && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl">
+                    {finishError}
+                  </div>
+                )}
+
+                {/* Judul Ibadah (Required) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Judul Ibadah <span className="text-rose-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    value={finishJudul}
+                    onChange={e => setFinishJudul(e.target.value)}
+                    placeholder="Contoh: Ibadah Raya 1..."
+                    className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-all"
+                  />
+                </div>
+
+                {/* Grid Pukul & Sesi (Required) */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Pukul <span className="text-rose-500">*</span></label>
+                    <input
+                      type="time"
+                      required
+                      value={finishPukul}
+                      onChange={e => setFinishPukul(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Sesi <span className="text-rose-500">*</span></label>
+                    <input
+                      type="text"
+                      required
+                      value={finishSesi}
+                      onChange={e => setFinishSesi(e.target.value)}
+                      placeholder="Contoh: Sesi 1..."
+                      className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Persembahan (Required) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Jumlah Persembahan (Rp) <span className="text-rose-500">*</span></label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={finishPersembahan}
+                    onChange={e => setFinishPersembahan(e.target.value)}
+                    placeholder="Contoh: 1500000..."
+                    className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-all font-bold text-emerald-600"
+                  />
+                </div>
+
+                {/* Tema & Pengkhotbah (Optional) */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tema Khotbah</label>
+                    <input
+                      type="text"
+                      value={finishTema}
+                      onChange={e => setFinishTema(e.target.value)}
+                      placeholder="Tema..."
+                      className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Pengkhotbah</label>
+                    <input
+                      type="text"
+                      value={finishPengkhotbah}
+                      onChange={e => setFinishPengkhotbah(e.target.value)}
+                      placeholder="Nama Pengkhotbah..."
+                      className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Keterangan (Optional) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Keterangan Ibadah</label>
+                  <textarea
+                    rows={3}
+                    value={finishKeterangan}
+                    onChange={e => setFinishKeterangan(e.target.value)}
+                    placeholder="Masukkan catatan tambahan..."
+                    className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-all"
+                  />
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="flex gap-3 pt-4 border-t border-zinc-100 bg-zinc-50 -mx-6 -mb-6 p-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowFinishModal(false)}
+                    className="flex-1 py-3 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-sm font-bold hover:bg-zinc-50 transition-all cursor-pointer text-center"
+                  >
+                    Tutup
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={finishSubmitting}
+                    className="flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                  >
+                    {finishSubmitting ? (
+                      <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> Menyimpan...</>
+                    ) : (
+                      "Simpan Laporan"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </Portal>
+      )}
+
       {/* ── MODAL: DETAIL & EDIT ───────────────────────────────────────────── */}
       {selectedRecord && (
         <Portal>
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm animate-fade-in-up">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md border border-zinc-200/60 overflow-hidden animate-fade-in-up">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-zinc-200/60 overflow-hidden animate-fade-in-up max-h-[90vh] flex flex-col">
               
               {/* Header */}
-              <div className="p-6 border-b border-zinc-100 flex items-center justify-between">
+              <div className="p-6 border-b border-zinc-100 flex items-center justify-between shrink-0">
                 <div>
                   <h3 className="text-xl font-extrabold text-zinc-900">
-                    {isEditing ? "Edit Sesi Ibadah" : "Detail Sesi Ibadah"}
+                    {isEditing ? "Edit Laporan Ibadah" : "Detail Laporan Ibadah"}
                   </h3>
                   <p className="text-sm text-zinc-500 mt-0.5">
-                    {isEditing ? "Ubah rincian kehadiran jemaat" : "Rincian data kehadiran jemaat"}
+                    {isEditing ? "Ubah rincian laporan jalannya ibadah" : "Rincian detail data laporan ibadah"}
                   </p>
                 </div>
                 <button
@@ -696,100 +1039,248 @@ export default function QrAttendancePage() {
 
               {isEditing ? (
                 /* EDIT MODE */
-                <form onSubmit={handleEditSubmit} className="p-6 space-y-5">
+                <form onSubmit={handleEditSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
                   {editError && (
                     <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold rounded-xl">
                       {editError}
                     </div>
                   )}
 
+                  {/* Judul & Tanggal & Tipe */}
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Judul Ibadah (Opsional)</label>
+                      <input
+                        type="text"
+                        value={editJudul}
+                        onChange={e => setEditJudul(e.target.value)}
+                        placeholder="Contoh: Ibadah Raya 1..."
+                        className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tanggal Ibadah</label>
+                        <input
+                          type="date"
+                          value={editDate}
+                          onChange={(e) => setEditDate(e.target.value)}
+                          required
+                          className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Jenis Ibadah</label>
+                        <select
+                          value={editType}
+                          onChange={(e) => setEditType(e.target.value)}
+                          className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all cursor-pointer"
+                        >
+                          {SERVICE_TYPES.map((t) => (
+                            <option key={t}>{t}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-1.5 col-span-1">
+                        <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Pukul</label>
+                        <input
+                          type="time"
+                          value={editPukul}
+                          onChange={e => setEditPukul(e.target.value)}
+                          className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5 col-span-1">
+                        <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Sesi</label>
+                        <input
+                          type="text"
+                          value={editSesi}
+                          onChange={e => setEditSesi(e.target.value)}
+                          placeholder="Sesi 1..."
+                          className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5 col-span-1">
+                        <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Persembahan</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editPersembahan}
+                          onChange={e => setEditPersembahan(e.target.value)}
+                          placeholder="Rp..."
+                          className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tema & Pengkhotbah */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tanggal Ibadah</label>
+                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tema Khotbah (Opsional)</label>
                       <input
-                        type="date"
-                        value={editDate}
-                        onChange={(e) => setEditDate(e.target.value)}
-                        required
+                        type="text"
+                        value={editTema}
+                        onChange={e => setEditTema(e.target.value)}
                         className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Jenis Ibadah</label>
-                      <select
-                        value={editType}
-                        onChange={(e) => setEditType(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all cursor-pointer"
-                      >
-                        {SERVICE_TYPES.map((t) => (
-                          <option key={t}>{t}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Male / Female input */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-blue-500" /> Laki-laki
-                      </label>
+                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Nama Pengkhotbah (Opsional)</label>
                       <input
-                        type="number"
-                        min="0"
-                        value={editMale}
-                        onChange={(e) => setEditMale(e.target.value)}
-                        placeholder="0"
-                        className="w-full px-3.5 py-2.5 border border-blue-200 rounded-xl text-2xl font-extrabold text-blue-700 bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-center"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-pink-600 uppercase tracking-wider flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-pink-400" /> Perempuan
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={editFemale}
-                        onChange={(e) => setEditFemale(e.target.value)}
-                        placeholder="0"
-                        className="w-full px-3.5 py-2.5 border border-pink-200 rounded-xl text-2xl font-extrabold text-pink-700 bg-pink-50/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all text-center"
+                        type="text"
+                        value={editPengkhotbah}
+                        onChange={e => setEditPengkhotbah(e.target.value)}
+                        className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
                       />
                     </div>
                   </div>
 
-                  {/* Live total */}
-                  {(() => {
-                    const totalLiveEdit = (parseInt(editMale) || 0) + (parseInt(editFemale) || 0);
-                    return (
-                      <div className={`rounded-2xl p-4 flex items-center justify-between transition-colors ${totalLiveEdit > 0 ? "bg-zinc-900" : "bg-zinc-100"}`}>
-                        <div className={`text-sm font-bold ${totalLiveEdit > 0 ? "text-zinc-400" : "text-zinc-500"}`}>Total jemaat hadir</div>
-                        <div className={`text-3xl font-extrabold ${totalLiveEdit > 0 ? "text-white" : "text-zinc-400"}`}>
-                          {totalLiveEdit.toLocaleString()}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Notes */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Catatan (opsional)</label>
+                  {/* Absensi checklist */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider flex justify-between items-center">
+                      <span>Absensi Kehadiran Jemaat (Opsional)</span>
+                      <span className="text-zinc-500 font-semibold text-[10px] bg-zinc-100 px-2 py-0.5 rounded-full">{editAbsensi.length} Terpilih</span>
+                    </label>
                     <input
                       type="text"
-                      value={editNotes}
-                      onChange={(e) => setEditNotes(e.target.value)}
-                      placeholder="Contoh: Ibadah Natal, hari hujan..."
+                      value={searchMemberQuery}
+                      onChange={e => setSearchMemberQuery(e.target.value)}
+                      placeholder="Cari nama jemaat..."
+                      className="w-full px-3.5 py-2 border border-zinc-200 rounded-xl text-xs text-zinc-900 bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                    />
+                    <div className="max-h-36 overflow-y-auto border border-zinc-100 rounded-xl p-2 space-y-1.5 bg-zinc-50/30">
+                      {filteredMembers.map(member => {
+                        const isChecked = editAbsensi.includes(member.id);
+                        return (
+                          <label key={member.id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-100/80 rounded-lg cursor-pointer transition-colors text-xs font-medium text-zinc-700">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => toggleMemberAbsensi(member.id)}
+                              className="rounded text-zinc-900 focus:ring-zinc-900 h-3.5 w-3.5"
+                            />
+                            <div className="flex-1 truncate">
+                              {member.name} <span className="text-[10px] text-zinc-400 font-normal">{member.nij ? `(${member.nij})` : ""}</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Jumlah Kehadiran & Gender */}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-1.5 col-span-1">
+                        <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Total Hadir</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editJumlahKehadiran}
+                          onChange={e => setEditJumlahKehadiran(e.target.value)}
+                          placeholder={editAbsensi.length > 0 ? editAbsensi.length.toString() : "0"}
+                          className="w-full px-3 py-2 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-center"
+                        />
+                      </div>
+                      <div className="space-y-1.5 col-span-1">
+                        <label className="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Pria
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editMale}
+                          onChange={(e) => setEditMale(e.target.value)}
+                          placeholder="0"
+                          className="w-full px-3 py-2 border border-blue-200 rounded-xl text-sm text-blue-700 bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                        />
+                      </div>
+                      <div className="space-y-1.5 col-span-1">
+                        <label className="text-xs font-bold text-pink-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-pink-400" /> Wanita
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editFemale}
+                          onChange={(e) => setEditFemale(e.target.value)}
+                          placeholder="0"
+                          className="w-full px-3 py-2 border border-pink-200 rounded-xl text-sm text-pink-700 bg-pink-50/50 focus:outline-none focus:ring-2 focus:ring-pink-400 text-center"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Calculated live total */}
+                    {(() => {
+                      const totalLiveEdit = (parseInt(editJumlahKehadiran) || 0) || (parseInt(editMale) || 0) + (parseInt(editFemale) || 0) || editAbsensi.length;
+                      return (
+                        <div className={`rounded-2xl p-4 flex items-center justify-between transition-colors ${totalLiveEdit > 0 ? "bg-zinc-900 text-white" : "bg-zinc-100"}`}>
+                          <div className={`text-sm font-bold ${totalLiveEdit > 0 ? "text-zinc-400" : "text-zinc-500"}`}>Total kehadiran final:</div>
+                          <div className={`text-3xl font-extrabold ${totalLiveEdit > 0 ? "text-white" : "text-zinc-400"}`}>
+                            {totalLiveEdit.toLocaleString()}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Foto Dokumentasi */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Dokumentasi Foto (Opsional)</label>
+                    {editFoto ? (
+                      <div className="relative rounded-2xl overflow-hidden border border-zinc-200 aspect-video">
+                        <img src={editFoto} className="w-full h-full object-cover" alt="Preview" />
+                        <button
+                          type="button"
+                          onClick={() => setEditFoto("")}
+                          className="absolute top-3 right-3 bg-red-600 hover:bg-red-700 text-white rounded-full p-2.5 transition-colors shadow-md cursor-pointer"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 hover:border-zinc-400 rounded-2xl p-6 cursor-pointer transition-colors bg-zinc-50/50">
+                        <svg className="w-8 h-8 text-zinc-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-xs text-zinc-500 font-bold">Pilih foto dokumentasi</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Keterangan */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Keterangan (Opsional)</label>
+                    <textarea
+                      rows={3}
+                      value={editKeterangan}
+                      onChange={(e) => setEditKeterangan(e.target.value)}
+                      placeholder="Masukkan keterangan ibadah..."
                       className="w-full px-3.5 py-2.5 border border-zinc-200 rounded-xl text-sm text-zinc-900 bg-zinc-50/50 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
                     />
                   </div>
 
-                  <div className="flex gap-3 pt-2">
+                  {/* Submit buttons */}
+                  <div className="flex gap-3 pt-2 bg-zinc-50 p-6 -mx-6 -mb-6 border-t border-zinc-100">
                     <button
                       type="button"
                       onClick={() => setIsEditing(false)}
-                      className="flex-1 py-3 rounded-xl border border-zinc-200 text-zinc-700 text-sm font-bold hover:bg-zinc-50 transition-all cursor-pointer"
+                      className="flex-1 py-3 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-sm font-bold hover:bg-zinc-50 transition-all cursor-pointer"
                     >
-                      Kembali ke Detail
+                      Batal
                     </button>
                     <button
                       type="submit"
@@ -805,25 +1296,36 @@ export default function QrAttendancePage() {
                   </div>
                 </form>
               ) : (
-                /* DETAIL MODE (READ ONLY WITH CHARTS / STATS) */
-                <div className="p-6 space-y-6">
+                /* DETAIL MODE (READ ONLY VIEW) */
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  
+                  {/* Banner / Foto Dokumentasi */}
+                  {selectedRecord.metadata?.foto && (
+                    <div className="rounded-2xl overflow-hidden border border-zinc-100 aspect-video shadow-md relative group">
+                      <img src={selectedRecord.metadata.foto} className="w-full h-full object-cover" alt="Dokumentasi Ibadah" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
+                        <span className="text-white text-xs font-black tracking-widest uppercase bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">Dokumentasi Foto</span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Big stats card */}
-                  <div className="bg-zinc-900 rounded-2xl p-6 text-center relative overflow-hidden">
+                  <div className="bg-zinc-900 text-white rounded-2xl p-6 text-center relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
                     <div className="relative z-10">
-                      <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-2">Total Kehadiran</div>
+                      <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-2">Total Kehadiran Ibadah</div>
                       <div className="text-5xl font-black text-white tracking-tight">
                         {selectedRecord.total.toLocaleString()}
                       </div>
                       <div className="text-xs text-zinc-400 mt-2 font-semibold">
-                        {selectedRecord.serviceType}
+                        {selectedRecord.serviceType} {selectedRecord.metadata?.judulIbadah ? `· "${selectedRecord.metadata.judulIbadah}"` : ""}
                       </div>
                     </div>
                   </div>
 
-                  {/* Date & Note Info */}
+                  {/* Tanggal & Waktu */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="border border-zinc-100 rounded-2xl p-4">
+                    <div className="border border-zinc-100 rounded-2xl p-4 bg-zinc-50/50">
                       <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Tanggal Ibadah</div>
                       <div className="text-sm font-extrabold text-zinc-900 mt-1">
                         {fmtShortDate(selectedRecord.serviceDate)}
@@ -832,12 +1334,95 @@ export default function QrAttendancePage() {
                         {new Date(selectedRecord.serviceDate).toLocaleDateString("id-ID", { weekday: "long" })}
                       </div>
                     </div>
-                    <div className="border border-zinc-100 rounded-2xl p-4">
-                      <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Catatan Sesi</div>
-                      <p className="text-sm font-semibold text-zinc-700 mt-1 truncate" title={selectedRecord.notes ?? ""}>
-                        {selectedRecord.notes || "Tidak ada catatan"}
+                    <div className="border border-zinc-100 rounded-2xl p-4 bg-zinc-50/50 flex flex-col justify-center">
+                      <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Hari Pencatatan</div>
+                      <p className="text-sm font-extrabold text-zinc-900 mt-1 truncate" title={fmtShortDate(selectedRecord.createdAt)}>
+                        {fmtShortDate(selectedRecord.createdAt)}
                       </p>
                     </div>
+                  </div>
+
+                  {/* Sesi, Pukul & Persembahan */}
+                  {(selectedRecord.metadata?.persembahan !== undefined || selectedRecord.metadata?.pukul || selectedRecord.metadata?.sesi) && (
+                    <div className="grid grid-cols-2 gap-4">
+                      {(selectedRecord.metadata?.pukul || selectedRecord.metadata?.sesi) && (
+                        <div className="border border-zinc-100 rounded-2xl p-4 bg-zinc-50/50">
+                          <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Sesi & Pukul</div>
+                          <div className="text-sm font-extrabold text-zinc-900 mt-1">
+                            {selectedRecord.metadata.sesi || "Sesi 1"} · {selectedRecord.metadata.pukul || "—"}
+                          </div>
+                        </div>
+                      )}
+                      {selectedRecord.metadata?.persembahan !== undefined && (
+                        <div className="border border-emerald-100 rounded-2xl p-4 bg-emerald-50/20">
+                          <div className="text-[10px] font-black text-emerald-600 uppercase tracking-wider">Jumlah Persembahan</div>
+                          <div className="text-sm font-extrabold text-emerald-700 mt-1">
+                            Rp {selectedRecord.metadata.persembahan.toLocaleString("id-ID")}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Khotbah Card */}
+                  {(selectedRecord.metadata?.temaKhotbah || selectedRecord.metadata?.namaPengkhotbah) && (
+                    <div className="border border-zinc-100 rounded-2xl p-5 space-y-3 bg-zinc-50/20">
+                      <div className="text-xs font-black text-zinc-400 uppercase tracking-wider">Detail Pemberitaan Firman</div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {selectedRecord.metadata?.namaPengkhotbah && (
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-wide">Pengkhotbah</div>
+                              <div className="text-xs font-bold text-zinc-800 mt-0.5">{selectedRecord.metadata.namaPengkhotbah}</div>
+                            </div>
+                          </div>
+                        )}
+                        {selectedRecord.metadata?.temaKhotbah && (
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" /></svg>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-wide">Tema Khotbah</div>
+                              <div className="text-xs font-bold text-zinc-800 mt-0.5">"{selectedRecord.metadata.temaKhotbah}"</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Absensi Kehadiran Jemaat List */}
+                  <div className="space-y-2">
+                    <div className="text-xs font-black text-zinc-400 uppercase tracking-wider flex justify-between items-center">
+                      <span>Absensi Kehadiran Individu</span>
+                      <span className="text-[10px] text-zinc-500 font-semibold bg-zinc-100 px-2 py-0.5 rounded-full">
+                        {selectedRecord.metadata?.absensi?.length || 0} Jemaat Check-In
+                      </span>
+                    </div>
+
+                    {selectedRecord.metadata?.absensi && selectedRecord.metadata.absensi.length > 0 ? (
+                      <div className="max-h-36 overflow-y-auto border border-zinc-100 bg-zinc-50/10 rounded-2xl p-3 flex flex-wrap gap-1.5">
+                        {selectedRecord.metadata.absensi.map((memberId: string) => {
+                          const m = membersList.find(x => x.id === memberId);
+                          return (
+                            <span 
+                              key={memberId}
+                              className="inline-flex items-center text-[10px] font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200/50 px-2.5 py-1 rounded-lg transition-colors cursor-default"
+                            >
+                              {m ? m.name : "Jemaat"}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-zinc-400 italic bg-zinc-50/50 p-4 border border-zinc-100 rounded-2xl text-center">
+                        Tidak ada jemaat yang di-check-in di absensi sesi ini.
+                      </div>
+                    )}
                   </div>
 
                   {/* Gender breakdown visual */}
@@ -876,20 +1461,29 @@ export default function QrAttendancePage() {
 
                     {/* Progress bar */}
                     {selectedRecord.total > 0 && (
-                      <div className="h-3 w-full rounded-full overflow-hidden flex bg-zinc-100">
+                      <div className="h-2 w-full rounded-full overflow-hidden flex bg-zinc-100">
                         <div className="bg-blue-500" style={{ width: `${(selectedRecord.male / selectedRecord.total) * 100}%` }} />
                         <div className="bg-pink-400" style={{ width: `${(selectedRecord.female / selectedRecord.total) * 100}%` }} />
                       </div>
                     )}
                   </div>
 
-                  <div className="flex gap-3 pt-2">
+                  {/* Keterangan Card */}
+                  <div className="border border-zinc-100 rounded-2xl p-4 bg-zinc-50/50">
+                    <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Keterangan / Catatan</div>
+                    <p className="text-xs font-medium text-zinc-650 mt-1.5 whitespace-pre-wrap leading-relaxed">
+                      {selectedRecord.metadata?.keterangan || selectedRecord.notes || "Tidak ada keterangan tambahan."}
+                    </p>
+                  </div>
+
+                  {/* Detail footer buttons */}
+                  <div className="flex gap-3 pt-2 bg-zinc-50 p-6 -mx-6 -mb-6 border-t border-zinc-100">
                     <button
                       onClick={() => {
                         setSelectedRecord(null);
                         setIsEditing(false);
                       }}
-                      className="flex-1 py-3 rounded-xl border border-zinc-200 text-zinc-700 text-sm font-bold hover:bg-zinc-50 transition-all cursor-pointer text-center"
+                      className="flex-1 py-3 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-sm font-bold hover:bg-zinc-50 transition-all cursor-pointer text-center"
                     >
                       Tutup
                     </button>
@@ -900,7 +1494,7 @@ export default function QrAttendancePage() {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
-                      Edit Data
+                      Edit Laporan
                     </button>
                   </div>
                 </div>

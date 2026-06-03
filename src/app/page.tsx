@@ -163,8 +163,8 @@ export default function Home() {
             <a href="#kontak" className="hidden sm:inline-flex px-5 py-2 bg-gradient-to-r from-brand-orange to-brand-gold hover:from-brand-orange hover:to-brand-orange-light text-zinc-950 font-bold rounded-md transition-all text-xs tracking-wider uppercase shadow-md shadow-brand-orange/20">
               Hubungi Sales
             </a>
-            <a href="/portal/yesh-cms" className="px-5 py-2 border border-white/20 hover:border-brand-orange hover:text-brand-orange text-white font-bold rounded-md transition-all text-xs tracking-wider uppercase">
-              Portal Admin
+            <a href="/portal" className="px-5 py-2 border border-white/20 hover:border-brand-orange hover:text-brand-orange text-white font-bold rounded-md transition-all text-xs tracking-wider uppercase">
+              LOGIN DASHBOARD
             </a>
           </div>
         </div>
@@ -889,8 +889,8 @@ export default function Home() {
               &copy; {new Date().getFullYear()} Yesh CMS. PT Yesh Heal Me Indonesia. All Rights Reserved.
             </span>
             <div className="flex gap-4">
-              <a href="/portal/yesh-cms" className="text-zinc-600 hover:text-brand-orange text-[10px] uppercase font-bold tracking-wider">
-                Portal Admin Login
+              <a href="/portal" className="text-zinc-600 hover:text-brand-orange text-[10px] uppercase font-bold tracking-wider">
+                Login Dashboard
               </a>
             </div>
           </div>

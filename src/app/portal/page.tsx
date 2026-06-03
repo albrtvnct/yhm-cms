@@ -70,7 +70,7 @@ export default function PortalGatePage() {
                   Memverifikasi...
                 </>
               ) : (
-                "Cari Portal Saya &rarr;"
+                "Cari Portal Saya →"
               )}
             </button>
           </form>
