@@ -264,7 +264,7 @@ export default function Home() {
               <span className="mx-4 text-white">•</span>
               <span>YESH HEAL ME INDONESIA</span>
               <span className="mx-4 text-white">•</span>
-              <span>GEREJA MODERN MANAJEMEN LEBIH MUDA</span>
+              <span>SOLUSI DIGITALISASI GEREJA ANDA</span>
               <span className="mx-4 text-white">•</span>
               <span>INTEGRASI DATA JEMAAT & KEUANGAN GEREJA</span>
               <span className="mx-4 text-white">•</span>
