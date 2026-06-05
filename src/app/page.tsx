@@ -17,17 +17,6 @@ const FEATURES = [
   { icon: "🎓", color: "#1a1a24", textCol: "#e4e4e7", label: "Pengembangan SDM", desc: "Pelatihan pelayan, sertifikasi, riwayat pelayanan, penilaian, dan rencana pengembangan rohani." },
 ];
 
-const MODULE_CARDS = [
-  { title: "Komsel / Cell", subtitle: "KELOMPOK KECIL", bg: "bg-orange-600/90 text-white", label: "CELL", font: "tracking-tighter", desc: "Manajemen data kelompok sel, absensi, materi mingguan, dan laporan perkembangan rohani jemaat." },
-  { title: "Misi & Sosial", subtitle: "DIKONIA & OUTREACH", bg: "bg-emerald-800/90 text-white", label: "MISSION", font: "tracking-tight", desc: "Penyaluran bantuan sosial, pengelolaan dana misi, dan koordinasi relawan lapangan." },
-  { title: "Yesh Women", subtitle: "IBADAH WANITA", bg: "bg-pink-600/90 text-white", label: "WOMEN", font: "italic font-serif", desc: "Wadah persekutuan wanita, rekaman sharing kelompok, dan kegiatan pengembangan keluarga kristen." },
-  { title: "Yesh Kids", subtitle: "SEKOLAH MINGGU", bg: "bg-cyan-600/95 text-white", label: "KIDS", font: "font-mono font-black", desc: "Database anak, absensi barcode/QR, check-in anak demi keamanan, dan pencatatan kelas kurikulum rohani." },
-  { title: "Yesh Youth", subtitle: "IBADAH REMAJA & MUDA", bg: "bg-zinc-800 text-white border border-zinc-700", label: "YOUTH", font: "font-black tracking-widest", desc: "Manajemen komunitas anak muda, pelayan ibadah youth, event kreatif, dan mentoring pastoral." },
-  { title: "Jadwal Pelayan", subtitle: "TIM ALTAR & MUSIC", bg: "bg-lime-500 text-zinc-950", label: "SERVICE", font: "font-sans font-bold", desc: "Penjadwalan otomatis tim pemusik, singer, worship leader, usher, pendoa, lengkap dengan pengingat WA." },
-  { title: "Visitasi & Konseling", subtitle: "ATTENDANCE ALERTS", bg: "bg-purple-800/90 text-white", label: "PASTORAL", font: "font-serif tracking-tight", desc: "Deteksi otomatis jemaat yang absen 3 minggu berturut-turut untuk dijadwalkan kunjungan pastoral." },
-  { title: "Keuangan & Donasi", subtitle: "QRIS & TITHE", bg: "bg-zinc-950 text-white border border-brand-orange/30", label: "FINANCE", font: "font-black tracking-tighter", desc: "Integrasi persembahan digital (QRIS), persepuluhan, slip transfer otomatis, dan audit internal bendahara." },
-  { title: "Sakramen & Surat", subtitle: "ADMINISTRASI GEREJA", bg: "bg-blue-700 text-white", label: "CHURCH", font: "font-mono", desc: "Layanan pengajuan surat baptis, penyerahan anak, pernikahan, surat pindah, approval gembala." },
-];
 
 const ONBOARDING_STEPS = [
   {
@@ -152,7 +141,6 @@ export default function Home() {
           
           <div className="hidden md:flex items-center gap-8 text-sm font-semibold tracking-wider uppercase text-zinc-400">
             <a href="#tentang" className="hover:text-brand-orange transition-colors">Tentang</a>
-            <a href="#modul" className="hover:text-brand-orange transition-colors">Modul</a>
             <a href="#fitur" className="hover:text-brand-orange transition-colors">Fitur</a>
             <a href="#harga" className="hover:text-brand-orange transition-colors">Harga</a>
             <a href="#testimoni" className="hover:text-brand-orange transition-colors">Testimoni</a>
@@ -205,9 +193,6 @@ export default function Home() {
                 <a href="#harga" className="px-8 py-3.5 bg-gradient-to-r from-brand-orange to-brand-gold text-zinc-950 font-black rounded-md transition-all hover:scale-105 shadow-lg shadow-brand-orange/30 flex items-center gap-2 group">
                   Mulai Sekarang
                   <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
-                </a>
-                <a href="#modul" className="px-8 py-3.5 border border-white/20 hover:border-brand-orange hover:bg-brand-orange/10 font-bold rounded-md transition-all">
-                  Lihat Modul
                 </a>
               </div>
 
@@ -342,57 +327,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── MODUL INTEGRASI GRID ── */}
-      <section id="modul" className="py-24 bg-gradient-to-b from-black to-zinc-950">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16">
-            <div className="text-left">
-              <div className="text-xs uppercase tracking-widest text-brand-orange font-bold mb-3">INTEGRASI DIVISI</div>
-              <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white">
-                Temukan Solusi Modul <br />
-                Untuk Setiap Divisi
-              </h2>
-            </div>
-            <a href="#fitur" className="text-xs font-bold uppercase tracking-widest text-brand-gold hover:text-brand-orange mt-4 md:mt-0 transition-colors">
-              LIHAT SEMUA FITUR UNGGULAN &rarr;
-            </a>
-          </div>
-
-          {/* 3x3 Grid cards style */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MODULE_CARDS.map((card, idx) => (
-              <div
-                key={idx}
-                className={`relative rounded-2xl p-8 flex flex-col justify-between overflow-hidden group shadow-lg min-h-[280px] text-left transition-all duration-300 hover:-translate-y-2 hover:shadow-xl ${card.bg}`}
-              >
-                {/* Background Large Text overlay */}
-                <div className="absolute top-4 right-4 text-7xl font-black tracking-tighter opacity-5 select-none pointer-events-none">
-                  {card.label}
-                </div>
-
-                <div>
-                  <div className="text-[10px] uppercase font-bold tracking-widest opacity-60 mb-2">
-                    {card.subtitle}
-                  </div>
-                  <h3 className="text-2xl font-black tracking-tight mb-4">
-                    {card.title}
-                  </h3>
-                </div>
-
-                <div>
-                  <p className="text-sm leading-relaxed opacity-85 mb-4">
-                    {card.desc}
-                  </p>
-                  <div className="text-xs uppercase font-extrabold tracking-wider border-t border-white/10 pt-4 flex items-center justify-between">
-                    <span>Lihat Detail</span>
-                    <span className="transition-transform duration-300 group-hover:translate-x-1.5">&rarr;</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ── ONBOARDING / IMPLEMENTATION EVENTS ── */}
       <section className="py-24 bg-zinc-950 border-t border-b border-white/5">
