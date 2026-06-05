@@ -127,12 +127,12 @@ export default function QrAttendancePage() {
     }
   }, []);
 
-  // Poll overall attendance data and history every 4 seconds to keep the admin panel auto-updated
+  // Poll overall attendance data and history every 100ms to keep the admin panel auto-updated (10 data per second)
   useEffect(() => {
     loadData();
     const interval = setInterval(() => {
       loadData();
-    }, 4000);
+    }, 100);
     return () => clearInterval(interval);
   }, [loadData]);
 
@@ -160,7 +160,7 @@ export default function QrAttendancePage() {
     restoreSession();
   }, []);
 
-  // Polling for live session check-in count
+  // Polling for live session check-in count (10 data per second)
   useEffect(() => {
     if (!activeQr) {
       setActiveStats(null);
@@ -171,7 +171,7 @@ export default function QrAttendancePage() {
 
     const interval = setInterval(() => {
       refreshActiveStats(activeQr.recordId);
-    }, 3000);
+    }, 100);
 
     return () => clearInterval(interval);
   }, [activeQr, refreshActiveStats]);

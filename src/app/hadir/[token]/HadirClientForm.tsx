@@ -32,10 +32,10 @@ export default function HadirClientForm({ sessionData }: HadirClientFormProps) {
     setMounted(true);
   }, []);
 
-  // Poll database stats every 1.5 seconds to sync multiple clicker phones
+  // Poll database stats every 100ms to sync multiple clicker phones (10 data per sec)
   const syncStats = useCallback(async () => {
-    // Skip updating from DB if the user has tapped in the last 2 seconds to avoid jitter
-    if (Date.now() - lastClickTimeRef.current < 2000) return;
+    // Skip updating from DB if the user has tapped in the last 100ms to avoid jitter
+    if (Date.now() - lastClickTimeRef.current < 100) return;
 
     const res = await getRealtimeAttendanceStats(sessionData.recordId);
     if (res.success && res.data) {
@@ -45,7 +45,7 @@ export default function HadirClientForm({ sessionData }: HadirClientFormProps) {
   }, [sessionData.recordId]);
 
   useEffect(() => {
-    const interval = setInterval(syncStats, 1500);
+    const interval = setInterval(syncStats, 100);
     return () => clearInterval(interval);
   }, [syncStats]);
 
@@ -78,7 +78,7 @@ export default function HadirClientForm({ sessionData }: HadirClientFormProps) {
       const res = await incrementRealtimeAttendance(sessionData.recordId, gender);
       if (res.success && res.data) {
         // Only apply DB stats if the user hasn't clicked again in the meantime
-        if (Date.now() - lastClickTimeRef.current >= 2000) {
+        if (Date.now() - lastClickTimeRef.current >= 100) {
           setMale(res.data.male);
           setFemale(res.data.female);
         }
@@ -114,7 +114,7 @@ export default function HadirClientForm({ sessionData }: HadirClientFormProps) {
       const res = await decrementRealtimeAttendance(sessionData.recordId, gender);
       if (res.success && res.data) {
         // Only apply DB stats if the user hasn't clicked again in the meantime
-        if (Date.now() - lastClickTimeRef.current >= 2000) {
+        if (Date.now() - lastClickTimeRef.current >= 100) {
           setMale(res.data.male);
           setFemale(res.data.female);
         }
